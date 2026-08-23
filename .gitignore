@@ -12,3 +12,6 @@ htmlcov/
 # Productive Workspace build/install scratch
 node_modules/
 .lock-venv/
+
+# Generated macOS Desktop app (not tracked; created by installer)
+*.app/
