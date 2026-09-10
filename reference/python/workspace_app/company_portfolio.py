@@ -30,7 +30,7 @@ _ALLOWED_TARGETS = frozenset(
         "unspecified",
     }
 )
-_REPOSITORY_RE = re.compile(r"^arvectum1/[A-Za-z0-9_.-]+$")
+_REPOSITORY_RE = re.compile(r"^arvectum2/[A-Za-z0-9_.-]+$")
 _PATH_RE = re.compile(r"^[A-Za-z0-9_./ -]+\.md$")
 _HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 _STAGE_HEADING_RE = re.compile(r"^##\s+(R\d+(?:\.\d+)?)\s+[—-]\s+(.+?)\s*$", re.IGNORECASE)

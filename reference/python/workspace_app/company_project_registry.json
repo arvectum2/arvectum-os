@@ -1,8 +1,8 @@
 {
   "schema": "arvectum.company.workspace-project-registry/1",
   "authority": {
-    "portfolio_identity": "arvectum1/arvectum-company:docs/portfolio/AC-301-PORTFOLIO-IDENTITY-BOUNDARY-OWNERSHIP-RECONCILIATION-v1.0.0.md",
-    "git_primary": "arvectum1/arvectum-company:docs/governance/decisions/DECISION-2026-08-25-GIT-INFRASTRUCTURE-MIGRATION-CLOSURE.md"
+    "portfolio_identity": "arvectum2/arvectum-company:docs/portfolio/AC-301-PORTFOLIO-IDENTITY-BOUNDARY-OWNERSHIP-RECONCILIATION-v1.0.0.md",
+    "git_primary": "arvectum2/arvectum-company:docs/governance/decisions/DECISION-2026-08-25-GIT-INFRASTRUCTURE-MIGRATION-CLOSURE.md"
   },
   "projects": [
     {
@@ -10,7 +10,7 @@
       "label": "Arvectum Company",
       "kind": "company",
       "disposition": "continue",
-      "repository": "arvectum1/arvectum-company",
+      "repository": "arvectum2/arvectum-company",
       "roadmap_path": "docs/roadmap/ROADMAP.md",
       "adapter": "company-roadmap-v1",
       "execution_targets": []
@@ -20,7 +20,7 @@
       "label": "Arvectum OS",
       "kind": "platform",
       "disposition": "continue",
-      "repository": "arvectum1/arvectum-os",
+      "repository": "arvectum2/arvectum-os",
       "roadmap_path": "docs/roadmap/ROADMAP.md",
       "adapter": "os-roadmap-v1",
       "execution_targets": []
@@ -30,7 +30,7 @@
       "label": "Arvectum Tender Agent",
       "kind": "product",
       "disposition": "continue",
-      "repository": "arvectum1/tender-agent",
+      "repository": "arvectum2/tender-agent",
       "roadmap_path": "STATUS.md",
       "adapter": "tender-status-v1",
       "execution_targets": []
@@ -40,7 +40,7 @@
       "label": "Discount Parser",
       "kind": "product",
       "disposition": "continue",
-      "repository": "arvectum1/discount-parser",
+      "repository": "arvectum2/discount-parser",
       "roadmap_path": "docs/ROADMAP.md",
       "adapter": "generic-roadmap-v1",
       "execution_targets": []
@@ -50,7 +50,7 @@
       "label": "Arvectum Proxy Launcher",
       "kind": "product",
       "disposition": "continue",
-      "repository": "arvectum1/proxy-launcher",
+      "repository": "arvectum2/proxy-launcher",
       "roadmap_path": "docs/ROADMAP.md",
       "adapter": "proxy-roadmap-v1",
       "execution_targets": []
@@ -60,7 +60,7 @@
       "label": "Creative Test Agent",
       "kind": "product",
       "disposition": "continue",
-      "repository": "arvectum1/creative-test-agent",
+      "repository": "arvectum2/creative-test-agent",
       "roadmap_path": "docs/roadmap/CURRENT.md",
       "adapter": "creative-roadmap-v1",
       "execution_targets": []
@@ -80,7 +80,7 @@
       "label": "Doors Parser",
       "kind": "client-delivery-solution",
       "disposition": "contain",
-      "repository": "arvectum1/doors_parser",
+      "repository": "arvectum2/doors_parser",
       "roadmap_path": null,
       "adapter": "reconciliation-required",
       "execution_targets": []
@@ -90,7 +90,7 @@
       "label": "Data Platform",
       "kind": "initiative",
       "disposition": "clarify",
-      "repository": "arvectum1/data-platform",
+      "repository": "arvectum2/data-platform",
       "roadmap_path": null,
       "adapter": "reconciliation-required",
       "execution_targets": []

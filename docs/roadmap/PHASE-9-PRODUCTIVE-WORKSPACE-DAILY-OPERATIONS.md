@@ -90,7 +90,7 @@ Real owner use found that the Workspace did not make ordinary work obvious enoug
 
 The first p9.11.2 governed deployment attempt failed closed because P7.06 still admitted only obsolete repository identity `arvectum/arvectum-os`.
 
-The merged bounded migration now requires current checkout/new deployment targets from canonical `arvectum1/arvectum-os`, while old `arvectum/arvectum-os` identity may be recognized only as immutable historical installed-source provenance.
+The merged bounded migration now requires current checkout/new deployment targets from canonical `arvectum2/arvectum-os`, while old `arvectum/arvectum-os` identity may be recognized only as immutable historical installed-source provenance.
 
 Focused F04 validation: `44 passed`; shell syntax and Python compilation PASS.
 

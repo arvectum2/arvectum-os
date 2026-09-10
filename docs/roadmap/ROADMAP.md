@@ -65,7 +65,7 @@ This roadmap update creates no Constitution/RFC amendment, new Kernel primitive,
 - R33, P10.03, P10.04 and P10.05 are `Complete / PASS` inside the R33/P10.02 constraints;
 - R34 is current and remains `BLOCKED / NOT PASS`; B2 durability is closed and B1 real owner-operated evidence remains open;
 - operating environment remains `Local / Persistent Internal / owner-operated` with scoped conformance;
-- current canonical repository for new checkouts/deployments is `arvectum1/arvectum-os`;
+- current canonical repository for new checkouts/deployments is `arvectum2/arvectum-os`;
 - no public/stable SDK/API/wire/browser/connector surface, external/customer Production, SLA/support/certification or broader conformance claim exists.
 
 ## 4. Strategic roadmap

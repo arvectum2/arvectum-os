@@ -11,7 +11,7 @@ DOMAIN="gui/$(id -u)"
 SERVICE_TARGET="$DOMAIN/$LABEL"
 SERVICE_WAIT_ATTEMPTS=${ARVECTUM_P7_02_SERVICE_WAIT_ATTEMPTS:-20}
 SERVICE_WAIT_INTERVAL=${ARVECTUM_P7_02_SERVICE_WAIT_INTERVAL:-0.5}
-CANONICAL_REPOSITORY="arvectum1/arvectum-os"
+CANONICAL_REPOSITORY="arvectum2/arvectum-os"
 
 fail() { printf '%s\n' "P7.02 FAIL: $*" >&2; exit 1; }
 info() { printf '%s\n' "P7.02: $*"; }

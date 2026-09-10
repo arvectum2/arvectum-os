@@ -36,7 +36,7 @@ def _registry(root: Path) -> Path:
                         "label": "Arvectum Company",
                         "kind": "company",
                         "disposition": "continue",
-                        "repository": "arvectum1/arvectum-company",
+                        "repository": "arvectum2/arvectum-company",
                         "roadmap_path": "docs/roadmap/ROADMAP.md",
                         "adapter": "company-roadmap-v1",
                         "execution_targets": [],

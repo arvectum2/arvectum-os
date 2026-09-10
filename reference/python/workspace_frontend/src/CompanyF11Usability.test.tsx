@@ -18,11 +18,11 @@ const portfolio: CompanyPortfolioProjection = {
   scope: { organization_resolved_server_side: true, actor_resolved_server_side: true, cross_organization_aggregation: false },
   projects: [{
     id: "PORT-003", label: "Arvectum Proxy Launcher", kind: "product", disposition: "continue",
-    repository: "arvectum1/proxy-launcher", roadmap_path: "docs/ROADMAP.md",
+    repository: "arvectum2/proxy-launcher", roadmap_path: "docs/ROADMAP.md",
     execution_targets: ["web", "windows-test-laptop"], authority_mode: "External Reference",
     projection_authority: "non-authoritative", state: "current-source-backed", message: "Source backed",
     source: {
-      repository: "arvectum1/proxy-launcher", path: "docs/ROADMAP.md", commit_sha: "a".repeat(40),
+      repository: "arvectum2/proxy-launcher", path: "docs/ROADMAP.md", commit_sha: "a".repeat(40),
       content_sha256: "b".repeat(64), fetched_at: "2026-08-26T15:00:00Z", freshness: "fresh-fetch", adapter: "proxy-roadmap-v1",
     },
     roadmap: {
@@ -98,7 +98,7 @@ describe("F11 owner usability remediation", () => {
     expect(technicalDetails?.hasAttribute("open")).toBe(false);
     fireEvent.click(technical);
     expect(technicalDetails?.hasAttribute("open")).toBe(true);
-    expect(screen.getByText("arvectum1/proxy-launcher")).toBeTruthy();
+    expect(screen.getByText("arvectum2/proxy-launcher")).toBeTruthy();
   });
 
   it("keeps Projects and Company materials in the primary navigation so the owner can return", async () => {
