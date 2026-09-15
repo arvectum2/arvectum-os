@@ -88,10 +88,26 @@ function latestStagedItems(data: CompanyAssetLibraryProjection): CompanyAssetLib
   return [...byMaterial.values()].sort((a, b) => a.title.localeCompare(b.title));
 }
 
-function admittedDocxItems(data: CompanyAssetLibraryProjection): CompanyAssetLibraryItem[] {
+function currentAdmittedItems(data: CompanyAssetLibraryProjection): CompanyAssetLibraryItem[] {
   return [...data.views.accepted, ...data.views.archive]
-    .filter((item) => item.canonical !== null && item.media_type === DOCX)
+    .filter((item) => item.canonical?.current === true)
+    .sort((a, b) => a.title.localeCompare(b.title, "ru"));
+}
+
+function admittedDocxItems(data: CompanyAssetLibraryProjection): CompanyAssetLibraryItem[] {
+  return currentAdmittedItems(data)
+    .filter((item) => item.semantic_role === "document-template" && item.media_type === DOCX)
     .sort((a, b) => b.received_at.localeCompare(a.received_at));
+}
+
+function assetApplicationLabel(item: CompanyAssetLibraryItem, text: (ru: string, en: string) => string): string {
+  if (item.semantic_role === "logo" && ["image/png", "image/jpeg"].includes(item.media_type)) {
+    return text("будет встроен в DOCX", "will be embedded in the DOCX");
+  }
+  if (["text/plain", "text/markdown"].includes(item.media_type)) {
+    return text("текст будет включён", "text will be included");
+  }
+  return text("будет закреплён как точный reference", "will be pinned as an exact reference");
 }
 
 function prettyDate(value: string): string {
@@ -236,7 +252,11 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
   }, []);
 
   const latest = useMemo(() => state.kind === "ready" ? latestStagedItems(state.data) : [], [state]);
+  const currentAdmitted = useMemo(() => state.kind === "ready" ? currentAdmittedItems(state.data) : [], [state]);
   const docxVersions = useMemo(() => state.kind === "ready" ? admittedDocxItems(state.data) : [], [state]);
+  const brandInputs = useMemo(() => currentAdmitted.filter((item) => ["logo", "brandbook"].includes(item.semantic_role)), [currentAdmitted]);
+  const sourceInputs = useMemo(() => currentAdmitted.filter((item) => item.semantic_role === "source"), [currentAdmitted]);
+  const referenceInputs = useMemo(() => currentAdmitted.filter((item) => !["document-template", "logo", "brandbook", "source"].includes(item.semantic_role)), [currentAdmitted]);
 
   const run = async (action: () => Promise<void>) => {
     setMessage(null);
@@ -308,17 +328,38 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
     const composite = String(data.get("source_version") ?? "");
     const [materialId, versionId] = composite.split("::", 2);
     if (!materialId || !versionId) return;
+    const assetInputs: Array<{ use_as: "brand" | "source" | "reference"; material_id: string; version_id: string }> = [];
+    for (const value of data.getAll("asset_input")) {
+      const [useAs, inputMaterialId, inputVersionId] = String(value).split("::", 3);
+      if (!inputMaterialId || !inputVersionId || !["brand", "source", "reference"].includes(useAs)) {
+        setMessage(text("Выбор дополнительного материала устарел или повреждён. Обновите страницу и выберите материалы заново.", "The auxiliary asset selection is stale or invalid. Refresh and select the assets again."));
+        return;
+      }
+      assetInputs.push({
+        use_as: useAs as "brand" | "source" | "reference",
+        material_id: inputMaterialId,
+        version_id: inputVersionId,
+      });
+    }
+    if (assetInputs.length > 8) {
+      setMessage(text("Можно выбрать не более 8 дополнительных материалов.", "Choose no more than 8 auxiliary assets."));
+      return;
+    }
     setBusy(true);
     try {
       const output = await generateCompanyDocx({
         material_id: materialId,
         version_id: versionId,
+        asset_inputs: assetInputs,
         title: String(data.get("title") ?? ""),
         body: String(data.get("body") ?? ""),
         date: String(data.get("date") ?? ""),
       }, csrfToken);
       setGenerated(output);
-      setMessage(text("Документ создан как Transient Output из точной принятой версии.", "Document created as a Transient Output from the exact admitted version."));
+      setMessage(text(
+        `Документ создан как Transient Output из точного шаблона и ${assetInputs.length} дополнительных принятых материалов.`,
+        `Document created as a Transient Output from the exact template and ${assetInputs.length} additional admitted assets.`,
+      ));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "COMPANY_GENERATION_FAILED");
     } finally {
@@ -369,7 +410,7 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
 
   return <section className="company-page" aria-labelledby="company-materials-title">
     <header className="company-page-head asset-library-head">
-      <p className="eyebrow">P10.04 / P10.09-A · Product Contract Provisional 0.2.0</p>
+      <p className="eyebrow">P10.04 / P10.09-A / P10.09-B · Product Contract Provisional 0.2.0</p>
       <h1 id="company-materials-title">{text("Материалы компании", "Company materials")}</h1>
       <p>{text("Принятые материалы доступны как обычная рабочая библиотека. Черновики и review остаются staged/non-canonical; только успешно завершённый Governed Execution создаёт принятую каноническую версию.", "Admitted assets are available as an ordinary working library. Drafts and review remain staged/non-canonical; only a successful Governed Execution creates an admitted canonical version.")}</p>
       <details className="company-boundary-details"><summary>{text("Граница authority", "Authority boundary")}</summary><p>{text("Workspace показывает состояние и инициирует команду, но не является источником authority. Authentication, Authorization, Organizational Authority, Data Governance, Validation и Consequential Approval не выводятся из видимости кнопки. Generated output остаётся Transient Output и не становится validated Knowledge.", "Workspace presents state and initiates a command but is not an authority source. Authentication, Authorization, Organizational Authority, Data Governance, Validation, and Consequential Approval are not inferred from button visibility. Generated output remains a Transient Output and does not become validated Knowledge.")}</p></details>
@@ -438,15 +479,22 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
       </form>
 
       <form id="company-docx-generator" className="company-form" onSubmit={(event) => void submitGenerate(event)}>
-        <h2>{text("Создать DOCX по принятому шаблону", "Generate DOCX from admitted template")}</h2>
-        <p>{text("Для генерации доступны только точные канонически принятые DOCX-версии. Результат всё равно остаётся Transient Output.", "Only exact canonically admitted DOCX versions are available for generation. The result still remains a Transient Output.")}</p>
-        <label>{text("Принятая версия шаблона", "Admitted template version")}<select name="source_version" required value={reuseSourceVersion} onChange={(event) => setReuseSourceVersion(event.target.value)}><option value="" disabled>{text("Выберите шаблон", "Choose template")}</option>{docxVersions.map((item) => <option key={item.version_id} value={`${item.material_id}::${item.version_id}`}>{item.title} · {prettyDate(item.received_at)}</option>)}</select></label>
+        <h2>{text("Создать DOCX из принятых материалов", "Generate DOCX from admitted assets")}</h2>
+        <p>{text("Выберите текущую принятую версию шаблона и, при необходимости, дополнительные принятые assets. Логотип PNG/JPEG встраивается в DOCX, TXT/MD включается как текст, остальные материалы закрепляются как точные references. Результат остаётся Transient Output.", "Choose the current admitted template version and optional admitted assets. PNG/JPEG logos are embedded in the DOCX, TXT/MD content is included as text, and other assets are pinned as exact references. The result remains a Transient Output.")}</p>
+        <label>{text("Текущий принятый шаблон", "Current admitted template")}<select name="source_version" required value={reuseSourceVersion} onChange={(event) => setReuseSourceVersion(event.target.value)}><option value="" disabled>{text("Выберите шаблон", "Choose template")}</option>{docxVersions.map((item) => <option key={item.version_id} value={`${item.material_id}::${item.version_id}`}>{item.title} · {prettyDate(item.received_at)}</option>)}</select></label>
+        <section className="asset-generation-inputs" aria-labelledby="asset-generation-inputs-title">
+          <h3 id="asset-generation-inputs-title">{text("Дополнительные материалы", "Additional assets")}</h3>
+          <p>{text("Используются только текущие канонически принятые версии. Технические идентификаторы подставляются сервером и не требуются для выбора.", "Only current canonically admitted versions are eligible. The server resolves exact technical identities; they are not required for selection.")}</p>
+          {brandInputs.length ? <fieldset><legend>{text("Бренд", "Brand")}</legend>{brandInputs.map((item) => <label className="asset-generation-option" key={item.version_id}><input type="checkbox" name="asset_input" value={`brand::${item.material_id}::${item.version_id}`} /><span><strong>{item.title}</strong><small>{assetApplicationLabel(item, text)}</small></span></label>)}</fieldset> : null}
+          {sourceInputs.length ? <fieldset><legend>{text("Исходные материалы", "Source materials")}</legend>{sourceInputs.map((item) => <label className="asset-generation-option" key={item.version_id}><input type="checkbox" name="asset_input" value={`source::${item.material_id}::${item.version_id}`} /><span><strong>{item.title}</strong><small>{assetApplicationLabel(item, text)}</small></span></label>)}</fieldset> : null}
+          {referenceInputs.length ? <fieldset><legend>{text("References", "References")}</legend>{referenceInputs.map((item) => <label className="asset-generation-option" key={item.version_id}><input type="checkbox" name="asset_input" value={`reference::${item.material_id}::${item.version_id}`} /><span><strong>{item.title}</strong><small>{assetApplicationLabel(item, text)}</small></span></label>)}</fieldset> : null}
+        </section>
         <label>{text("Заголовок", "Title")}<input name="title" required maxLength={320} /></label>
         <label>{text("Текст", "Body")}<textarea name="body" required maxLength={6000} rows={9} /></label>
         <label>{text("Дата", "Date")}<input name="date" required maxLength={80} defaultValue={new Date().toLocaleDateString("ru-RU")} /></label>
         <button type="submit" disabled={busy || docxVersions.length === 0}>{text("Создать transient DOCX", "Generate transient DOCX")}</button>
         {docxVersions.length === 0 ? <p className="boundary-note">{text("Сначала примите DOCX-шаблон через governed admission.", "First admit a DOCX template through governed admission.")}</p> : null}
-        {generated ? <div className="company-output"><strong>Transient Output</strong><p>{text("Источник", "Source")}: {docxVersions.find((item) => item.version_id === generated.output.source_version_id)?.title ?? text("точная принятая версия", "exact admitted version")}</p><button type="button" disabled={busy} onClick={() => void downloadGenerated(generated)}>{text("Скачать DOCX", "Download DOCX")}</button><details><summary>{text("Технические сведения", "Technical details")}</summary><code>{generated.output.output_id}</code><br /><code>{generated.output.source_version_id}</code></details></div> : null}
+        {generated ? <div className="company-output"><strong>Transient Output</strong><p>{text("Шаблон", "Template")}: {docxVersions.find((item) => item.version_id === generated.output.source_version_id)?.title ?? text("точная принятая версия", "exact admitted version")}</p>{generated.output.input_assets?.length ? <div><p><strong>{text("Использованные материалы", "Used assets")}</strong></p><ul>{generated.output.input_assets.map((item) => <li key={`${item.material_id}-${item.version_id}`}>{item.title} · {item.application === "embedded-image" ? text("встроен", "embedded") : item.application === "text-included" ? text("текст включён", "text included") : text("точный reference", "exact reference")}</li>)}</ul></div> : null}<button type="button" disabled={busy} onClick={() => void downloadGenerated(generated)}>{text("Скачать DOCX", "Download DOCX")}</button><details><summary>{text("Технические сведения", "Technical details")}</summary><code>{generated.output.output_id}</code><br /><code>{generated.output.source_version_id}</code>{generated.output.generation_input_digest ? <><br /><code>{generated.output.generation_input_digest}</code></> : null}</details></div> : null}
       </form>
     </div>
   </section>;

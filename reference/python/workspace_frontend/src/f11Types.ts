@@ -204,6 +204,9 @@ export type GeneratedCompanyOutput = {
     source_material_id: string;
     source_version_id: string;
     source_sha256: string;
+    generation_profile?: string;
+    generation_input_digest?: string;
+    input_assets?: CompanyGenerationAssetInputEvidence[];
     output_sha256: string;
     media_type: string;
     filename: string;
@@ -218,5 +221,25 @@ export type GeneratedCompanyOutput = {
     source_admitted_company_asset?: true;
     source_document_version?: string;
     source_designation_version?: string;
+    all_generation_inputs_exact_admitted?: true;
+    generation_input_count?: number;
   };
+};
+
+export type CompanyGenerationAssetInput = {
+  material_id: string;
+  version_id: string;
+  use_as: "brand" | "source" | "reference";
+};
+
+export type CompanyGenerationAssetInputEvidence = CompanyGenerationAssetInput & {
+  application: "embedded-image" | "text-included" | "pinned-reference";
+  content_sha256: string;
+  title: string;
+  media_type: string;
+  semantic_role: string;
+  document_version: string;
+  designation_version: string;
+  event_version: string;
+  provenance_refs: string[];
 };

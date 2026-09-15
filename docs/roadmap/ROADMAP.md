@@ -1,7 +1,7 @@
 # Arvectum OS Canonical Roadmap
 
 Status: `Active`
-Version: `2.99.0`
+Version: `3.00.0`
 Created: `2026-08-07`
 Updated: `2026-09-15`
 Owner: `ООО «Арвектум»`
@@ -26,7 +26,7 @@ Roadmap status does not itself change Platform Capability lifecycle, Product Con
 
 Detailed phase plans, reviews and repository history retain implementation/evidence detail; this file defines current canonical sequencing when subordinate phase text is older or more restrictive.
 
-## 2. Version 2.99.0 — P10.09-A closure and P10.09-B activation
+## 2. Version 3.00.0 — P10.09-B closure and P10.09-C activation
 
 Phase 10 has progressed beyond the original serial plan:
 
@@ -34,8 +34,9 @@ Phase 10 has progressed beyond the original serial plan:
 - `M10-alpha = Achieved / PASS` through a real owner-operated governed Company asset cycle;
 - ADR-0002 durable Company Workspace state is accepted and qualified in the bounded owner-local scope;
 - `P10.06 — Real Action Request / Actionable Work boundary = Complete / PASS`;
-- Workspace internal release is `p10.09.1`, application contract `13`;
+- Workspace internal release is `p10.09.2`, application contract `14`;
 - `P10.09-A — admitted-asset discovery and ordinary retrieval = Complete / PASS`;
+- `P10.09-B — asset-aware generation = Complete / PASS`;
 - `P10.07` truthfully waits for a naturally occurring genuine request and may not use synthetic evidence.
 
 The prior sequencing incorrectly allowed the P10.07 waiting state to appear to freeze all later useful development.
@@ -46,7 +47,7 @@ The prior sequencing incorrectly allowed the P10.07 waiting state to appear to f
 
 Accordingly:
 
-- **P10.09 remains the primary current development stream; P10.09-B is now CURRENT after P10.09-A closure**;
+- **P10.09 remains the primary current development stream; P10.09-C is now CURRENT after P10.09-B closure**;
 - P10.08 may perform bounded product-owned/no-side-effect preparation, but evidence-based reusable platform generalization still waits for the first real P10.07 action;
 - P10.10 may begin asset-side dogfooding, but full P10.10 PASS still requires the P10.07 action journey;
 - R35 remains blocked until real action evidence exists;
@@ -103,6 +104,7 @@ Completed:
 | M10-alpha | First Governed Company Asset Cycle | 🟩 Achieved / PASS |
 | P10.06 | Real Action Request / Actionable Work boundary | 🟩 Complete / PASS |
 | P10.09-A | Admitted-asset discovery and ordinary retrieval | 🟩 Complete / PASS |
+| P10.09-B | Asset-aware generation from exact admitted Company asset versions | 🟩 Complete / PASS |
 
 M10-alpha proves a real Company-owned material can complete staging → review → Governed Execution admission → immutable asset/version/provenance → restart/no-replay reconstruction → later exact-version use through Workspace while generated output remains `TransientOutput` by default.
 
@@ -112,7 +114,7 @@ M10-alpha proves a real Company-owned material can complete staging → review �
 |---|---|---:|
 | **P10.07** | First real governed operational action | **⏸ WAITING — genuine request required; mandatory M10 evidence** |
 | **P10.08** | Product operational entry-point composition | **🟦 PARALLEL PREPARATION AVAILABLE**; final reusable generalization waits real P10.07 evidence |
-| **P10.09** | Source-grounded use of admitted assets in Workspace / AI / generation | **🟨 CURRENT / PRIMARY DEVELOPMENT STREAM — P10.09-B** |
+| **P10.09** | Source-grounded use of admitted assets in Workspace / AI / generation | **🟨 CURRENT / PRIMARY DEVELOPMENT STREAM — P10.09-C** |
 | **P10.10** | Real daily-operations dogfooding + friction closure | **🟦 PARTIALLY OPEN** — asset-side sessions may start; full PASS waits P10.07 |
 | P10.11 | Lifecycle / platform-reuse / capability disposition | ⬜ waits sufficient Phase 10 evidence |
 | **R35** | Operational Work / Product Boundary / AI Authority Review | **🔒 blocked on real P10.07 action + applicable P10.08 evidence** |
@@ -142,6 +144,8 @@ P10.09 starts immediately from the already-achieved governed Company asset found
 
 [`P10.09-A Admitted Asset Discovery Closure Review — 2026-09-15`](../reviews/P10-09-A-admitted-asset-discovery-closure-review.md) is `Complete / PASS`.
 
+[`P10.09-B Asset-Aware Generation Closure Review — 2026-09-15`](../reviews/P10-09-B-asset-aware-generation-closure-review.md) is `Complete / PASS`.
+
 ### P10.09-A — admitted-asset discovery and ordinary retrieval — COMPLETE / PASS
 
 Make governed Company assets easy to find and use through normal Workspace UX:
@@ -157,7 +161,7 @@ Make governed Company assets easy to find and use through normal Workspace UX:
 
 No terminal, GitHub or internal UUID knowledge on the ordinary path.
 
-### P10.09-B — asset-aware generation — CURRENT
+### P10.09-B — asset-aware generation — COMPLETE / PASS
 
 Use exact admitted Company assets as explicit UI-selectable generation inputs:
 
@@ -168,7 +172,7 @@ Use exact admitted Company assets as explicit UI-selectable generation inputs:
 
 Generated outputs remain `TransientOutput` unless the already-governed reviewed promotion path succeeds.
 
-### P10.09-C — asset-grounded Copilot fit-check and bounded use
+### P10.09-C — asset-grounded Copilot fit-check and bounded use — CURRENT
 
 Before admitted Company assets become material AI/Copilot context, record one explicit fit decision:
 
@@ -224,9 +228,9 @@ Full P10.10 closure still requires the genuine P10.07 action journey.
                            ┌─ VALUE / ASSETS
                            │   P10.09-A COMPLETE / PASS
                            │      ↓
-                           │   P10.09-B CURRENT
+                           │   P10.09-B COMPLETE / PASS
                            │      ↓
-                           │   P10.09-C fit gate → bounded AI use if admitted
+                           │   P10.09-C CURRENT — fit gate → bounded AI use if admitted
                            │      ↓
                            │   P10.09-D / asset-side P10.10 dogfooding
                            │
@@ -283,7 +287,7 @@ M10 still requires all applicable evidence, including:
 
 **Primary development action:**
 
-> **P10.09-B — asset-aware generation from explicit exact admitted Company asset versions.**
+> **P10.09-C — record the explicit Product Contract fit decision before admitted Company assets become material AI/Copilot context; only proceed with bounded AI use when the effective contract permits it.**
 
 **Waiting evidence action:**
 

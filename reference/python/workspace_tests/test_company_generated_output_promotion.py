@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import io
+import json
 import tempfile
 import unittest
 import zipfile
@@ -261,6 +262,126 @@ class CompanyGeneratedOutputPromotionTests(unittest.TestCase):
         self.assertFalse(projection["governance"]["promotion_relabels_transient_source"])
         self.assertFalse(projection["governance"]["validated_knowledge_created"])
         self.assertFalse(projection["governance"]["external_send_sign_publish_available"])
+
+    def test_asset_aware_promotion_preserves_every_exact_admitted_input(self) -> None:
+        staged = self.materials.stage(
+            self.access,
+            {
+                "project_id": "COMPANY",
+                "filename": "approved-source.txt",
+                "media_type": "text/plain",
+                "semantic_role": "source",
+                "classification": "internal",
+                "purpose": "company governed document generation",
+                "rights": "company-internal-use",
+                "retention_rule": "retain-while-current-plus-governed-history",
+                "content_base64": base64.b64encode(b"Approved exact source text").decode("ascii"),
+            },
+        )["material"]
+        self.assets.submit_review(
+            self.access,
+            staged["material_id"],
+            staged["version_id"],
+            {
+                "deletion_rule": "delete-only-through-governed-retention-process",
+                "permitted_reuse": ["company-internal-document-generation"],
+            },
+        )
+        self.assets.admit(self.access, staged["material_id"], staged["version_id"])
+        input_admission = self.asset_executor.state.committed[-1]
+        input_artifact = input_admission.admitted_document.artifacts[0]
+
+        generated = self.assets.generate_docx(
+            self.access,
+            {
+                "material_id": self.material_id,
+                "version_id": self.version_id,
+                "asset_inputs": [
+                    {
+                        "material_id": staged["material_id"],
+                        "version_id": staged["version_id"],
+                        "use_as": "source",
+                    }
+                ],
+                "title": "Asset-aware reviewed document",
+                "body": "Body",
+                "date": "2026-09-15",
+            },
+        )
+        output_id = str(generated["output"]["output_id"])
+        self.outputs.review(
+            self.access,
+            output_id,
+            {
+                "disposition": "PromotionRequested",
+                "document_title": "Asset-aware reviewed document",
+                "semantic_role": "company-project-document",
+            },
+        )
+        provision_company_generated_output_promotion_grant(self.root)
+        self.outputs.promote(self.access, output_id)
+
+        committed = self.promotion_executor.state.committed[0]
+        record = committed.admitted_document.canonical_record
+        artifact = committed.admitted_document.artifacts[0]
+        self.assertIn(input_admission.admitted_document.version_id, record.provenance_refs)
+        self.assertIn(input_admission.designation.version_id, record.provenance_refs)
+        self.assertIn(input_artifact.artifact_id, artifact.source_artifact_ids)
+        _, manifest = self.materials.output_path(self.access, output_id)
+        self.assertEqual(manifest["state"], "TransientOutput")
+        self.assertEqual(manifest["input_assets"][0]["application"], "text-included")
+        self.assertEqual(len(manifest["generation_input_digest"]), 64)
+
+    def test_asset_aware_review_rejects_tampered_input_application_evidence(self) -> None:
+        staged = self.materials.stage(
+            self.access,
+            {
+                "project_id": "COMPANY",
+                "filename": "approved-source.txt",
+                "media_type": "text/plain",
+                "semantic_role": "source",
+                "classification": "internal",
+                "purpose": "company governed document generation",
+                "rights": "company-internal-use",
+                "retention_rule": "retain-while-current-plus-governed-history",
+                "content_base64": base64.b64encode(b"Approved exact source text").decode("ascii"),
+            },
+        )["material"]
+        self.assets.submit_review(
+            self.access, staged["material_id"], staged["version_id"],
+            {
+                "deletion_rule": "delete-only-through-governed-retention-process",
+                "permitted_reuse": ["company-internal-document-generation"],
+            },
+        )
+        self.assets.admit(self.access, staged["material_id"], staged["version_id"])
+        generated = self.assets.generate_docx(
+            self.access,
+            {
+                "material_id": self.material_id,
+                "version_id": self.version_id,
+                "asset_inputs": [{"material_id": staged["material_id"], "version_id": staged["version_id"], "use_as": "source"}],
+                "title": "Tamper check",
+                "body": "Body",
+                "date": "2026-09-15",
+            },
+        )
+        output_id = str(generated["output"]["output_id"])
+        manifest_path = self.materials.transient / f"{output_id}.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["input_assets"][0]["application"] = "pinned-reference"
+        manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+
+        with self.assertRaisesRegex(CompanyAssetAdmissionUnavailable, "application evidence"):
+            self.outputs.review(
+                self.access, output_id,
+                {
+                    "disposition": "PromotionRequested",
+                    "document_title": "Tamper check",
+                    "semantic_role": "company-project-document",
+                },
+            )
+        self.assertEqual(len(self.promotion_executor.state.committed), 0)
 
     def test_promotion_fails_closed_without_exact_admitted_source(self) -> None:
         self.request_promotion()

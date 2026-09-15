@@ -5,6 +5,7 @@ import type {
   CompanyMaterialsProjection,
   CompanyPortfolioProjection,
   GeneratedCompanyOutput,
+  CompanyGenerationAssetInput,
   StagedMaterialVersion,
 } from "./f11Types";
 
@@ -145,7 +146,14 @@ export async function stageCompanyMaterial(
 }
 
 export function generateCompanyDocx(
-  input: { material_id: string; version_id: string; title: string; body: string; date: string },
+  input: {
+    material_id: string;
+    version_id: string;
+    title: string;
+    body: string;
+    date: string;
+    asset_inputs?: CompanyGenerationAssetInput[];
+  },
   csrfToken: string,
 ): Promise<GeneratedCompanyOutput> {
   return request<GeneratedCompanyOutput>("/api/app/v1/company-materials/generate", {
