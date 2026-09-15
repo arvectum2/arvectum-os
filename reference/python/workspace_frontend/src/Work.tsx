@@ -1,3 +1,4 @@
+import { ActionableWork } from "./ActionableWork";
 import { MyWork } from "./MyWork";
 import { Products } from "./Products";
 import { useWorkspaceLanguage } from "./i18n";
@@ -11,6 +12,7 @@ export function Work() {
       <p>{text("Текущие задачи, требующие внимания, и доступные продуктовые контексты.", "Current tasks requiring attention and available product contexts.")}</p>
     </header>
     <MyWork />
+    <ActionableWork />
     <Products />
   </section>;
 }

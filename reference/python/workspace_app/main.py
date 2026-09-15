@@ -12,6 +12,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .access import AccessContext, AccessResolver, P704AccessResolver, WorkspaceAccessError
+from .actionable_work import ActionableWorkError, ActionableWorkProvider, RuntimeActionableWorkProvider
 from .attention import AttentionProvider, RuntimeAttentionProvider
 from .config import WorkspaceSettings
 from .copilot import CopilotError, CopilotProvider, LoopbackChatModel, RuntimeCopilotProvider, normalize_question
@@ -105,6 +106,7 @@ def create_app(
     *,
     access_resolver: AccessResolver | None = None,
     attention_provider: AttentionProvider | None = None,
+    actionable_work_provider: ActionableWorkProvider | None = None,
     discovery_provider: DiscoveryProvider | None = None,
     governed_provider: GovernedExperienceProvider | None = None,
     product_provider: ProductCompositionProvider | None = None,
@@ -118,6 +120,7 @@ def create_app(
     release = load_release()
     resolver = access_resolver or P704AccessResolver(settings.runtime_root)
     attention = attention_provider or RuntimeAttentionProvider(settings.runtime_root)
+    actionable_work = actionable_work_provider or RuntimeActionableWorkProvider()
     discovery = discovery_provider or RuntimeDiscoveryProvider(settings.runtime_root)
     governed = governed_provider or RuntimeGovernedExperienceProvider(settings.runtime_root)
     products = product_provider or RuntimeProductCompositionProvider(settings.runtime_root)
@@ -144,6 +147,7 @@ def create_app(
     app.state.release = release
     app.state.access_resolver = resolver
     app.state.attention_provider = attention
+    app.state.actionable_work_provider = actionable_work
     app.state.discovery_provider = discovery
     app.state.governed_provider = governed
     app.state.product_provider = products
@@ -317,6 +321,16 @@ def create_app(
     async def read_my_work(current: tuple[WorkspaceSession, AccessContext] = Depends(_authorize_current)) -> dict[str, Any]:
         _, access = current
         return attention.project(access).to_payload()
+
+    @app.get("/api/app/v1/actionable-work")
+    async def read_actionable_work(
+        current: tuple[WorkspaceSession, AccessContext] = Depends(_authorize_current),
+    ) -> dict[str, Any]:
+        _, access = current
+        try:
+            return actionable_work.project(access).to_payload()
+        except ActionableWorkError:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="ACTIONABLE_WORK_UNAVAILABLE") from None
 
     @app.get("/api/app/v1/discovery")
     async def read_discovery(

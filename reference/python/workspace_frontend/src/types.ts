@@ -433,3 +433,73 @@ export type OrganizationCompositionProjection = {
   };
   lanes: OrganizationLane[];
 };
+
+export type ActionableWorkFreshness = "fresh" | "stale" | "unknown";
+
+export type ActionableWorkItem = {
+  id: string;
+  title: string;
+  context: string;
+  attention_reason: string;
+  source: {
+    kind: "product" | "company";
+    id: string;
+    label: string;
+    request_ref: string;
+    authority: string;
+    state: string;
+    freshness: ActionableWorkFreshness;
+    observed_at: string;
+    product_contract: {
+      id: string;
+      version: string;
+      lifecycle: "Provisional" | "Stable";
+    };
+  };
+  next_steps: string[];
+  governed_execution: {
+    preflight_state: string;
+    current_gate_revalidation_required_for_effect: true;
+    consequential_action_available: false;
+    organizational_authority_provided: false;
+    consequential_approval_provided: false;
+  };
+  entry: {
+    kind: "no-side-effect-context-entry";
+    available: boolean;
+    href: string | null;
+    consequential: false;
+    canonical_mutation_requested: false;
+    external_effect_requested: false;
+    authority_provided: false;
+    executes_product_operation: false;
+  };
+  technical: {
+    provenance_refs: string[];
+    exact_source_request_ref_available: true;
+  };
+};
+
+export type ActionableWorkProjection = {
+  schema: "arvectum.workspace.actionable-work/1";
+  generated_at: string;
+  projection: {
+    derived: true;
+    canonical_authority: false;
+    creates_requests: false;
+    universal_task_primitive: false;
+    product_semantics_owned_by_platform: false;
+    organizational_authority_provided: false;
+    urgency_inferred: false;
+    owner_responsibility_inferred: false;
+    approval_requirement_inferred: false;
+    action_availability_inferred: false;
+  };
+  scope: {
+    organization_resolved_server_side: true;
+    actor_resolved_server_side: true;
+    current_workspace_access_revalidated: true;
+    denied_request_counts_exposed: false;
+  };
+  items: ActionableWorkItem[];
+};

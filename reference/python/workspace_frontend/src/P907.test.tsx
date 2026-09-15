@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
-import type { MyWorkProjection, ProductCompositionProjection, WorkspaceContext } from "./types";
+import type { ActionableWorkProjection, MyWorkProjection, ProductCompositionProjection, WorkspaceContext } from "./types";
 
 const context: WorkspaceContext = {
   schema: "arvectum.workspace.shell-context/1",
@@ -25,6 +25,19 @@ const myWork: MyWorkProjection = {
   projection: { derived: true, canonical_authority: false, organizational_authority_provided: false, consequential_action_available: false, visibility_implies_permission: false },
   scope: { organization_resolved_server_side: true, actor_resolved_server_side: true, denied_item_counts_exposed: false },
   health: { state: "fresh", code: "OK", message: "Current", observed_at: "2026-08-21T15:00:00Z", heartbeat_age_seconds: 1 },
+  items: [],
+};
+
+
+const actionableWork: ActionableWorkProjection = {
+  schema: "arvectum.workspace.actionable-work/1",
+  generated_at: "2026-09-15T12:00:00Z",
+  projection: {
+    derived: true, canonical_authority: false, creates_requests: false, universal_task_primitive: false,
+    product_semantics_owned_by_platform: false, organizational_authority_provided: false, urgency_inferred: false,
+    owner_responsibility_inferred: false, approval_requirement_inferred: false, action_availability_inferred: false,
+  },
+  scope: { organization_resolved_server_side: true, actor_resolved_server_side: true, current_workspace_access_revalidated: true, denied_request_counts_exposed: false },
   items: [],
 };
 
@@ -69,6 +82,7 @@ describe("P9.07 J5 product composition", () => {
       paths.push(path);
       if (path === "/api/app/v1/context") return json(context);
       if (path === "/api/app/v1/my-work") return json(myWork);
+      if (path === "/api/app/v1/actionable-work") return json(actionableWork);
       if (path === "/api/app/v1/products") return json(products);
       throw new Error(`Unexpected P9.07 request: ${path}`);
     }));
@@ -110,6 +124,6 @@ describe("P9.07 J5 product composition", () => {
     expect(screen.getByText("CAP-004")).toBeTruthy();
     expect(screen.getByText(/never replays an external effect/)).toBeTruthy();
 
-    expect(paths.every((path) => ["/api/app/v1/context", "/api/app/v1/my-work", "/api/app/v1/products"].includes(path))).toBe(true);
+    expect(paths.every((path) => ["/api/app/v1/context", "/api/app/v1/my-work", "/api/app/v1/actionable-work", "/api/app/v1/products"].includes(path))).toBe(true);
   });
 });

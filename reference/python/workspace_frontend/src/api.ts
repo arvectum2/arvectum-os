@@ -1,4 +1,5 @@
 import type {
+  ActionableWorkProjection,
   CopilotAnswer,
   DiscoveryKind,
   DiscoveryProjection,
@@ -64,6 +65,10 @@ export async function loadWorkspaceContext(): Promise<WorkspaceContext> {
 
 export async function loadMyWork(): Promise<MyWorkProjection> {
   return request<MyWorkProjection>("/api/app/v1/my-work");
+}
+
+export async function loadActionableWork(): Promise<ActionableWorkProjection> {
+  return request<ActionableWorkProjection>("/api/app/v1/actionable-work");
 }
 
 export async function loadDiscovery(query = "", kind?: DiscoveryKind): Promise<DiscoveryProjection> {
