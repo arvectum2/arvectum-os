@@ -1,8 +1,8 @@
 # R34-B1 — Owner-Operated Company Asset Cycle Execution / Evidence Runbook
 
-**Version:** 0.1.1  
-**Status:** Prepared / NOT EXECUTED  
-**Date:** 2026-08-30  
+**Version:** 0.2.0
+**Status:** Executed / PASS
+**Date:** 2026-09-15
 **Owner:** ООО «Арвектум»  
 **Task classification:** `platform + product_specific + governance`  
 **Parent review:** [`R34 — M10-alpha Asset Governance / Usability Review`](R34-m10-alpha-asset-governance-usability-review.md)  
@@ -10,9 +10,9 @@
 
 ## 1. Purpose
 
-This runbook prepares the first real owner-operated Arvectum Company asset cycle required to resolve R34 blocker B1.
+This runbook defined the first real owner-operated Arvectum Company asset cycle required to resolve R34 blocker B1 and was executed on 2026-09-15.
 
-It is an execution/evidence procedure only. Publication of this runbook is **not** owner-operated evidence, does **not** close B1, does **not** make R34 PASS and does **not** establish M10-alpha.
+The procedure alone is not milestone evidence. The resulting live evidence is recorded in [`R34-B1 — Real Owner-Operated Company Asset Cycle Evidence`](R34-b1-owner-operated-company-asset-cycle-evidence-2026-09-15.md); R34/M10-alpha status changes only through the reviewed closure and roadmap synchronization.
 
 The qualifying cycle must use one real bounded Company-owned material and the actual Productive Workspace owner path. Synthetic fixtures, CI-only runs, generated test material and AI-created substitute evidence do not qualify.
 
@@ -329,11 +329,16 @@ R34 may become `Closed / PASS` only if all canonical exit criteria are satisfied
 
 ## 11. Current disposition
 
-**Runbook:** `Prepared / NOT EXECUTED`  
-**B1:** `OPEN`  
+**Runbook:** `Executed / PASS`
+**Execution evidence:** [`R34-B1 live evidence`](R34-b1-owner-operated-company-asset-cycle-evidence-2026-09-15.md) `1.0.0 — Executed / PASS`
+**B1:** `CLOSED / LIVE PASS`
 **B2:** `CLOSED / TECHNICAL PASS`  
-**R34:** `BLOCKED / NOT PASS`  
-**M10-alpha:** unclaimed  
+**R34:** `Closed / PASS — final functional cross-review 7/7`
+**M10-alpha:** `Achieved / PASS`
+**Next executable action:** `P10.06 — Real Action Request / Actionable Work boundary`
 **Product Contract:** remains `Provisional 0.2.0`  
-**Platform Capability promotion:** none  
-**Next action:** owner selects one real qualifying Company-owned material and executes this runbook through Productive Workspace; the resulting real evidence packet is then subjected to R34 re-review.
+**Platform Capability promotion:** none
+
+## 12. Execution record
+
+The qualifying cycle used the owner-provided Arvectum official-letter DOCX after the owner-requested contact/footer correction, explicit owner ownership/handling attestation, exact staged/reviewed/admitted identity, Governed Execution admission, same-runtime-root restart/no-replay, genuine later document generation and a bounded fail-closed exact-version negative. Generated output remained `TransientOutput`; no promotion was exercised. Two P3 findings remain and no P0/P1 blocker was observed.
