@@ -1,250 +1,290 @@
 # Arvectum OS Canonical Roadmap
 
 Status: `Active`
-Version: `2.97.9`
+Version: `2.98.0`
 Created: `2026-08-07`
 Updated: `2026-09-15`
 Owner: `ООО «Арвектум»`
 Task classification: `governance`
 
-## 1. Purpose
+## 1. Purpose and authority
 
-This document is the canonical planning source for Arvectum OS sequencing and concurrency. It coordinates work but does not override the Constitution, Accepted RFC/ADR, approved governance, Product Contracts, code/tests or canonical implementation evidence.
+This document is the **single canonical roadmap** for Arvectum OS sequencing, current status and concurrency.
+
+Authority order remains:
+
+1. Constitution;
+2. Accepted RFC;
+3. Accepted ADR;
+4. approved governance/policies/standards/catalogs;
+5. Product Contracts and approved product decisions;
+6. code/tests/evidence;
+7. this roadmap;
+8. task materials/chat/model memory.
 
 Roadmap status does not itself change Platform Capability lifecycle, Product Contract lifecycle, operational environment/readiness, conformance maturity, SLA/support or commercial commitments.
 
-Detailed completed-phase evidence remains in the corresponding phase roadmaps, reviews, decisions and repository history rather than being duplicated indefinitely here.
+Detailed phase plans, reviews and repository history retain implementation/evidence detail; this file defines current canonical sequencing when subordinate phase text is older or more restrictive.
 
-## 2. Version note
+## 2. Version 2.98.0 — Phase 10 concurrency correction
 
-Version `2.97.9` records `P10.06 — Real Action Request / Actionable Work boundary = Complete / PASS` after bounded implementation, five functional review/revise iterations and exact-head GitHub CI. [`P10.06 closure`](../reviews/P10-06-real-action-request-actionable-work-closure-review.md) defines a domain-neutral non-authoritative projection over already-real Company/product-owned requests, intentionally registers no default request sources, introduces no universal `Task` primitive, infers no urgency/responsibility/approval/authority, and exposes only a no-side-effect context entry. Workspace advances to internal release `p10.06.1`, application contract `12`, still `bounded-internal-provisional` and non-public.
+Phase 10 has progressed beyond the original serial plan:
 
-P10.07 is now the next critical-path item but remains **WAITING** for a naturally occurring genuine request plus the applicable owning-product exact effective Product Contract/governed operation and current RFC-0005 gates. No synthetic request is admitted merely to advance the roadmap.
+- `R34 = Complete / PASS — 7/7`;
+- `M10-alpha = Achieved / PASS` through a real owner-operated governed Company asset cycle;
+- ADR-0002 durable Company Workspace state is accepted and qualified in the bounded owner-local scope;
+- `P10.06 — Real Action Request / Actionable Work boundary = Complete / PASS`;
+- Workspace internal release is `p10.06.1`, application contract `12`;
+- `P10.07` truthfully waits for a naturally occurring genuine request and may not use synthetic evidence.
 
-Version `2.97.8` recorded closure of `R34 — M10-alpha Asset Governance / Usability Review` after the first real owner-operated Company asset cycle, while preserving the prior ADR-0002/R34-D1/D2 durability evidence.
+The prior sequencing incorrectly allowed the P10.07 waiting state to appear to freeze all later useful development.
 
-R34 is now `Closed / PASS — 7/7`. Durability blocker `B2` remains `CLOSED / TECHNICAL PASS`: R34-D1 is merged at `5f65061095094d9b58a4b293b2a5a8f01d88ad10`, and R34-D2 qualifies the actual Productive Workspace P10.04/P10.05 composition with restart, lost-response retry/no-replay, uncertainty, backup/restore, fail-closed schema/corruption, retained-byte and owner-local filesystem evidence. The exact technical qualification evidence head is `434976f24c9767f0e6b79c12beb66afcd9e54975`.
+[`P10 Sequencing / Concurrency Review — 2026-09-15`](../reviews/P10-SEQUENCING-CONCURRENCY-REVIEW-2026-09-15.md) is `Complete / PASS` and establishes the corrected rule:
 
-R34 blocker `B1` is `CLOSED / LIVE PASS`. [`R34-B1 live evidence`](../reviews/R34-b1-owner-operated-company-asset-cycle-evidence-2026-09-15.md) records a real owner-provided/owner-attested Company template completing staging, review, Governed Execution admission, same-root restart/no-replay and genuine later exact-version use; generated output remained `TransientOutput`.
+> **P10.07 is a mandatory real-world evidence gate for R35/M10 closure, not a global development prerequisite. Independent asset usefulness, bounded product-owned preparation, dogfooding and reliability work may continue in parallel.**
 
-`M10-alpha = Achieved / PASS`. `P10.06 — Real Action Request / Actionable Work boundary` is now `Complete / PASS`. P10.07 is the next critical-path item but still waits for a naturally occurring genuine request plus the applicable owning-product Product Contract and current Governed Execution gates.
+Accordingly:
 
-P10.05 remains `Complete / PASS` for its exact bounded internal owner-facing/reference-runtime scope. Its historical closure correctly selected no durable persistence mechanism at that task boundary; ADR-0002 and R34-D1/D2 are later R34-driven subordinate implementation/qualification work and do not retroactively change the P10.05 claim.
+- **P10.09 is now the primary current development stream**;
+- P10.08 may perform bounded product-owned/no-side-effect preparation, but evidence-based reusable platform generalization still waits for the first real P10.07 action;
+- P10.10 may begin asset-side dogfooding, but full P10.10 PASS still requires the P10.07 action journey;
+- R35 remains blocked until real action evidence exists;
+- P10.07 remains mandatory for M10 closure.
 
-P10.05 implements the already-admitted P10.02 `Provisional 0.2.0` operation `company.generated-output.promote-reviewed`: review remains non-canonical; Reject/Keep transient/PromotionRequested remain distinct; the final command revalidates exact output/source/handling plus all six independent RFC-0005 gates; successful promotion creates a separate immutable governed Company Document/Artifact version, Organizational Asset designation and canonical Event while the source remains `TransientOutput`. R34-D2 verifies that the promotion result reconstructs across restart while the source remains transient.
-
-P10.04 exposes the P10.03 governed Organizational Asset admission path through Productive Workspace without creating a new authority surface. Four truthful lifecycle views separate staged drafts/review from canonical accepted/superseded history; exact version/digest/handling is reviewed before admission; productive admission requires a separate exact P7.04 `company.asset.admit-staged-version` authorization grant and independently evaluated Actor Assurance, Organizational Authority, Data Governance, Validation and Consequential Approval; canonical mutation remains exclusively behind the P10.03 guarded entrypoint; immutable version/currentness/supersession and canonical Document/designation/Event provenance remain reconstructable; bounded export remains Organization-scoped; and Company DOCX generation requires an exact admitted source while the generated result remains `TransientOutput`.
-
-R34-D1/D2 now provide the minimum bounded restart-durable Company-local implementation selected by ADR-0002: owner-local immutable schema-versioned JSON records under the existing Workspace runtime root, existing content-addressed stores for retained bytes, exact reconstruction of committed/retry/uncertainty evidence, and recovery without consequential replay. This selects no platform-wide database, new Kernel primitive, public persistence API or shared Platform Capability. It makes no Production/SLA/RTO/RPO or multi-process writer claim.
-
-P10.01 authority/admission and real-work source semantics remain recorded in [`P10-01-asset-admission-real-work-authority-matrix`](../reviews/P10-01-asset-admission-real-work-authority-matrix.md) — `Complete / PASS`.
-
-P10.02 remains lifecycle-current [`Provisional 0.2.0`](../contracts/P10-02-ARVECTUM-COMPANY-WORKSPACE-PRODUCT-CONTRACT-PROVISIONAL-v0.2.0.md), approved in [`DECISION-2026-08-27-P10-02-PROVISIONAL-APPROVAL`](../governance/decisions/DECISION-2026-08-27-P10-02-PROVISIONAL-APPROVAL.md) and closed by [`P10-02-product-contract-publication-closure`](../reviews/P10-02-product-contract-publication-closure.md) — `Complete / PASS`.
-
-The owner-approved Product Contract substance remains exact Draft blob `a92c1d1aac54d565d3d32ce746925620c9d1fd12`. ADR-0002/R34-D1/R34-D2 do not alter that contract, promote it to `Stable`, promote CAP-001 to `Active`, establish customer Production or broaden conformance/support commitments.
-
-Phase 10 remains grounded in real M9/F11 evidence:
-
-- Company materials can be received as `StagedNonCanonical` and P10.04 presents the bounded governed admission lifecycle through Workspace;
-- P10.03/P10.04/P10.05 provide the bounded semantic and owner-facing paths;
-- R34-D1/D2 now make the existing Productive Workspace governed admission/promotion state restart-durable within the accepted ADR-0002 owner-local scope;
-- generated document output remains `TransientOutput` by default;
-- generated-output promotion remains a separate governed operation and reconstructs without relabelling or replay;
-- M10-alpha is `Achieved / PASS` through the reviewed real owner-operated R34-B1 cycle;
-- M9 proved a usable owner-operated Workspace but did not prove the full real organizational-asset lifecycle or a naturally occurring genuine task → governed-action loop;
-- the first natural genuine action remains the truthful deferred F08 recheck and is carried into Phase 10 without synthetic evidence.
-
-This roadmap update creates no Constitution/RFC amendment, new Kernel primitive, public/stable API/browser contract, customer Production, Stable Product Contract, Active Platform Capability, SLA/support/certification or broader conformance claim.
+This sequencing correction creates no Constitution/RFC/ADR amendment, Product Contract expansion, Stable/Active lifecycle promotion, public interface, customer Production or authority claim.
 
 ## 3. Architecture and governance baseline
 
 - Constitution `1.2.0` — `Ratified`, frozen;
 - RFC-0001 through RFC-0008 — `Accepted 1.0.0`;
-- ADR-0001 — `Productive Workspace Browser Application Topology`, `Accepted 2026-08-21`;
-- ADR-0002 — `Company Workspace Durable Governed State`, `Accepted 2026-08-29` for the exact bounded Company-local persistence scope;
-- Decision Authority Policy remains `Proposed 0.2.1`; residual authority remains with the owner under Accepted governance;
-- Approved Engineering Quality and Refactoring Gates remain binding;
+- ADR-0001 — `Productive Workspace Browser Application Topology`, `Accepted`;
+- ADR-0002 — `Company Workspace Durable Governed State`, `Accepted` for the exact bounded Company-local persistence scope;
+- Decision Authority Policy — `Proposed 0.2.1`; residual authority remains with the owner under Accepted governance;
+- Engineering Quality and Refactoring Gates remain binding;
 - CAP-001 through CAP-004 remain `Incubating / Provisional`;
 - Arvectum Company ↔ Productive Workspace Product Contract is lifecycle-current `Provisional 0.2.0` for its exact declared scope;
-- R33, P10.03, P10.04 and P10.05 are `Complete / PASS` inside the R33/P10.02 constraints;
-- R34 is `Complete / PASS — 7/7`; B1 live owner-cycle evidence and B2 durability/recovery evidence are both closed; `M10-alpha = Achieved / PASS`;
 - operating environment remains `Local / Persistent Internal / owner-operated` with scoped conformance;
-- current canonical repository for new checkouts/deployments is `arvectum2/arvectum-os`;
+- canonical repository for current work is `arvectum2/arvectum-os`;
 - no public/stable SDK/API/wire/browser/connector surface, external/customer Production, SLA/support/certification or broader conformance claim exists.
 
 ## 4. Strategic roadmap
 
 | Phase | Strategic scope | Status | Milestone |
 |---|---|---:|---|
-| `Phase 0` | Foundation / Architecture Bootstrap | 🟩 Complete | M0 |
-| `Phase 1` | Reference Implementation | 🟩 Complete | M1 |
-| `Phase 2` | Core Runtime | 🟩 Complete | M2 |
-| `Phase 3` | Shared Platform Capabilities | 🟩 Complete | `M3` Validated shared capability baseline |
-| `Phase 4` | Workspace / Operator Experience | 🟩 Complete | M4 |
-| `Phase 5` | SDK, Contracts and Extension Experience | 🟩 Complete | M5 |
-| `Phase 6` | Product-driven Platform Validation | 🟩 Complete / PASS | M6 |
-| `Phase 7` | Operational / Enterprise Readiness | 🟩 Complete / PASS | M7 |
-| `Phase 8` | Ecosystem and External Integration | 🟩 Complete / PASS | M8 — exact activated one-Organization scope |
-| `Phase 9` | Productive Workspace & Daily Operations | 🟩 Complete / PASS | `M9 — Daily-use organizational workbench` |
-| **`Phase 10`** | **Operational Work & Organizational Assets** | **🟨 Active** | **`M10 — Governed Daily Operations Baseline`** |
+| Phase 0 | Foundation / Architecture Bootstrap | 🟩 Complete | M0 |
+| Phase 1 | Reference Implementation | 🟩 Complete | M1 |
+| Phase 2 | Core Runtime | 🟩 Complete | M2 |
+| Phase 3 | Shared Platform Capabilities | 🟩 Complete | M3 |
+| Phase 4 | Workspace / Operator Experience | 🟩 Complete | M4 |
+| Phase 5 | SDK, Contracts and Extension Experience | 🟩 Complete | M5 |
+| Phase 6 | Product-driven Platform Validation | 🟩 Complete / PASS | M6 |
+| Phase 7 | Operational / Enterprise Readiness | 🟩 Complete / PASS | M7 |
+| Phase 8 | Ecosystem and External Integration | 🟩 Complete / PASS | M8 |
+| Phase 9 | Productive Workspace & Daily Operations | 🟩 Complete / PASS | M9 |
+| **Phase 10** | **Operational Work & Organizational Assets** | **🟨 Active** | **M10 — Governed Daily Operations Baseline** |
 
-## 5. Completed Phase 9 baseline
+## 5. Phase 10 completed baseline
 
-Detailed roadmap: [`PHASE-9-PRODUCTIVE-WORKSPACE-DAILY-OPERATIONS.md`](PHASE-9-PRODUCTIVE-WORKSPACE-DAILY-OPERATIONS.md) — `Complete / PASS 1.14.0`.
+Detailed phase plan: [`PHASE-10-OPERATIONAL-WORK-ORGANIZATIONAL-ASSETS.md`](PHASE-10-OPERATIONAL-WORK-ORGANIZATIONAL-ASSETS.md).
 
-Closure review: [`P9-12-phase-9-m9-closure-review.md`](../reviews/P9-12-phase-9-m9-closure-review.md) — `Complete / PASS`.
-
-`M9 = Achieved / PASS` only for the exact `Local / Persistent Internal / owner-operated` Productive Workspace scope.
-
-The first naturally occurring genuine actionable task still rechecks the repaired F08 task-detail → governed-action journey. No synthetic natural task evidence is admitted.
-
-## 6. Active Phase 10 — Operational Work & Organizational Assets
-
-Detailed roadmap: [`PHASE-10-OPERATIONAL-WORK-ORGANIZATIONAL-ASSETS.md`](PHASE-10-OPERATIONAL-WORK-ORGANIZATIONAL-ASSETS.md) — `Active`.
-
-Activation decision: [`DECISION-2026-08-27-PHASE-10-OPERATIONAL-WORK-ACTIVATION`](../governance/decisions/DECISION-2026-08-27-PHASE-10-OPERATIONAL-WORK-ACTIVATION.md) — `Approved`.
-
-### 6.1 Milestones
-
-- `M10-alpha — First Governed Company Asset Cycle`;
-- `M10 — Governed Daily Operations Baseline`.
-
-M10-alpha requires one real Company-owned material to move through staged receipt → explicit owner review → Governed Execution canonical admission → immutable asset/version/provenance → restart/recovery-safe reconstruction → later retrieval/use through Workspace.
-
-M10 additionally requires at least one naturally occurring genuine product/company action to move through owner-facing actionable context → current server-side authority/gate revalidation → Governed Execution → truthful completed/blocked/failed/uncertain result with reconstruction evidence.
-
-### 6.2 Work breakdown
+Completed:
 
 | ID | Work item | Status |
 |---|---|---:|
-| `P10.00` | Post-M9 outcome selection + Phase 10 activation baseline | 🟩 Complete / PASS |
-| `P10.01` | Asset/admission + real-work authority matrix | 🟩 Complete / PASS |
-| `P10.02` | Product Contract evolution for Company assets + operational work | 🟩 Complete / PASS — `Provisional 0.2.0` effective |
-| `R33` | Asset / Product Contract / Authority Boundary Review | 🟩 Complete / PASS — 6 iterations |
-| **`P10.03`** | **Domain-neutral organizational-asset admission execution path** | **🟩 Complete / PASS** |
-| **`P10.04`** | **Company Asset Library UX + version/handling lifecycle** | **🟩 Complete / PASS** |
-| **`P10.05`** | **Reviewed generated-output promotion boundary** | **🟩 Complete / PASS** |
-| **`R34`** | **M10-alpha Asset Governance / Usability Review** | **🟩 Complete / PASS — 7/7** |
-| `M10-alpha` | First Governed Company Asset Cycle | 🟩 Achieved / PASS |
-| **`P10.06`** | **Real Action Request / Actionable Work boundary** | **🟩 Complete / PASS** |
-| `P10.07` | First real governed operational action | ⬜ — waits for genuine request |
-| `P10.08` | Product operational entry-point composition | ⬜ |
-| `R35` | Operational Work / Product Boundary / AI Authority Review | ⬜ gate |
-| `P10.09` | Source-grounded use of admitted assets in Workspace / AI / generation | ⬜ |
-| `P10.10` | Real daily-operations dogfooding + friction closure | ⬜ |
-| `P10.11` | Lifecycle / platform-reuse / capability disposition | ⬜ |
-| `R36` | M10 Hardening + Milestone Code Health Gate | ⬜ gate |
-| `P10.12` | Phase 10 / M10 closure review | ⬜ |
+| P10.00 | Phase 10 activation | 🟩 Complete / PASS |
+| P10.01 | Asset/admission + real-work authority matrix | 🟩 Complete / PASS |
+| P10.02 | Company Workspace Product Contract evolution | 🟩 Complete / PASS — `Provisional 0.2.0` |
+| R33 | Asset / Product Contract / Authority Boundary Review | 🟩 Complete / PASS |
+| P10.03 | Organizational-asset admission execution path | 🟩 Complete / PASS |
+| P10.04 | Company Asset Library UX + version/handling | 🟩 Complete / PASS |
+| P10.05 | Reviewed generated-output promotion | 🟩 Complete / PASS |
+| R34 | M10-alpha Asset Governance / Usability Review | 🟩 Complete / PASS — 7/7 |
+| M10-alpha | First Governed Company Asset Cycle | 🟩 Achieved / PASS |
+| P10.06 | Real Action Request / Actionable Work boundary | 🟩 Complete / PASS |
 
-### 6.3 Critical-path sequencing
+M10-alpha proves a real Company-owned material can complete staging → review → Governed Execution admission → immutable asset/version/provenance → restart/no-replay reconstruction → later exact-version use through Workspace while generated output remains `TransientOutput` by default.
+
+## 6. Active Phase 10 work
+
+| ID | Work item | Current status |
+|---|---|---:|
+| **P10.07** | First real governed operational action | **⏸ WAITING — genuine request required; mandatory M10 evidence** |
+| **P10.08** | Product operational entry-point composition | **🟦 PARALLEL PREPARATION AVAILABLE**; final reusable generalization waits real P10.07 evidence |
+| **P10.09** | Source-grounded use of admitted assets in Workspace / AI / generation | **🟨 CURRENT / PRIMARY DEVELOPMENT STREAM** |
+| **P10.10** | Real daily-operations dogfooding + friction closure | **🟦 PARTIALLY OPEN** — asset-side sessions may start; full PASS waits P10.07 |
+| P10.11 | Lifecycle / platform-reuse / capability disposition | ⬜ waits sufficient Phase 10 evidence |
+| **R35** | Operational Work / Product Boundary / AI Authority Review | **🔒 blocked on real P10.07 action + applicable P10.08 evidence** |
+| R36 | M10 Hardening + Milestone Code Health Gate | ⬜ later gate |
+| P10.12 | Phase 10 / M10 closure review | ⬜ later |
+
+## 7. P10.07 — real-action evidence gate
+
+P10.07 remains deliberately non-synthetic.
+
+Required evidence:
+
+`real source request → Workspace context → owner decision → fresh server-side gates → Governed Execution → completed/blocked/failed/uncertain result → reconstruction evidence`.
+
+Prerequisites for the concrete action include:
+
+- naturally occurring real Company/product-owned request;
+- owning product's exact effective Product Contract covering the consequential operation;
+- exact current workflow/operation and RFC-0005 gates;
+- no replay of an historical external effect without new authorization.
+
+If no genuine request exists, P10.07 waits. This waiting state does **not** freeze unrelated work.
+
+## 8. P10.09 — current value-delivery stream
+
+P10.09 starts immediately from the already-achieved governed Company asset foundation.
+
+### P10.09-A — admitted-asset discovery and ordinary retrieval — CURRENT
+
+Make governed Company assets easy to find and use through normal Workspace UX:
+
+- search/filter by human-readable name;
+- semantic Company role/type;
+- project association where product-owned evidence exists;
+- current versus superseded version;
+- accepted/archive lifecycle state;
+- ordinary open/preview/download/reuse path;
+- exact version/digest/provenance available on demand rather than as primary UX;
+- Organization/access/classification/purpose controls preserved.
+
+No terminal, GitHub or internal UUID knowledge on the ordinary path.
+
+### P10.09-B — asset-aware generation
+
+Use exact admitted Company assets as explicit UI-selectable generation inputs:
+
+- templates;
+- logos/brand assets;
+- source/reference materials;
+- exact current/effective versions.
+
+Generated outputs remain `TransientOutput` unless the already-governed reviewed promotion path succeeds.
+
+### P10.09-C — asset-grounded Copilot fit-check and bounded use
+
+Before admitted Company assets become material AI/Copilot context, record one explicit fit decision:
+
+- `COVERED` — current effective Product Contract already covers the exact intended bounded use;
+- `CONTRACT_EVOLUTION_REQUIRED` — publish the minimum sufficient new immutable Product Contract version before reliance;
+- `DEFER` — unresolved need/rights/security boundary.
+
+AI may retrieve, explain, compare, summarize and draft. It does not independently approve, admit assets, create authority or convert document content into RFC-0007 validated Knowledge.
+
+### P10.09-D — derived previews/search indexes
+
+Bounded preview, text extraction and search/index projections may be introduced when useful, provided they remain:
+
+- non-authoritative;
+- rebuildable;
+- source/version attributable;
+- Organization/access/purpose scoped;
+- explicit about unsupported/failed extraction;
+- non-Knowledge by default.
+
+## 9. P10.08 — product operational preparation in parallel
+
+Before P10.07 occurs, permitted preparatory work is limited to bounded, product-owned/no-side-effect scope:
+
+- inventory explicit operational entry points already admitted by current product contracts;
+- improve read-only/product context surfaces;
+- prepare `workspace.product-operation.enter` routing where the applicable contract already permits it;
+- identify missing owning-product Product Contract operations;
+- prepare fail-closed unavailable/blocked states.
+
+Do **not** infer a universal stable product-action API or platform abstraction before real reuse evidence exists.
+
+After P10.07, evaluate what is genuinely reusable and finish P10.08/R35 from actual evidence.
+
+## 10. P10.10 — progressive dogfooding
+
+Asset-side real owner dogfooding may start as P10.09 slices become available.
+
+Useful sessions include:
+
+- find an admitted Company asset without knowing internal identifiers;
+- compare current and prior versions;
+- use an exact admitted template/brand/source version in real generation;
+- review/promote/reject generated output where naturally useful;
+- use asset-grounded AI only after the P10.09-C fit gate;
+- record and close material usability friction.
+
+Full P10.10 closure still requires the genuine P10.07 action journey.
+
+## 11. Parallel lanes
 
 ```text
-P10.01 ✓
-   ↓
-P10.02 ✓
-   ↓
-R33 ✓
-   ↓
-P10.03 ✓
-   ↓
-P10.04 ✓
-   ↓
-P10.05 ✓
-   ↓
-R34 ✓ / 7-of-7 PASS
-   ├─ ADR-0002 ✓
-   ├─ R34-D1 durable-state implementation ✓
-   ├─ R34-D2 Productive Workspace qualification ✓ / B2 CLOSED
-   └─ R34-B1 real owner-operated cycle + evidence ✓ / B1 CLOSED
-   ↓
-M10-alpha ✓ / Achieved
-   ↓
-P10.06 ✓ → P10.07 WAITING (genuine request) → P10.08
-   ↓
-R35
-   ↓
-P10.09 → P10.10 → P10.11
-   ↓
-R36
-   ↓
-P10.12 / M10
+                           ┌─ VALUE / ASSETS
+                           │   P10.09-A CURRENT
+                           │      ↓
+                           │   P10.09-B
+                           │      ↓
+                           │   P10.09-C fit gate → bounded AI use if admitted
+                           │      ↓
+                           │   P10.09-D / asset-side P10.10 dogfooding
+                           │
+Phase 10 current main ─────┼─ REAL ACTION EVIDENCE
+                           │   P10.07 WAITING [genuine request]
+                           │      ↓
+                           │   P10.08 evidence-informed completion → R35
+                           │
+                           ├─ PRODUCT PREPARATION
+                           │   bounded P10.08 read-only/no-side-effect preparation
+                           │
+                           ├─ EXTERNAL INTEGRATIONS
+                           │   INT-B7 WAITING [real endpoint/deployment/account]
+                           │
+                           └─ RELIABILITY / DX
+                               continuous bounded engineering work
+
+(asset evidence + real-action evidence + R35 + full dogfooding)
+                           ↓
+                         P10.11
+                           ↓
+                          R36
+                           ↓
+                      P10.12 / M10
 ```
 
-P10.06 is complete for the bounded projection/entry envelope. P10.07 cannot execute until the applicable owning-product Product Contract is effective and a genuine action request naturally exists; absence of such a request is a truthful waiting state, not a reason to manufacture evidence.
+## 12. External integration lane
 
-## 7. Phase 10 authority boundaries
+INT-B1 through INT-B6 are complete/scoped PASS. INT-B7 is prepared but remains `NOT ADMITTED` until a real exact endpoint/deployment/account and least-privilege credential binding exist.
 
-### 7.1 Organizational assets
+Preferred prepared candidate remains bounded read-only `1С:ERP 2.5` procurement projection.
 
-- `StagedNonCanonical` receipt is not canonical admission;
-- generated output remains `TransientOutput` by default;
-- canonical Company asset/version admission is a consequential canonical mutation through RFC-0005 Governed Execution;
-- admitted documents/assets do not automatically become RFC-0007 validated Knowledge;
-- historical immutable versions are not overwritten;
-- asset handling remains Organization/access/classification/purpose/rights/retention/deletion constrained;
-- P10.03 supplies the bounded domain-neutral admission execution path and P10.04 supplies the owner-facing/product composition while keeping Company taxonomy product-owned and all unresolved required evidence fail-closed;
-- ADR-0002 governs only the bounded durable product-runtime realization of already-governed results and does not make persistence itself an authority source.
+Do not invent endpoint/credential evidence or an INT-B8 merely to create activity.
 
-### 7.2 Real work
+## 13. Closure invariants
 
-Phase 10 does not create a universal Kernel `Task` primitive.
+M10 still requires all applicable evidence, including:
 
-Concrete requests remain product/company-owned. Workspace may provide a domain-neutral non-authoritative Actionable Work projection, but it cannot invent urgency, responsibility, permission, approval or Organizational Authority.
-
-### 7.3 Product Contract
-
-The lifecycle-current Company Workspace Product Contract is `Provisional 0.2.0` for the exact owner-approved boundary. It admits Company asset canonical-admission semantics and bounded Actionable Work/product-entry semantics, but actual downstream consequential product effects still require the owning product's exact effective Product Contract and governed operation.
-
-P10.03/P10.04/P10.05 and ADR-0002 remain inside the R33-reviewed `0.2.0` boundary; no Product Contract `0.2.1` was required.
-
-### 7.4 AI
-
-AI may retrieve, explain, summarize, compare, draft and propose. It cannot independently admit assets, approve consequential actions, create authority or promote documents into validated Knowledge.
-
-## 8. Parallel lanes
-
-| Lane | Scope | Status |
-|---|---|---:|
-| **A — Organizational Assets** | P10.03–P10.05 → R34 → M10-alpha | 🟩 M10-alpha achieved / PASS |
-| **B — Real Operational Work** | P10.06–P10.08 → R35 | 🟦 design available; real execution waits genuine request + applicable contract |
-| **C — Product ↔ Workspace** | product-owned operational surfaces/entry points | 🟦 bounded on Product Contract/product-local evidence |
-| **D — External integrations** | existing INT-B7 real connector pilot | ⏸ blocked on exact real endpoint/deployment/account |
-| **E — Reliability / DX / technical debt** | CI, recovery, observability, dependency/security, evidence-backed refactoring | 🟦 continuous |
-
-### Lane D — integration state
-
-INT-B1 through INT-B6 are complete/scoped PASS. INT-B7 is prepared and cross-reviewed but the pilot remains `NOT ADMITTED` until an exact real 1С/CRM/СЭД/ЭДО endpoint/deployment/account and least-privilege credential binding exist.
-
-Preferred prepared candidate remains a bounded read-only `1С:ERP 2.5` procurement projection. Do not invent INT-B8 or synthetic endpoint evidence merely to keep the lane moving.
-
-## 9. M10 closure definition
-
-M10 requires:
-
-1. M10-alpha remains valid with a real governed Company asset cycle;
+1. M10-alpha remains valid;
 2. receipt/staging, canonical admission and generated-output promotion remain distinct;
-3. immutable asset versions/provenance/authority/handling are reconstructable across the declared restart/recovery boundary;
-4. owner can perform ordinary asset work through Workspace without terminal/GitHub/internal identifiers;
-5. one genuine action reaches a truthful governed outcome or truthful blocked/failed/uncertain state with complete reconstruction evidence;
-6. Actionable Work does not manufacture tasks/urgency/authority;
-7. effective Product Contracts cover actual platform reliance;
+3. asset state remains durable/reconstructable in declared scope;
+4. ordinary asset work is usable without terminal/GitHub/internal identifiers;
+5. **one naturally occurring genuine action completes P10.07 or reaches a truthful blocked/failed/uncertain state with complete evidence**;
+6. Actionable Work does not manufacture work/urgency/authority;
+7. Product Contracts cover actual reliance;
 8. product business semantics remain product-owned;
-9. AI remains proposal/source-grounded and does not become authority or Knowledge-promotion source;
-10. external source-of-truth declarations remain intact;
-11. real daily-operations dogfooding has no unresolved material closure blockers;
-12. R33–R36 material findings are closed or properly dispositioned;
-13. M10 Milestone Code Health Gate passes before closure.
+9. AI remains source-grounded/proposal-only and does not create authority/Knowledge promotion;
+10. external authority remains external where declared;
+11. full P10.10 dogfooding has no unresolved material blockers;
+12. R33–R36 findings are closed/dispositioned;
+13. R36 Milestone Code Health Gate passes before P10.12.
 
-If no genuine action naturally exists, Phase 10 may reach M10-alpha and remain Active rather than fabricating P10.07 evidence.
+## 14. Current canonical actions
 
-## 10. Current canonical actions
+**Primary development action:**
 
-**Critical path:**
+> **P10.09-A — admitted Company asset discovery and ordinary retrieval through Productive Workspace.**
 
-> **P10.07 — wait for the first naturally occurring genuine governed operational action.**
+**Waiting evidence action:**
 
-P10.06 is closed/PASS. P10.07 is the next critical-path item but is not executable until a genuine product/company-owned request naturally exists and the applicable owning-product exact effective Product Contract/governed operation is available. When that condition occurs, revalidate current RFC-0005 gates and carry the request through truthful completed/blocked/failed/uncertain outcome and reconstruction evidence. Do not fabricate an action merely to advance the roadmap.
+> **P10.07 — execute the first naturally occurring genuine governed operational action when a real request and applicable owning-product contract/operation exist. Do not synthesize it.**
 
-**Parallel integrations:**
+**Available parallel work:**
 
-> **No internally executable INT-B follow-on. Resume INT-B7 only when an exact real external endpoint/deployment/account exists.**
+> bounded P10.08 product-owned/no-side-effect preparation; asset-side P10.10 dogfooding as P10.09 slices land; reliability/DX work; INT-B7 only if a real external endpoint becomes available.
