@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { CompanyAssetDiscovery } from "./CompanyAssetDiscovery";
 import {
   admitCompanyAssetVersion,
   downloadCompanyOutput,
@@ -18,6 +19,7 @@ import type {
 } from "./f11Types";
 import { useWorkspaceLanguage } from "./i18n";
 import "./CompanyWorkspace.css";
+import "./CompanyAssetLibrary.css";
 
 const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
@@ -213,6 +215,7 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
   const [generated, setGenerated] = useState<GeneratedCompanyOutput | null>(null);
   const [semanticRoleChoice, setSemanticRoleChoice] = useState<MaterialRoleChoice>("");
   const [selectedMaterialId, setSelectedMaterialId] = useState("");
+  const [reuseSourceVersion, setReuseSourceVersion] = useState("");
 
   const refresh = async () => {
     setState({ kind: "loading" });
@@ -366,43 +369,55 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
 
   return <section className="company-page" aria-labelledby="company-materials-title">
     <header className="company-page-head asset-library-head">
-      <p className="eyebrow">P10.04 · Product Contract Provisional 0.2.0</p>
+      <p className="eyebrow">P10.04 / P10.09-A · Product Contract Provisional 0.2.0</p>
       <h1 id="company-materials-title">{text("Материалы компании", "Company materials")}</h1>
-      <p>{text("Черновики и review остаются staged/non-canonical. Только успешно завершённый Governed Execution создаёт принятую каноническую версию; предыдущая принятая версия остаётся в истории.", "Drafts and review remain staged/non-canonical. Only a successful Governed Execution creates an admitted canonical version; the previous admitted version remains in history.")}</p>
+      <p>{text("Принятые материалы доступны как обычная рабочая библиотека. Черновики и review остаются staged/non-canonical; только успешно завершённый Governed Execution создаёт принятую каноническую версию.", "Admitted assets are available as an ordinary working library. Drafts and review remain staged/non-canonical; only a successful Governed Execution creates an admitted canonical version.")}</p>
       <details className="company-boundary-details"><summary>{text("Граница authority", "Authority boundary")}</summary><p>{text("Workspace показывает состояние и инициирует команду, но не является источником authority. Authentication, Authorization, Organizational Authority, Data Governance, Validation и Consequential Approval не выводятся из видимости кнопки. Generated output остаётся Transient Output и не становится validated Knowledge.", "Workspace presents state and initiates a command but is not an authority source. Authentication, Authorization, Organizational Authority, Data Governance, Validation, and Consequential Approval are not inferred from button visibility. Generated output remains a Transient Output and does not become validated Knowledge.")}</p></details>
       <button type="button" disabled={busy} onClick={() => void downloadExport()}>{text("Экспортировать доступную историю", "Export accessible history")}</button>
     </header>
 
-    <nav className="asset-library-tabs" aria-label={text("Состояния материалов", "Material lifecycle views")}>
-      {VIEW_OPTIONS.map((view) => <button key={view.key} type="button" className={activeView === view.key ? "active" : ""} onClick={() => setActiveView(view.key)}>{text(view.ru, view.en)} <span>{state.data.views[view.key].length}</span></button>)}
-    </nav>
+    <CompanyAssetDiscovery
+      data={state.data}
+      projects={projectOptions}
+      onReuse={(item) => {
+        setReuseSourceVersion(`${item.material_id}::${item.version_id}`);
+        setMessage(text(`Для генерации выбрана точная принятая версия «${item.title}».`, `The exact admitted version “${item.title}” is selected for generation.`));
+      }}
+    />
 
-    <section className="asset-library-view" aria-live="polite">
-      {currentItems.length ? <div className="company-grid">{currentItems.map((item) => <MaterialCard
-        key={item.version_id}
-        item={item}
-        busy={busy}
-        admissionAvailable={admissionAvailable}
-        onReview={async (target, deletionRule, permittedReuse) => run(async () => {
-          await submitCompanyAssetReview(target.material_id, target.version_id, { deletion_rule: deletionRule, permitted_reuse: permittedReuse }, csrfToken);
-          setActiveView("review");
-          setMessage(text("Точная staged-версия передана на рассмотрение; canonical state не изменён.", "The exact staged version entered review; canonical state did not change."));
-        })}
-        onReject={async (target, reason) => run(async () => {
-          await rejectCompanyAssetVersion(target.material_id, target.version_id, reason, csrfToken);
-          setActiveView("archive");
-          setMessage(text("Версия отклонена без canonical mutation.", "Version rejected without canonical mutation."));
-        })}
-        onAdmit={async (target) => run(async () => {
-          await admitCompanyAssetVersion(target.material_id, target.version_id, csrfToken);
-          setActiveView("accepted");
-          setMessage(text("Governed admission завершён; точная версия отображается как канонически принятая.", "Governed admission completed; the exact version is now shown as canonically accepted."));
-        })}
-        onNewVersion={(target) => {
-          setSelectedMaterialId(target.material_id);
-          setMessage(text(`Форма добавления переключена на новую версию «${target.title}».`, `The add form is now creating a new version of “${target.title}”.`));
-        }}
-      />)}</div> : <p className="asset-empty-state">{text("В этом состоянии материалов пока нет.", "There are no materials in this lifecycle view yet.")}</p>}
+    <section aria-labelledby="company-asset-governance-title">
+      <div className="company-page-head"><p className="eyebrow">P10.04</p><h2 id="company-asset-governance-title">{text("Управление поступлением и версиями", "Admission and version management")}</h2><p>{text("Этот раздел нужен для загрузки, review и governed admission. Для обычного поиска и открытия используйте библиотеку выше.", "Use this section for upload, review, and governed admission. For ordinary discovery and opening, use the library above.")}</p></div>
+      <nav className="asset-library-tabs" aria-label={text("Состояния материалов", "Material lifecycle views")}>
+        {VIEW_OPTIONS.map((view) => <button key={view.key} type="button" className={activeView === view.key ? "active" : ""} onClick={() => setActiveView(view.key)}>{text(view.ru, view.en)} <span>{state.data.views[view.key].length}</span></button>)}
+      </nav>
+
+      <section className="asset-library-view" aria-live="polite">
+        {currentItems.length ? <div className="company-grid">{currentItems.map((item) => <MaterialCard
+          key={item.version_id}
+          item={item}
+          busy={busy}
+          admissionAvailable={admissionAvailable}
+          onReview={async (target, deletionRule, permittedReuse) => run(async () => {
+            await submitCompanyAssetReview(target.material_id, target.version_id, { deletion_rule: deletionRule, permitted_reuse: permittedReuse }, csrfToken);
+            setActiveView("review");
+            setMessage(text("Точная staged-версия передана на рассмотрение; canonical state не изменён.", "The exact staged version entered review; canonical state did not change."));
+          })}
+          onReject={async (target, reason) => run(async () => {
+            await rejectCompanyAssetVersion(target.material_id, target.version_id, reason, csrfToken);
+            setActiveView("archive");
+            setMessage(text("Версия отклонена без canonical mutation.", "Version rejected without canonical mutation."));
+          })}
+          onAdmit={async (target) => run(async () => {
+            await admitCompanyAssetVersion(target.material_id, target.version_id, csrfToken);
+            setActiveView("accepted");
+            setMessage(text("Governed admission завершён; точная версия отображается как канонически принятая.", "Governed admission completed; the exact version is now shown as canonically accepted."));
+          })}
+          onNewVersion={(target) => {
+            setSelectedMaterialId(target.material_id);
+            setMessage(text(`Форма добавления переключена на новую версию «${target.title}».`, `The add form is now creating a new version of “${target.title}”.`));
+          }}
+        />)}</div> : <p className="asset-empty-state">{text("В этом состоянии материалов пока нет.", "There are no materials in this lifecycle view yet.")}</p>}
+      </section>
     </section>
 
     {message ? <p className="company-message" role="status">{message}</p> : null}
@@ -422,10 +437,10 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
         <button type="submit" disabled={busy}>{busy ? text("Сохраняем…", "Saving…") : text("Сохранить как черновик", "Save as draft")}</button>
       </form>
 
-      <form className="company-form" onSubmit={(event) => void submitGenerate(event)}>
+      <form id="company-docx-generator" className="company-form" onSubmit={(event) => void submitGenerate(event)}>
         <h2>{text("Создать DOCX по принятому шаблону", "Generate DOCX from admitted template")}</h2>
         <p>{text("Для генерации доступны только точные канонически принятые DOCX-версии. Результат всё равно остаётся Transient Output.", "Only exact canonically admitted DOCX versions are available for generation. The result still remains a Transient Output.")}</p>
-        <label>{text("Принятая версия шаблона", "Admitted template version")}<select name="source_version" required defaultValue=""><option value="" disabled>{text("Выберите шаблон", "Choose template")}</option>{docxVersions.map((item) => <option key={item.version_id} value={`${item.material_id}::${item.version_id}`}>{item.title} · {prettyDate(item.received_at)}</option>)}</select></label>
+        <label>{text("Принятая версия шаблона", "Admitted template version")}<select name="source_version" required value={reuseSourceVersion} onChange={(event) => setReuseSourceVersion(event.target.value)}><option value="" disabled>{text("Выберите шаблон", "Choose template")}</option>{docxVersions.map((item) => <option key={item.version_id} value={`${item.material_id}::${item.version_id}`}>{item.title} · {prettyDate(item.received_at)}</option>)}</select></label>
         <label>{text("Заголовок", "Title")}<input name="title" required maxLength={320} /></label>
         <label>{text("Текст", "Body")}<textarea name="body" required maxLength={6000} rows={9} /></label>
         <label>{text("Дата", "Date")}<input name="date" required maxLength={80} defaultValue={new Date().toLocaleDateString("ru-RU")} /></label>
