@@ -1,9 +1,9 @@
 # Arvectum OS Phase 10 — Operational Work & Organizational Assets
 
 Status: `Active`
-Version: `1.0.7`
+Version: `1.0.8`
 Created: `2026-08-27`
-Updated: `2026-08-30`
+Updated: `2026-09-15`
 Owner: `ООО «Арвектум»`
 Task classification: `platform` with `product_contract`, `product_specific` and `governance`
 Parent roadmap: [`ROADMAP.md`](ROADMAP.md)
@@ -16,15 +16,15 @@ Activation review: [`P10-00-post-M9-outcome-selection-and-phase-10-activation.md
 
 ## 0. Version note
 
-Version `1.0.7` records completion of the R34 durability remediation under [`ADR-0002 — Company Workspace Durable Governed State`](../adrs/ADR-0002-company-workspace-durable-governed-state.md).
+Version `1.0.8` records `R34 = Closed / PASS` and `M10-alpha = Achieved / PASS` after the first real owner-operated Company asset cycle, while retaining the prior ADR-0002/R34-D1/D2 durability evidence.
 
-R34 remains `BLOCKED / NOT PASS`, but durability blocker `B2` is now `CLOSED / TECHNICAL PASS`. R34-D1 implemented the bounded Company-local durable-state adapter and is merged at `5f65061095094d9b58a4b293b2a5a8f01d88ad10`. R34-D2 qualifies the actual Productive Workspace P10.04/P10.05 composition with restart, lost-response retry/no-replay, uncertainty, backup/restore, fail-closed schema/corruption, retained-byte and owner-local filesystem evidence; its exact technical qualification evidence head is `434976f24c9767f0e6b79c12beb66afcd9e54975`.
+R34 is `Closed / PASS — 7/7`; durability blocker `B2` remains `CLOSED / TECHNICAL PASS`. R34-D1 implemented the bounded Company-local durable-state adapter and is merged at `5f65061095094d9b58a4b293b2a5a8f01d88ad10`. R34-D2 qualifies the actual Productive Workspace P10.04/P10.05 composition with restart, lost-response retry/no-replay, uncertainty, backup/restore, fail-closed schema/corruption, retained-byte and owner-local filesystem evidence; its exact technical qualification evidence head is `434976f24c9767f0e6b79c12beb66afcd9e54975`.
 
-The sole remaining R34 blocker is `B1`: no real owner-operated Company asset-cycle evidence packet yet. The next executable Lane A action is therefore to execute one real bounded owner-operated Company asset cycle using a real Company-owned material, capture the required evidence packet, and re-run R34. Only R34 PASS may establish M10-alpha; P10.06 remains sequenced after M10-alpha on the canonical critical path.
+R34 blocker `B1` is `CLOSED / LIVE PASS`. [`R34-B1 live evidence`](../reviews/R34-b1-owner-operated-company-asset-cycle-evidence-2026-09-15.md) records the real owner-provided/owner-attested Company template cycle. `M10-alpha = Achieved / PASS`; the next executable Lane B action is `P10.06 — Real Action Request / Actionable Work boundary`.
 
 P10.05 remains `Complete / PASS` for its exact bounded internal owner-facing/reference-runtime scope. Its closure correctly selected no new durable persistence mechanism at that task boundary. ADR-0002 and R34-D1/D2 are later R34-driven subordinate implementation/qualification work and do not retroactively change P10.05.
 
-P10.05 keeps generated output `TransientOutput` by default, stores owner review/disposition as non-canonical state, and permits a separate promotion command only after exact current output/source/handling revalidation and six independent RFC-0005 gates. Success creates a separate immutable governed Company Document/Artifact version, Organizational Asset designation and canonical Event; the transient source is not relabelled. R34-D2 verifies that this separation reconstructs across restart/recovery. Product Contract remains `Provisional 0.2.0`; M10-alpha remains unclaimed.
+P10.05 keeps generated output `TransientOutput` by default, stores owner review/disposition as non-canonical state, and permits a separate promotion command only after exact current output/source/handling revalidation and six independent RFC-0005 gates. Success creates a separate immutable governed Company Document/Artifact version, Organizational Asset designation and canonical Event; the transient source is not relabelled. R34-D2 verifies that this separation reconstructs across restart/recovery. Product Contract remains `Provisional 0.2.0`; M10-alpha is now achieved by the separate reviewed R34-B1 live cycle.
 
 P10.04 exposes the P10.03 admission semantics through the Productive Workspace without creating a new authority surface: four truthful staged/review/accepted/archive views are available; review remains non-canonical; productive admission uses a distinct exact P7.04 authorization grant plus independent current Actor Assurance, Organizational Authority, Data Governance, Validation and Consequential Approval evidence; canonical mutation remains exclusively behind the P10.03 guarded Governed Execution entrypoint; immutable version/currentness/supersession and canonical Document/designation/Event provenance are visible; bounded export is Organization-scoped; and Company DOCX generation requires an exact admitted Company Asset version while its result remains `TransientOutput`.
 
@@ -53,7 +53,7 @@ Canonical P10.02 evidence:
 - [`P10-02-ARVECTUM-COMPANY-WORKSPACE-PRODUCT-CONTRACT-PROVISIONAL-v0.2.0`](../contracts/P10-02-ARVECTUM-COMPANY-WORKSPACE-PRODUCT-CONTRACT-PROVISIONAL-v0.2.0.md) — lifecycle-current `Provisional 0.2.0`;
 - [`P10-02-product-contract-publication-closure`](../reviews/P10-02-product-contract-publication-closure.md) — `Complete / PASS`.
 
-ADR-0002/R34-D1/R34-D2 do not alter the approved Product Contract substance, promote it to `Stable`, promote CAP-001 to `Active`, establish M10-alpha, customer Production or broader conformance/support commitments.
+ADR-0002/R34-D1/R34-D2 do not by themselves alter the approved Product Contract substance, promote it to `Stable`, promote CAP-001 to `Active`, establish customer Production or broaden conformance/support commitments. M10-alpha is established separately by the reviewed R34-B1 live cycle.
 
 ## 1. Purpose
 
@@ -81,7 +81,7 @@ Phase 10 starts from these canonical facts:
 - R33 passed the exact asset/Product Contract/authority boundary, P10.03 implements the bounded domain-neutral admission execution path, and P10.04 exposes that path through the owner-facing Productive Workspace;
 - generated-output promotion is implemented/reviewed by P10.05 for the exact bounded owner-operated path, but generated output remains transient by default;
 - R34 identified restart durability/recovery as an additional material prerequisite; ADR-0002 and R34-D1/D2 now close that technical durability blocker for the declared owner-local Productive Workspace scope;
-- real owner evidence is still required by R34/M10-alpha and is the sole remaining R34 blocker;
+- real owner evidence is complete under R34-B1; R34 is `Complete / PASS — 7/7` and `M10-alpha = Achieved / PASS`;
 - F08 false-task projection was repaired; the first naturally occurring genuine actionable task still remains the truthful real-world recheck of task-detail → governed-action comprehension;
 - CAP-001 through CAP-004 remain `Incubating / Provisional` unless separately governed;
 - no Product Contract is promoted to `Stable` and no capability to `Active`;
@@ -203,9 +203,9 @@ M10 does not require customer Production, public interfaces, multi-Organization 
 | **`P10.03`** | **Domain-neutral organizational-asset admission execution path** | **🟩 Complete / PASS** | exact staged/external-reference material can enter immutable canonical asset history only through explicit Governed Execution with reconstructable evidence |
 | **`P10.04`** | **Company Asset Library UX + version/handling lifecycle** | **🟩 Complete / PASS** | owner can review, admit, find, inspect, supersede/version and export/download admitted assets through Workspace |
 | **`P10.05`** | **Reviewed generated-output promotion boundary** | **🟩 Complete / PASS** | generated `TransientOutput` can be reviewed and, only when admitted, promoted to a governed Company document/asset version |
-| **`R34`** | **M10-alpha Asset Governance / Usability Review** | **🟨 Current — B2 closed; real owner-operated B1 evidence/re-review next** | real asset cycle safe, understandable, durable and reconstructable |
-| `M10-alpha` | First Governed Company Asset Cycle | ⬜ | first real asset cycle owner PASS |
-| `P10.06` | Real Action Request / Actionable Work boundary | ⬜ | concrete product/company requests can appear truthfully without a universal Task primitive |
+| **`R34`** | **M10-alpha Asset Governance / Usability Review** | **🟩 Complete / PASS — 7/7** | real asset cycle safe, understandable, durable and reconstructable |
+| `M10-alpha` | First Governed Company Asset Cycle | 🟩 Achieved / PASS | first real asset cycle owner PASS |
+| **`P10.06`** | **Real Action Request / Actionable Work boundary** | **🟨 Current** | concrete product/company requests can appear truthfully without a universal Task primitive |
 | `P10.07` | First real governed operational action | ⬜ — waits genuine request | one natural genuine action reaches Governed Execution and truthful terminal/uncertain state |
 | `P10.08` | Product operational entry-point composition | ⬜ | Workspace can start/continue admitted product-owned actions without embedding product business logic in platform |
 | `R35` | Operational Work / Product Boundary / AI Authority Review | ⬜ gate | action semantics, authority and product ownership remain correct |
@@ -417,55 +417,16 @@ This task does not turn document generation into validated Knowledge or legal ap
 
 ## 13. R34 / M10-alpha
 
-R34 is `Executed / BLOCKED — NOT PASS` with one remaining blocker:
+R34 is `Closed / PASS`; `M10-alpha = Achieved / PASS`.
 
-- `B1` — the required real owner-operated Company asset-cycle evidence is absent — `OPEN`;
+- `B1` — real owner-operated Company asset-cycle evidence — `CLOSED / LIVE PASS`;
 - `B2` — restart-durable governed admission/promotion state and recovery evidence — `CLOSED / TECHNICAL PASS`.
 
-ADR-0002 is `Accepted`. R34-D1 implemented the bounded durable-state adapter and R34-D2 corrected/qualified the actual Productive Workspace wiring. The remaining R34 sequence is:
+The real final B1 cycle is recorded in [`R34-B1 live evidence`](../reviews/R34-b1-owner-operated-company-asset-cycle-evidence-2026-09-15.md). It used the owner-provided official-letter template after the owner-requested footer/contact correction and explicit owner ownership/handling attestation. The exact version completed staging → review → Governed Execution admission → immutable identity/Event/provenance → same-root restart/no-replay → Accepted projection → genuine later exact-version use. Generated output remained `TransientOutput`; promotion was not exercised because the real work did not require it.
 
-```text
-ADR-0002 Accepted ✓
-        ↓
-R34-D1 durable implementation ✓
-        ↓
-R34-D2 Productive Workspace wiring + qualification ✓
-        ↓
-B2 CLOSED ✓
-        ↓
-one real owner-operated Company asset cycle + evidence packet  ← NEXT
-        ↓
-R34 re-review
-        ↓ PASS only if criteria satisfied
-M10-alpha
-```
+A safe exact-version negative failed closed without mutation. No P0/P1 was observed; two P3 follow-ups remain. Final R34 functional cross-review `7/7` found no material objection.
 
-R34-D2 technical evidence covers:
-
-- productive durable admission/promotion composition;
-- restart reconstruction of exact identity/Event/digest/provenance;
-- lost-response idempotent return without replaying the consequential effect;
-- exact typed uncertainty/retry token/fingerprint reconstruction plus pre-effect reconciliation evidence;
-- durable promotion while source remains `TransientOutput`;
-- coherent backup/restore with retained source/output bytes and review evidence;
-- fail-closed corrupt/partial/unknown-schema state;
-- stale-temp non-publication;
-- symlink/path safety and restrictive owner-local POSIX permissions;
-- absence of raw Company payload duplication in governed metadata.
-
-R34 must still review the real cycle for at least:
-
-- owner usability;
-- exact-version truthfulness;
-- provenance;
-- authority/gate correctness;
-- retention/classification presentation;
-- failure/retry/reconciliation behavior;
-- generated-output classification and separate promotion;
-- restart/recovery behavior on the real asset cycle;
-- no hidden product/platform coupling.
-
-After R34 PASS and the real owner journey passes, `M10-alpha = Achieved / PASS`.
+The Phase 10 critical path therefore advances to P10.06. No Product Contract/Platform Capability lifecycle, Production/readiness or conformance claim changes.
 
 ## 14. P10.06 — Real Action Request / Actionable Work boundary
 
@@ -618,7 +579,7 @@ Phase 10 intentionally supports bounded concurrency.
 
 ### Lane A — Organizational Assets — primary early critical path
 
-`P10.01 ✓ → P10.02 ✓ → R33 ✓ → P10.03 ✓ → P10.04 ✓ → P10.05 ✓ → R34 [ADR-0002 ✓ → R34-D1 ✓ → R34-D2 ✓ / B2 closed → real owner cycle/evidence/re-review] → M10-alpha`.
+`P10.01 ✓ → P10.02 ✓ → R33 ✓ → P10.03 ✓ → P10.04 ✓ → P10.05 ✓ → R34 ✓ [ADR-0002 ✓ → R34-D1 ✓ → R34-D2 ✓ / B2 closed → R34-B1 ✓ / B1 closed] → M10-alpha ✓`.
 
 ### Lane B — Real Operational Work
 
@@ -641,10 +602,10 @@ CI, recovery, observability, dependency/security, deterministic build and eviden
 ```text
                          ┌─ Lane A: Assets
                          │   P10.01 ✓ → P10.02 ✓ → R33 ✓ → P10.03 ✓ → P10.04 ✓ → P10.05 ✓
-                         │        → R34 [ADR-0002 ✓ → D1 ✓ → D2 ✓ / B2 closed → real owner cycle/evidence/re-review] → M10-alpha
+                         │        → R34 ✓ [ADR-0002 ✓ → D1 ✓ → D2 ✓ / B2 closed → B1 live cycle ✓] → M10-alpha ✓
                          │
 Phase 10 current main ───┼─ Lane B: Real work
-                         │   P10.06 ──[genuine request + owning-product contract]──→ P10.07 → P10.08 → R35
+                         │   P10.06 ← CURRENT ──[genuine request + owning-product contract]──→ P10.07 → P10.08 → R35
                          │
                          ├─ Lane C: product-owned operational surfaces
                          ├─ Lane D: INT-B7 ──[wait real external endpoint]
@@ -674,6 +635,6 @@ Phase 10 does not by itself establish:
 
 ## 26. Current canonical action
 
-> **R34 / B1 — execute the first real owner-operated Company asset cycle and capture the evidence packet.**
+> **P10.06 — define the Real Action Request / Actionable Work boundary.**
 
-Use one real bounded Company-owned material through the existing Workspace journey: staged receipt → explicit owner review → governed canonical admission → restart/recovery-safe reconstruction → owner-visible retrieval/use of the exact admitted version. Capture point-of-use authority/data-governance evidence, one safe negative or partial-failure/retry observation, and generated-output review/promotion evidence where exercised. Then re-run R34. Only after R34 PASS may `M10-alpha` be claimed; P10.06 remains after M10-alpha on the canonical critical path.
+R34 and M10-alpha are closed/PASS. Define the smallest domain-neutral Workspace envelope for real product/company-owned action requests without creating a universal Kernel Task primitive or importing product-specific schemas/workflows/approval rules into platform behavior. P10.07 still requires a naturally occurring genuine request, the applicable owning-product Product Contract and fresh current Governed Execution gates. If no genuine action exists, do not fabricate one merely to advance the milestone sequence.
