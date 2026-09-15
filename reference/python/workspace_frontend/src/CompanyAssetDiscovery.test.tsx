@@ -89,7 +89,7 @@ describe("P10.09-A admitted asset discovery", () => {
     expect(screen.getByRole("heading", { name: "Шаблон договора.docx" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Логотип 2025.png" })).toBeTruthy();
     expect(screen.queryByText("Не принятый файл.pdf")).toBeNull();
-    expect(screen.getByText("Tender Agent")).toBeTruthy();
+    expect(screen.getAllByText("Tender Agent").length).toBeGreaterThanOrEqual(2);
 
     fireEvent.change(screen.getByLabelText("Название или назначение"), { target: { value: "договор" } });
     expect(screen.getByRole("heading", { name: "Шаблон договора.docx" })).toBeTruthy();
