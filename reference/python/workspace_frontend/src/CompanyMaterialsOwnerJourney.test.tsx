@@ -64,6 +64,51 @@ const admittedTemplate: CompanyAssetLibraryItem = {
   technical_identity_available: true,
 };
 
+
+const admittedLogo: CompanyAssetLibraryItem = {
+  ...admittedTemplate,
+  material_id: "MAT-logo000001",
+  version_id: "MV-logo0000000001",
+  title: "Arvectum-logo.png",
+  project_id: "COMPANY",
+  media_type: "image/png",
+  semantic_role: "logo",
+  purpose: "current Company logo",
+  content_sha256: "c".repeat(64),
+  canonical: {
+    ...admittedTemplate.canonical!,
+    material_id: "MAT-logo000001",
+    version_id: "MV-logo0000000001",
+    document_subject: "document:org:logo",
+    document_version: "document-version:org:logo-v1",
+    designation_subject: "organizational-asset:org:logo",
+    designation_version: "organizational-asset-version:org:logo-v1",
+    event_version: "event-version:org:logo-v1",
+  },
+};
+
+const admittedSource: CompanyAssetLibraryItem = {
+  ...admittedTemplate,
+  material_id: "MAT-source0001",
+  version_id: "MV-source00000001",
+  title: "Approved-facts.md",
+  project_id: "COMPANY",
+  media_type: "text/markdown",
+  semantic_role: "source",
+  purpose: "approved source material",
+  content_sha256: "d".repeat(64),
+  canonical: {
+    ...admittedTemplate.canonical!,
+    material_id: "MAT-source0001",
+    version_id: "MV-source00000001",
+    document_subject: "document:org:source",
+    document_version: "document-version:org:source-v1",
+    designation_subject: "organizational-asset:org:source",
+    designation_version: "organizational-asset-version:org:source-v1",
+    event_version: "event-version:org:source-v1",
+  },
+};
+
 const emptyLibrary: CompanyAssetLibraryProjection = {
   schema: "arvectum.workspace.company-asset-library/1",
   generated_at: "2026-08-26T20:00:00Z",
@@ -83,13 +128,25 @@ const libraryWithTemplate: CompanyAssetLibraryProjection = {
   views: { ...emptyLibrary.views, accepted: [admittedTemplate] },
 };
 
+const libraryWithGenerationAssets: CompanyAssetLibraryProjection = {
+  ...emptyLibrary,
+  views: { ...emptyLibrary.views, accepted: [admittedTemplate, admittedLogo, admittedSource] },
+};
+
 const generated: GeneratedCompanyOutput = {
   schema: "arvectum.workspace.company-generated-output/1",
   output: {
     output_id: "OUT-generated0001", state: "TransientOutput", organization: "organization:arvectum@platform",
     project_id: "PORT-003", created_at: "2026-08-26T20:01:00Z", created_by: "principal:owner@arvectum",
     source_material_id: admittedTemplate.material_id, source_version_id: admittedTemplate.version_id,
-    source_sha256: admittedTemplate.content_sha256, output_sha256: "b".repeat(64), media_type: DOCX,
+    source_sha256: admittedTemplate.content_sha256,
+    generation_profile: "company-docx-asset-aware-v1",
+    generation_input_digest: "e".repeat(64),
+    input_assets: [
+      { material_id: admittedLogo.material_id, version_id: admittedLogo.version_id, use_as: "brand", application: "embedded-image", content_sha256: admittedLogo.content_sha256, title: admittedLogo.title, media_type: admittedLogo.media_type, semantic_role: admittedLogo.semantic_role, document_version: admittedLogo.canonical!.document_version, designation_version: admittedLogo.canonical!.designation_version, event_version: admittedLogo.canonical!.event_version, provenance_refs: admittedLogo.canonical!.provenance_refs },
+      { material_id: admittedSource.material_id, version_id: admittedSource.version_id, use_as: "source", application: "text-included", content_sha256: admittedSource.content_sha256, title: admittedSource.title, media_type: admittedSource.media_type, semantic_role: admittedSource.semantic_role, document_version: admittedSource.canonical!.document_version, designation_version: admittedSource.canonical!.designation_version, event_version: admittedSource.canonical!.event_version, provenance_refs: admittedSource.canonical!.provenance_refs },
+    ],
+    output_sha256: "b".repeat(64), media_type: DOCX,
     filename: "generated-OUT-generated0001.docx", canonical_authority: false, validated_knowledge: false,
     download_href: "/api/app/v1/company-materials/outputs/OUT-generated0001/download",
   },
@@ -98,6 +155,7 @@ const generated: GeneratedCompanyOutput = {
     source_admitted_company_asset: true,
     source_document_version: admittedTemplate.canonical!.document_version,
     source_designation_version: admittedTemplate.canonical!.designation_version,
+    all_generation_inputs_exact_admitted: true, generation_input_count: 3,
   },
 };
 
@@ -134,18 +192,30 @@ describe("P10.04 Company Asset owner journey", () => {
     expect(screen.getByLabelText("Другой тип")).toBeTruthy();
   });
 
-  it("allows generation only from an admitted template and exposes download as a protected action", async () => {
-    renderMaterials(libraryWithTemplate);
+  it("selects exact current template, brand and source assets without requiring technical IDs", async () => {
+    const fetchMock = renderMaterials(libraryWithGenerationAssets);
     expect(await screen.findByRole("heading", { name: "Материалы компании" })).toBeTruthy();
-    fireEvent.change(screen.getByLabelText("Принятая версия шаблона"), {
+    fireEvent.change(screen.getByLabelText("Текущий принятый шаблон"), {
       target: { value: `${admittedTemplate.material_id}::${admittedTemplate.version_id}` },
     });
+    fireEvent.click(screen.getByLabelText(/Arvectum-logo\.png/));
+    fireEvent.click(screen.getByLabelText(/Approved-facts\.md/));
     fireEvent.change(screen.getByLabelText("Заголовок"), { target: { value: "Тестовый документ" } });
     fireEvent.change(screen.getByLabelText("Текст"), { target: { value: "Проверка owner journey" } });
     fireEvent.change(screen.getByLabelText("Дата"), { target: { value: "26.08.2026" } });
     fireEvent.click(screen.getByRole("button", { name: "Создать transient DOCX" }));
     expect(await screen.findByText("Transient Output")).toBeTruthy();
+    expect(screen.getByText("Arvectum-logo.png · встроен")).toBeTruthy();
+    expect(screen.getByText("Approved-facts.md · текст включён")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Скачать DOCX" })).toBeTruthy();
     expect(screen.queryByRole("link", { name: "Скачать DOCX" })).toBeNull();
+
+    const call = fetchMock.mock.calls.find(([input, init]) => String(input).endsWith("/company-materials/generate") && init?.method === "POST");
+    expect(call).toBeTruthy();
+    const body = JSON.parse(String(call?.[1]?.body));
+    expect(body.asset_inputs).toEqual([
+      { material_id: admittedLogo.material_id, version_id: admittedLogo.version_id, use_as: "brand" },
+      { material_id: admittedSource.material_id, version_id: admittedSource.version_id, use_as: "source" },
+    ]);
   });
 });

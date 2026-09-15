@@ -127,3 +127,32 @@
     text-align: left;
   }
 }
+
+.asset-generation-inputs {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border: 1px solid var(--line, #d8dde5);
+  border-radius: 0.8rem;
+}
+.asset-generation-inputs fieldset {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.65rem 0;
+  border: 0;
+  border-top: 1px solid var(--line, #d8dde5);
+}
+.asset-generation-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 0.6rem;
+}
+.asset-generation-option span {
+  display: grid;
+  gap: 0.15rem;
+}
+.asset-generation-option small {
+  opacity: 0.72;
+}

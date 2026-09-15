@@ -16,6 +16,7 @@ records those fields as unavailable rather than inventing evidence.
 from __future__ import annotations
 
 import hashlib
+import json
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -38,6 +39,10 @@ from .company_asset_library import CompanyAssetAdmissionUnavailable, P1003Compan
 from .company_materials import CompanyMaterialUnavailable, CompanyMaterialsError, CompanyMaterialsStore
 
 
+def _identity_text(identity: Identity) -> str:
+    return f"{identity.namespace}:{identity.scope}:{identity.value}"
+
+
 @dataclass(frozen=True, slots=True)
 class ExactCompanyGeneratedOutput:
     output_id: str
@@ -53,6 +58,8 @@ class ExactCompanyGeneratedOutput:
     generation_profile: str | None
     generation_input_digest: str | None
     source_admission: CommittedOrganizationalAssetAdmission
+    input_admissions: tuple[CommittedOrganizationalAssetAdmission, ...]
+    input_assets: tuple[dict[str, object], ...]
     handling: OrganizationalAssetHandlingPolicy
 
     def __post_init__(self) -> None:
@@ -62,6 +69,8 @@ class ExactCompanyGeneratedOutput:
             raise ValueError("retained generation_profile must be non-empty")
         if self.generation_input_digest is not None and len(self.generation_input_digest) != 64:
             raise ValueError("retained generation_input_digest must be SHA-256")
+        if len(self.input_admissions) != len(self.input_assets):
+            raise ValueError("asset-aware generated output must retain one exact admission per auxiliary input")
 
 
 def _designation_handling(
@@ -143,25 +152,111 @@ def resolve_exact_generated_output(
         else None
     )
 
+    def exact_admission(material_id: str, version_id: str) -> CommittedOrganizationalAssetAdmission:
+        matches = tuple(
+            item
+            for item in asset_admission.state.committed
+            if dict(item.admitted_document.canonical_record.payload).get("source_material_id") == material_id
+            and dict(item.admitted_document.canonical_record.payload).get("source_version_id") == version_id
+            and item.admitted_document.canonical_record.organization.organization_id == access.organization
+        )
+        if len(matches) != 1:
+            raise CompanyAssetAdmissionUnavailable(
+                "exact admitted generation input is unavailable in the current bounded canonical state"
+            )
+        return matches[0]
+
     source_material_id = str(manifest["source_material_id"])
     source_version_id = str(manifest["source_version_id"])
-    matches = tuple(
-        item
-        for item in asset_admission.state.committed
-        if dict(item.admitted_document.canonical_record.payload).get("source_material_id") == source_material_id
-        and dict(item.admitted_document.canonical_record.payload).get("source_version_id") == source_version_id
-        and item.admitted_document.canonical_record.organization.organization_id == access.organization
-    )
-    if len(matches) != 1:
-        raise CompanyAssetAdmissionUnavailable(
-            "exact admitted source asset version is unavailable in the current bounded canonical state"
-        )
-    source = matches[0]
+    source = exact_admission(source_material_id, source_version_id)
     source_artifacts = source.admitted_document.artifacts
     if len(source_artifacts) != 1:
         raise CompanyAssetAdmissionUnavailable("exact admitted source Artifact is ambiguous")
     if source_artifacts[0].integrity_ref != manifest["source_sha256"]:
         raise CompanyAssetAdmissionUnavailable("generated output source digest differs from admitted source")
+    handling = _designation_handling(source)
+
+    raw_inputs = manifest.get("input_assets", [])
+    if not isinstance(raw_inputs, list) or len(raw_inputs) > 8:
+        raise CompanyAssetAdmissionUnavailable("asset-aware generation input evidence is invalid")
+    input_admissions: list[CommittedOrganizationalAssetAdmission] = []
+    normalized_inputs: list[dict[str, object]] = []
+    required_input_fields = {
+        "use_as", "application", "material_id", "version_id", "content_sha256", "title", "media_type",
+        "semantic_role", "document_version", "designation_version", "event_version", "provenance_refs",
+    }
+    for raw in raw_inputs:
+        if not isinstance(raw, dict) or set(raw) != required_input_fields:
+            raise CompanyAssetAdmissionUnavailable("asset-aware generation input evidence is incomplete")
+        material = raw.get("material_id")
+        version = raw.get("version_id")
+        expected_sha = raw.get("content_sha256")
+        if not isinstance(material, str) or not isinstance(version, str) or not isinstance(expected_sha, str):
+            raise CompanyAssetAdmissionUnavailable("asset-aware generation input identity is invalid")
+        admitted_input = exact_admission(material, version)
+        artifacts = admitted_input.admitted_document.artifacts
+        if len(artifacts) != 1 or artifacts[0].integrity_ref != expected_sha:
+            raise CompanyAssetAdmissionUnavailable("asset-aware generation input digest differs from admission")
+        record = admitted_input.admitted_document.canonical_record
+        payload = dict(record.payload)
+        media_type = artifacts[0].media_type
+        semantic_role = payload.get("semantic_role")
+        filename = payload.get("filename")
+        use_as = raw.get("use_as")
+        if raw.get("media_type") != media_type or raw.get("semantic_role") != semantic_role or raw.get("title") != filename:
+            raise CompanyAssetAdmissionUnavailable("asset-aware input metadata differs from admitted exact source")
+        if use_as not in {"brand", "source", "reference"}:
+            raise CompanyAssetAdmissionUnavailable("asset-aware input use is invalid")
+        if use_as == "brand" and semantic_role not in {"logo", "brandbook"}:
+            raise CompanyAssetAdmissionUnavailable("asset-aware brand input role differs from admitted source")
+        if use_as == "source" and semantic_role != "source":
+            raise CompanyAssetAdmissionUnavailable("asset-aware source input role differs from admitted source")
+        if use_as == "reference" and semantic_role == "document-template":
+            raise CompanyAssetAdmissionUnavailable("asset-aware reference input cannot be a document template")
+        expected_application = (
+            "text-included"
+            if media_type in {"text/plain", "text/markdown"}
+            else "embedded-image"
+            if use_as == "brand" and media_type in {"image/png", "image/jpeg"}
+            else "pinned-reference"
+        )
+        if raw.get("application") != expected_application:
+            raise CompanyAssetAdmissionUnavailable("asset-aware input application evidence is inconsistent")
+        if _identity_text(admitted_input.admitted_document.version_id) != raw.get("document_version"):
+            raise CompanyAssetAdmissionUnavailable("asset-aware input Document Version differs from generation evidence")
+        if _identity_text(admitted_input.designation.version_id) != raw.get("designation_version"):
+            raise CompanyAssetAdmissionUnavailable("asset-aware input designation differs from generation evidence")
+        if _identity_text(admitted_input.event.version_id) != raw.get("event_version"):
+            raise CompanyAssetAdmissionUnavailable("asset-aware input admission Event differs from generation evidence")
+        expected_provenance = [
+            _identity_text(ref)
+            for ref in dict.fromkeys((*admitted_input.designation.provenance_refs, *admitted_input.event.record.provenance_refs))
+        ]
+        if raw.get("provenance_refs") != expected_provenance:
+            raise CompanyAssetAdmissionUnavailable("asset-aware input provenance differs from admitted exact source")
+        input_handling = _designation_handling(admitted_input)
+        if input_handling != handling:
+            raise CompanyAssetAdmissionUnavailable(
+                "asset-aware input handling differs from template handling; governed promotion is fail-closed"
+            )
+        input_admissions.append(admitted_input)
+        normalized_inputs.append(dict(raw))
+
+    if generation_profile == "company-docx-asset-aware-v1":
+        material_basis = {
+            "profile": generation_profile,
+            "template": {
+                "material_id": source_material_id,
+                "version_id": source_version_id,
+                "sha256": str(manifest["source_sha256"]),
+            },
+            "asset_inputs": normalized_inputs,
+        }
+        expected_input_digest = hashlib.sha256(
+            json.dumps(material_basis, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+        if generation_input_digest != expected_input_digest:
+            raise CompanyAssetAdmissionUnavailable("asset-aware generation material-input digest is invalid")
 
     return ExactCompanyGeneratedOutput(
         output_id=output_id,
@@ -177,7 +272,9 @@ def resolve_exact_generated_output(
         generation_profile=generation_profile,
         generation_input_digest=generation_input_digest,
         source_admission=source,
-        handling=_designation_handling(source),
+        input_admissions=tuple(input_admissions),
+        input_assets=tuple(normalized_inputs),
+        handling=handling,
     )
 
 
@@ -229,8 +326,8 @@ def build_generated_output_document_candidate(
         output=output, actor=actor
     )
     source_admission = output.source_admission
-    source_record = source_admission.admitted_document.canonical_record
-    source_artifact = source_admission.admitted_document.artifacts[0]
+    all_admissions = (source_admission, *output.input_admissions)
+    all_source_artifacts = tuple(item.admitted_document.artifacts[0] for item in all_admissions)
     document_subject = Identity("document", f"generated-output-{output.output_id}", scope)
     document_version = Identity(
         "document-version", f"generated-output-{output.output_id}-{output.output_sha256[:24]}", scope
@@ -249,24 +346,28 @@ def build_generated_output_document_candidate(
         integrity_ref=output.output_sha256,
         rendition_role="original",
         handling=handling,
-        source_artifact_ids=(source_artifact.artifact_id,),
+        source_artifact_ids=tuple(dict.fromkeys(item.artifact_id for item in all_source_artifacts)),
         transformation=output.generation_profile or "company-docx-generation",
         storage_locator="owner-local-company-materials/transient",
     )
-    provenance = tuple(
-        dict.fromkeys(
+    provenance_values: list[Identity] = [
+        actor.actual_principal.principal_id,
+        source_subject,
+        source_version,
+    ]
+    for admission in all_admissions:
+        record = admission.admitted_document.canonical_record
+        source_input_artifact = admission.admitted_document.artifacts[0]
+        provenance_values.extend(
             (
-                actor.actual_principal.principal_id,
-                source_subject,
-                source_version,
-                source_record.subject_id,
-                source_record.version_id,
-                source_artifact.artifact_id,
-                source_admission.designation.subject_id,
-                source_admission.designation.version_id,
+                record.subject_id,
+                record.version_id,
+                source_input_artifact.artifact_id,
+                admission.designation.subject_id,
+                admission.designation.version_id,
             )
         )
-    )
+    provenance = tuple(dict.fromkeys(provenance_values))
     record = CanonicalRecord(
         subject_id=document_subject,
         version_id=document_version,

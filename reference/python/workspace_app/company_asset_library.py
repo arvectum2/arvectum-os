@@ -627,26 +627,93 @@ class CompanyAssetLibrary:
         }
 
     def generate_docx(self, access: AccessContext, payload: object) -> dict[str, Any]:
-        if not isinstance(payload, dict):
+        required = {"material_id", "version_id", "title", "body", "date"}
+        allowed = required | {"asset_inputs"}
+        if not isinstance(payload, dict) or not required.issubset(payload) or not set(payload).issubset(allowed):
             raise CompanyMaterialsInputError("generation payload is invalid")
         material_id, version_id = payload.get("material_id"), payload.get("version_id")
         if not isinstance(material_id, str) or not isinstance(version_id, str):
             raise CompanyMaterialsInputError("generation source identity is invalid")
-        admitted = tuple(
-            value
-            for value in self.admission.admitted_versions(access)
-            if value.material_id == material_id and value.version_id == version_id
-        )
-        if len(admitted) != 1:
-            raise CompanyMaterialUnavailable(
-                "generation requires an exact admitted Company Asset version"
+
+        projection = self.project(access)
+        admitted_items = tuple((*projection["views"]["accepted"], *projection["views"]["archive"]))
+
+        def exact_item(candidate_material_id: object, candidate_version_id: object) -> dict[str, Any]:
+            if not isinstance(candidate_material_id, str) or not isinstance(candidate_version_id, str):
+                raise CompanyMaterialsInputError("generation input identity is invalid")
+            matches = tuple(
+                item
+                for item in admitted_items
+                if item["material_id"] == candidate_material_id
+                and item["version_id"] == candidate_version_id
+                and item.get("canonical") is not None
             )
-        result = self.materials.generate_docx(access, payload)
+            if len(matches) != 1:
+                raise CompanyMaterialUnavailable("generation requires exact admitted Company Asset versions")
+            return matches[0]
+
+        source = exact_item(material_id, version_id)
+        canonical = source["canonical"]
+        if (
+            not canonical.get("current")
+            or source.get("semantic_role") != "document-template"
+            or source.get("media_type") != "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ):
+            raise CompanyMaterialUnavailable("generation template must be the current admitted DOCX template version")
+
+        raw_inputs = payload.get("asset_inputs", [])
+        if not isinstance(raw_inputs, list) or len(raw_inputs) > 8:
+            raise CompanyMaterialsInputError("asset_inputs must contain at most 8 exact admitted inputs")
+        seen = {(material_id, version_id)}
+        resolved_inputs: list[dict[str, Any]] = []
+        for raw in raw_inputs:
+            if not isinstance(raw, dict) or set(raw) != {"material_id", "version_id", "use_as"}:
+                raise CompanyMaterialsInputError("asset input fields are invalid")
+            use_as = raw.get("use_as")
+            if use_as not in {"brand", "source", "reference"}:
+                raise CompanyMaterialsInputError("asset input use is unsupported")
+            key = (raw.get("material_id"), raw.get("version_id"))
+            if key in seen:
+                raise CompanyMaterialsInputError("generation inputs must not repeat an exact asset version")
+            item = exact_item(*key)
+            item_canonical = item["canonical"]
+            if not item_canonical.get("current"):
+                raise CompanyMaterialUnavailable("asset-aware generation requires current admitted auxiliary inputs")
+            role = item.get("semantic_role")
+            if use_as == "brand" and role not in {"logo", "brandbook"}:
+                raise CompanyMaterialsInputError("brand generation inputs must be admitted logo or brandbook assets")
+            if use_as == "source" and role != "source":
+                raise CompanyMaterialsInputError("source generation inputs must use the admitted source semantic role")
+            if use_as == "reference" and role == "document-template":
+                raise CompanyMaterialsInputError("document templates cannot be auxiliary reference inputs")
+            seen.add(key)
+            resolved_inputs.append(
+                {
+                    "use_as": use_as,
+                    "material_id": item["material_id"],
+                    "version_id": item["version_id"],
+                    "content_sha256": item["content_sha256"],
+                    "title": item["title"],
+                    "media_type": item["media_type"],
+                    "semantic_role": item["semantic_role"],
+                    "document_version": item_canonical["document_version"],
+                    "designation_version": item_canonical["designation_version"],
+                    "event_version": item_canonical["event_version"],
+                    "provenance_refs": list(item_canonical["provenance_refs"]),
+                }
+            )
+
+        base_payload = {key: payload[key] for key in required}
+        result = self.materials.generate_docx(
+            access, base_payload, admitted_inputs=tuple(resolved_inputs)
+        )
         result["governance"] = {
             **result["governance"],
             "source_admitted_company_asset": True,
-            "source_document_version": admitted[0].document_version,
-            "source_designation_version": admitted[0].designation_version,
+            "source_document_version": canonical["document_version"],
+            "source_designation_version": canonical["designation_version"],
+            "all_generation_inputs_exact_admitted": True,
+            "generation_input_count": 1 + len(resolved_inputs),
         }
         return result
 

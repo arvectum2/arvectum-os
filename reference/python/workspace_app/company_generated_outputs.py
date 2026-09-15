@@ -309,17 +309,20 @@ class P1005CompanyGeneratedOutputPromotionExecutor:
         source_subject, source_version, artifact_id = exact_generated_output_source_identities(
             output=output, actor=actor
         )
-        generation_refs = tuple(
-            dict.fromkeys(
+        generation_ref_values: list[Identity] = []
+        for admission in (output.source_admission, *output.input_admissions):
+            record = admission.admitted_document.canonical_record
+            artifact = admission.admitted_document.artifacts[0]
+            generation_ref_values.extend(
                 (
-                    output.source_admission.admitted_document.canonical_record.subject_id,
-                    output.source_admission.admitted_document.canonical_record.version_id,
-                    source_artifact.artifact_id,
-                    output.source_admission.designation.subject_id,
-                    output.source_admission.designation.version_id,
+                    record.subject_id,
+                    record.version_id,
+                    artifact.artifact_id,
+                    admission.designation.subject_id,
+                    admission.designation.version_id,
                 )
             )
-        )
+        generation_refs = tuple(dict.fromkeys(generation_ref_values))
         request = ReviewedGeneratedOutputPromotionRequest(
             candidate=candidate,
             source=ExactGeneratedOutputSource(
@@ -586,6 +589,9 @@ class CompanyGeneratedOutputs:
                     "source_material_id": manifest.get("source_material_id"),
                     "source_version_id": manifest.get("source_version_id"),
                     "source_sha256": manifest.get("source_sha256"),
+                    "generation_profile": manifest.get("generation_profile"),
+                    "generation_input_digest": manifest.get("generation_input_digest"),
+                    "input_assets": manifest.get("input_assets", []),
                     "download_href": f"/api/app/v1/company-materials/outputs/{output_id}/download",
                     "review": review,
                     "inherited_handling": _handling_payload(exact_source) if exact_source else None,

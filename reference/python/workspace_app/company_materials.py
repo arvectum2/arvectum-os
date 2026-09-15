@@ -48,7 +48,15 @@ _ALLOWED_MEDIA_TYPES = frozenset(
 _SAFE_ID = re.compile(r"^[A-Za-z0-9_.-]{8,96}$")
 _SAFE_PROJECT_ID = re.compile(r"^(?:PORT-[0-9]{3}|COMPANY)$")
 _WORD_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
+_OFFICE_REL_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+_DRAWING_NS = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+_DRAWING_MAIN_NS = "http://schemas.openxmlformats.org/drawingml/2006/main"
+_PICTURE_NS = "http://schemas.openxmlformats.org/drawingml/2006/picture"
 _SUPPORTED_PLACEHOLDERS = ("{{TITLE}}", "{{BODY}}", "{{DATE}}")
+_GENERATION_INPUT_USES = frozenset({"brand", "source", "reference"})
+_MAX_GENERATION_AUX_INPUTS = 8
+_MAX_EMBEDDED_TEXT_BYTES = 64 * 1024
 
 
 def _utc_now() -> str:
@@ -457,11 +465,19 @@ class CompanyMaterialsStore:
             ),
         }
 
-    def generate_docx(self, access: AccessContext, payload: object) -> dict[str, Any]:
+    def generate_docx(
+        self,
+        access: AccessContext,
+        payload: object,
+        *,
+        admitted_inputs: tuple[dict[str, Any], ...] = (),
+    ) -> dict[str, Any]:
         if not isinstance(access, AccessContext):
             raise CompanyMaterialsError("server-authorized AccessContext is required")
         if not isinstance(payload, dict) or set(payload) != {"material_id", "version_id", "title", "body", "date"}:
             raise CompanyMaterialsInputError("generation payload is invalid")
+        if not isinstance(admitted_inputs, tuple) or len(admitted_inputs) > _MAX_GENERATION_AUX_INPUTS:
+            raise CompanyMaterialsInputError("asset-aware generation accepts at most 8 auxiliary inputs")
         material_id = _bounded(payload.get("material_id"), "material_id", maximum=96)
         version_id = _bounded(payload.get("version_id"), "version_id", maximum=96)
         title = _bounded(payload.get("title"), "title", maximum=320)
@@ -470,16 +486,25 @@ class CompanyMaterialsStore:
         version = self._version(access, material_id, version_id)
         if version.get("media_type") != DOCX_MEDIA_TYPE:
             raise CompanyMaterialsInputError("template-aware generation currently requires an exact DOCX version")
-        blob = self.blobs / str(version["content_sha256"])
-        try:
-            if blob.is_symlink():
-                raise CompanyMaterialUnavailable("exact template bytes unavailable")
-            source = blob.read_bytes()
-        except OSError as exc:
-            raise CompanyMaterialUnavailable("exact template bytes unavailable") from exc
-        if _content_sha256(source) != version["content_sha256"]:
-            raise CompanyMaterialsError("exact template integrity mismatch")
-        output = self._render_docx(source, {"{{TITLE}}": title, "{{BODY}}": body, "{{DATE}}": date})
+        source = self._exact_blob(version, unavailable="exact template bytes unavailable")
+        resolved_inputs = tuple(self._resolve_generation_input(access, item) for item in admitted_inputs)
+        generation_basis = {
+            "profile": "company-docx-asset-aware-v1",
+            "template": {
+                "material_id": material_id,
+                "version_id": version_id,
+                "sha256": version["content_sha256"],
+            },
+            "asset_inputs": [item["manifest"] for item in resolved_inputs],
+        }
+        generation_input_digest = _content_sha256(
+            json.dumps(generation_basis, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        )
+        output = self._render_docx(
+            source,
+            {"{{TITLE}}": title, "{{BODY}}": body, "{{DATE}}": date},
+            input_assets=resolved_inputs,
+        )
         output_sha = _content_sha256(output)
         output_id = f"OUT-{secrets.token_hex(16)}"
         _secure_dir(self.root)
@@ -498,6 +523,9 @@ class CompanyMaterialsStore:
             "source_material_id": material_id,
             "source_version_id": version_id,
             "source_sha256": version["content_sha256"],
+            "generation_profile": "company-docx-asset-aware-v1",
+            "generation_input_digest": generation_input_digest,
+            "input_assets": [item["manifest"] for item in resolved_inputs],
             "output_sha256": output_sha,
             "media_type": DOCX_MEDIA_TYPE,
             "filename": f"generated-{output_id}.docx",
@@ -514,6 +542,54 @@ class CompanyMaterialsStore:
                 "exact_source_version_pinned": True,
             },
         }
+
+    def _exact_blob(self, version: dict[str, Any], *, unavailable: str) -> bytes:
+        blob = self.blobs / str(version["content_sha256"])
+        try:
+            if blob.is_symlink():
+                raise CompanyMaterialUnavailable(unavailable)
+            content = blob.read_bytes()
+        except OSError as exc:
+            raise CompanyMaterialUnavailable(unavailable) from exc
+        if _content_sha256(content) != version["content_sha256"]:
+            raise CompanyMaterialsError("exact generation input integrity mismatch")
+        return content
+
+    def _resolve_generation_input(self, access: AccessContext, item: dict[str, Any]) -> dict[str, Any]:
+        required = {
+            "use_as", "material_id", "version_id", "content_sha256", "title", "media_type",
+            "semantic_role", "document_version", "designation_version", "event_version", "provenance_refs",
+        }
+        if not isinstance(item, dict) or set(item) != required:
+            raise CompanyMaterialsInputError("server-resolved asset input metadata is invalid")
+        use_as = _bounded(item.get("use_as"), "use_as", maximum=16)
+        if use_as not in _GENERATION_INPUT_USES:
+            raise CompanyMaterialsInputError("asset input use is unsupported")
+        material_id = _bounded(item.get("material_id"), "material_id", maximum=96)
+        version_id = _bounded(item.get("version_id"), "version_id", maximum=96)
+        version = self._version(access, material_id, version_id)
+        for field in ("content_sha256", "media_type", "semantic_role"):
+            if version.get(field) != item.get(field):
+                raise CompanyMaterialUnavailable("server-resolved admitted input differs from retained exact version")
+        content = self._exact_blob(version, unavailable="exact auxiliary generation input unavailable")
+        manifest = {key: item[key] for key in required}
+        text: str | None = None
+        image: bytes | None = None
+        media_type = str(version.get("media_type"))
+        application = "pinned-reference"
+        if media_type in {"text/plain", "text/markdown"}:
+            if len(content) > _MAX_EMBEDDED_TEXT_BYTES:
+                raise CompanyMaterialsInputError("text generation input exceeds 64 KiB bounded inclusion limit")
+            try:
+                text = content.decode("utf-8")
+            except UnicodeDecodeError as exc:
+                raise CompanyMaterialsInputError("text generation input must be valid UTF-8") from exc
+            application = "text-included"
+        elif use_as == "brand" and media_type in {"image/png", "image/jpeg"}:
+            image = content
+            application = "embedded-image"
+        manifest["application"] = application
+        return {"manifest": manifest, "text": text, "image": image}
 
     def output_path(self, access: AccessContext, output_id: str) -> tuple[Path, dict[str, Any]]:
         if not isinstance(access, AccessContext):
@@ -540,44 +616,191 @@ class CompanyMaterialsStore:
         return output_path, manifest
 
     @staticmethod
-    def _render_docx(source: bytes, replacements: dict[str, str]) -> bytes:
+    def _render_docx(
+        source: bytes,
+        replacements: dict[str, str],
+        *,
+        input_assets: tuple[dict[str, Any], ...] = (),
+    ) -> bytes:
         entries = _office_entries(source, frozenset({"[Content_Types].xml", "word/document.xml"}))
+        entry_map = {info.filename: (info, data) for info, data in entries}
+        try:
+            document_root = ET.fromstring(entry_map["word/document.xml"][1])
+        except ET.ParseError as exc:
+            raise CompanyMaterialsInputError("selected DOCX document.xml is invalid") from exc
+
         changed: set[str] = set()
-        rendered_entries: list[tuple[zipfile.ZipInfo, bytes]] = []
-        for info, data in entries:
-            if info.filename != "word/document.xml":
-                rendered_entries.append((info, data))
+        for node in document_root.iter(f"{{{_WORD_NS}}}t"):
+            if node.text is None:
                 continue
-            try:
-                root = ET.fromstring(data)
-            except ET.ParseError as exc:
-                raise CompanyMaterialsInputError("selected DOCX document.xml is invalid") from exc
-            for node in root.iter(f"{{{_WORD_NS}}}t"):
-                if node.text is None:
-                    continue
-                value = node.text
-                for placeholder, replacement in replacements.items():
-                    if placeholder in value:
-                        value = value.replace(placeholder, replacement)
-                        changed.add(placeholder)
-                node.text = value
-            rendered_entries.append((info, ET.tostring(root, encoding="utf-8", xml_declaration=True)))
+            value = node.text
+            for placeholder, replacement in replacements.items():
+                if placeholder in value:
+                    value = value.replace(placeholder, replacement)
+                    changed.add(placeholder)
+            node.text = value
         if not changed:
             raise CompanyMaterialsInputError(
                 "DOCX template must contain at least one contiguous placeholder: {{TITLE}}, {{BODY}} or {{DATE}}"
             )
+        body = document_root.find(f"{{{_WORD_NS}}}body")
+        if body is None:
+            raise CompanyMaterialsInputError("selected DOCX has no document body")
+
+        image_relationships: dict[int, str] = {}
+        added_entries: list[tuple[str, bytes]] = []
+        image_inputs = [(idx, item) for idx, item in enumerate(input_assets) if item.get("image") is not None]
+        if image_inputs:
+            rel_path = "word/_rels/document.xml.rels"
+            if rel_path in entry_map:
+                try:
+                    rel_root = ET.fromstring(entry_map[rel_path][1])
+                except ET.ParseError as exc:
+                    raise CompanyMaterialsInputError("selected DOCX relationships are invalid") from exc
+            else:
+                rel_root = ET.Element(f"{{{_REL_NS}}}Relationships")
+            existing_ids = {str(node.get("Id")) for node in list(rel_root) if node.get("Id")}
+            for sequence, (idx, resolved) in enumerate(image_inputs, start=1):
+                rel_id = f"rIdP1009B{sequence}"
+                while rel_id in existing_ids:
+                    sequence += 1
+                    rel_id = f"rIdP1009B{sequence}"
+                existing_ids.add(rel_id)
+                media_type = str(resolved["manifest"]["media_type"])
+                extension = "png" if media_type == "image/png" else "jpg"
+                filename = f"p10_09_asset_{sequence}.{extension}"
+                ET.SubElement(
+                    rel_root,
+                    f"{{{_REL_NS}}}Relationship",
+                    {
+                        "Id": rel_id,
+                        "Type": f"{_OFFICE_REL_NS}/image",
+                        "Target": f"media/{filename}",
+                    },
+                )
+                image_relationships[idx] = rel_id
+                added_entries.append((f"word/media/{filename}", bytes(resolved["image"])))
+            rel_bytes = ET.tostring(rel_root, encoding="utf-8", xml_declaration=True)
+            if rel_path in entry_map:
+                entry_map[rel_path] = (entry_map[rel_path][0], rel_bytes)
+            else:
+                added_entries.append((rel_path, rel_bytes))
+            CompanyMaterialsStore._ensure_image_content_types(entry_map, input_assets)
+
+        if input_assets:
+            CompanyMaterialsStore._append_generation_inputs(body, input_assets, image_relationships)
+        entry_map["word/document.xml"] = (
+            entry_map["word/document.xml"][0],
+            ET.tostring(document_root, encoding="utf-8", xml_declaration=True),
+        )
+
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, "w") as target:
-            for info, data in rendered_entries:
-                clone = zipfile.ZipInfo(info.filename, date_time=info.date_time)
-                clone.compress_type = info.compress_type
-                clone.comment = info.comment
-                clone.extra = info.extra
-                clone.internal_attr = info.internal_attr
-                clone.external_attr = info.external_attr
-                clone.create_system = info.create_system
+            for info, _ in entries:
+                current_info, data = entry_map[info.filename]
+                clone = zipfile.ZipInfo(current_info.filename, date_time=current_info.date_time)
+                clone.compress_type = current_info.compress_type
+                clone.comment = current_info.comment
+                clone.extra = current_info.extra
+                clone.internal_attr = current_info.internal_attr
+                clone.external_attr = current_info.external_attr
+                clone.create_system = current_info.create_system
                 target.writestr(clone, data)
+            for filename, data in added_entries:
+                if filename in entry_map:
+                    continue
+                info = zipfile.ZipInfo(filename)
+                info.compress_type = zipfile.ZIP_DEFLATED
+                target.writestr(info, data)
         return buffer.getvalue()
+
+    @staticmethod
+    def _ensure_image_content_types(
+        entry_map: dict[str, tuple[zipfile.ZipInfo, bytes]],
+        input_assets: tuple[dict[str, Any], ...],
+    ) -> None:
+        info, data = entry_map["[Content_Types].xml"]
+        try:
+            root = ET.fromstring(data)
+        except ET.ParseError as exc:
+            raise CompanyMaterialsInputError("selected DOCX content-types manifest is invalid") from exc
+        namespace = root.tag[1:].split("}", 1)[0] if root.tag.startswith("{") else ""
+        def tag(name: str) -> str:
+            return f"{{{namespace}}}{name}" if namespace else name
+        defaults = {str(node.get("Extension", "")).lower(): node for node in root.findall(tag("Default"))}
+        needed = {
+            "png": "image/png",
+            "jpg": "image/jpeg",
+        }
+        used = {"png" if item["manifest"].get("media_type") == "image/png" else "jpg" for item in input_assets if item.get("image") is not None}
+        for extension in sorted(used):
+            if extension not in defaults:
+                ET.SubElement(root, tag("Default"), {"Extension": extension, "ContentType": needed[extension]})
+        entry_map["[Content_Types].xml"] = (info, ET.tostring(root, encoding="utf-8", xml_declaration=True))
+
+    @staticmethod
+    def _append_generation_inputs(
+        body: ET.Element,
+        input_assets: tuple[dict[str, Any], ...],
+        image_relationships: dict[int, str],
+    ) -> None:
+        def paragraph(value: str) -> ET.Element:
+            p = ET.Element(f"{{{_WORD_NS}}}p")
+            r = ET.SubElement(p, f"{{{_WORD_NS}}}r")
+            t = ET.SubElement(r, f"{{{_WORD_NS}}}t")
+            t.text = value
+            return p
+
+        def image_paragraph(rel_id: str, name: str, doc_id: int) -> ET.Element:
+            p = ET.Element(f"{{{_WORD_NS}}}p")
+            r = ET.SubElement(p, f"{{{_WORD_NS}}}r")
+            drawing = ET.SubElement(r, f"{{{_WORD_NS}}}drawing")
+            inline = ET.SubElement(drawing, f"{{{_DRAWING_NS}}}inline")
+            ET.SubElement(inline, f"{{{_DRAWING_NS}}}extent", {"cx": "1828800", "cy": "914400"})
+            ET.SubElement(inline, f"{{{_DRAWING_NS}}}docPr", {"id": str(doc_id), "name": name[:120]})
+            graphic = ET.SubElement(inline, f"{{{_DRAWING_MAIN_NS}}}graphic")
+            graphic_data = ET.SubElement(
+                graphic,
+                f"{{{_DRAWING_MAIN_NS}}}graphicData",
+                {"uri": _PICTURE_NS},
+            )
+            pic = ET.SubElement(graphic_data, f"{{{_PICTURE_NS}}}pic")
+            nv = ET.SubElement(pic, f"{{{_PICTURE_NS}}}nvPicPr")
+            ET.SubElement(nv, f"{{{_PICTURE_NS}}}cNvPr", {"id": "0", "name": name[:120]})
+            ET.SubElement(nv, f"{{{_PICTURE_NS}}}cNvPicPr")
+            fill = ET.SubElement(pic, f"{{{_PICTURE_NS}}}blipFill")
+            ET.SubElement(fill, f"{{{_DRAWING_MAIN_NS}}}blip", {f"{{{_OFFICE_REL_NS}}}embed": rel_id})
+            stretch = ET.SubElement(fill, f"{{{_DRAWING_MAIN_NS}}}stretch")
+            ET.SubElement(stretch, f"{{{_DRAWING_MAIN_NS}}}fillRect")
+            shape = ET.SubElement(pic, f"{{{_PICTURE_NS}}}spPr")
+            xfrm = ET.SubElement(shape, f"{{{_DRAWING_MAIN_NS}}}xfrm")
+            ET.SubElement(xfrm, f"{{{_DRAWING_MAIN_NS}}}off", {"x": "0", "y": "0"})
+            ET.SubElement(xfrm, f"{{{_DRAWING_MAIN_NS}}}ext", {"cx": "1828800", "cy": "914400"})
+            geometry = ET.SubElement(shape, f"{{{_DRAWING_MAIN_NS}}}prstGeom", {"prst": "rect"})
+            ET.SubElement(geometry, f"{{{_DRAWING_MAIN_NS}}}avLst")
+            return p
+
+        children = list(body)
+        insert_at = len(children)
+        if children and children[-1].tag == f"{{{_WORD_NS}}}sectPr":
+            insert_at -= 1
+        appendix: list[ET.Element] = [paragraph("Generation inputs")]
+        for index, resolved in enumerate(input_assets):
+            item = resolved["manifest"]
+            appendix.append(
+                paragraph(
+                    f"[{item['use_as']} / {item['application']}] {item['title']} · {item['semantic_role']} · "
+                    f"SHA-256 {item['content_sha256']}"
+                )
+            )
+            if resolved.get("text") is not None:
+                appendix.append(paragraph(str(resolved["text"])))
+            rel_id = image_relationships.get(index)
+            if rel_id is not None:
+                appendix.append(image_paragraph(rel_id, str(item["title"]), 1000 + index))
+        for offset, node in enumerate(appendix):
+            body.insert(insert_at + offset, node)
+
 
 
 __all__ = [
