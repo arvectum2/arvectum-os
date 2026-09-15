@@ -31,8 +31,8 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return await response.json() as T;
 }
 
-function downloadFilename(disposition: string | null): string {
-  if (!disposition) return "generated-arvectum-document.docx";
+function downloadFilename(disposition: string | null, fallback = "generated-arvectum-document.docx"): string {
+  if (!disposition) return fallback;
   const encoded = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
   if (encoded) {
     try {
@@ -43,7 +43,7 @@ function downloadFilename(disposition: string | null): string {
   }
   const quoted = disposition.match(/filename="([^"]+)"/i)?.[1];
   const plain = disposition.match(/filename=([^;]+)/i)?.[1]?.trim();
-  return quoted ?? plain ?? "generated-arvectum-document.docx";
+  return quoted ?? plain ?? fallback;
 }
 
 function assetPath(materialId: string, versionId: string, action: string): string {
@@ -64,6 +64,23 @@ export function loadCompanyAssetLibrary(): Promise<CompanyAssetLibraryProjection
 
 export function exportCompanyAssetLibrary(limit = 100): Promise<CompanyAssetLibraryExport> {
   return request<CompanyAssetLibraryExport>(`/api/app/v1/company-assets/export?limit=${limit}`);
+}
+
+export async function fetchCompanyAssetContent(
+  materialId: string,
+  versionId: string,
+  download = false,
+): Promise<{ blob: Blob; filename: string; mediaType: string }> {
+  const headers = new Headers();
+  headers.set(RELEASE_HEADER, RELEASE_ID);
+  const path = `${assetPath(materialId, versionId, "content")}?download=${download ? "true" : "false"}`;
+  const response = await fetch(path, { headers, credentials: "same-origin" });
+  if (!response.ok) throw await responseError(response);
+  return {
+    blob: await response.blob(),
+    filename: downloadFilename(response.headers.get("Content-Disposition"), "company-asset"),
+    mediaType: response.headers.get("Content-Type") ?? "application/octet-stream",
+  };
 }
 
 export async function submitCompanyAssetReview(
