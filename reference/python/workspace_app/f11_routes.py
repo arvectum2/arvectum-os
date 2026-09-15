@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import FileResponse
@@ -14,6 +15,11 @@ from .company_asset_library import (
     CompanyAssetLibrary,
     CompanyAssetLibraryError,
     CompanyAssetReviewError,
+)
+from .company_asset_retrieval import (
+    CompanyAssetContentUnavailable,
+    CompanyAssetRetrieval,
+    CompanyAssetRetrievalError,
 )
 from .company_materials import (
     CompanyMaterialUnavailable,
@@ -76,9 +82,11 @@ def install_f11_routes(
     portfolio = portfolio_provider or VerifiedRuntimeCompanyPortfolioProvider(cache_root=Path(settings.runtime_root))
     materials = materials_store or CompanyMaterialsStore(Path(settings.runtime_root))
     library = asset_library or CompanyAssetLibrary(materials, asset_admission)
+    retrieval = CompanyAssetRetrieval(library, materials)
     app.state.company_portfolio_provider = portfolio
     app.state.company_materials_store = materials
     app.state.company_asset_library = library
+    app.state.company_asset_retrieval = retrieval
 
     # Existing Workspace creates the SPA catch-all before this product boundary is
     # composed. Temporarily remove exactly that route so API routes remain reachable,
@@ -161,6 +169,32 @@ def install_f11_routes(
             return library.project(access)
         except (CompanyAssetLibraryError, CompanyMaterialsError):
             raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="COMPANY_ASSET_LIBRARY_UNAVAILABLE") from None
+
+    @app.get("/api/app/v1/company-assets/{material_id}/versions/{version_id}/content")
+    async def retrieve_company_asset_content(
+        material_id: str,
+        version_id: str,
+        download: bool = False,
+        current: tuple[WorkspaceSession, AccessContext] = Depends(authorize_current),
+    ) -> FileResponse:
+        _, access = current
+        try:
+            content = retrieval.resolve(access, material_id, version_id)
+        except CompanyAssetContentUnavailable:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="COMPANY_ASSET_CONTENT_UNAVAILABLE") from None
+        except CompanyAssetRetrievalError:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="COMPANY_ASSET_CONTENT_INTEGRITY_FAILED") from None
+        disposition = "attachment" if download else "inline"
+        encoded_filename = quote(content.filename, safe="")
+        return FileResponse(
+            content.path,
+            media_type=content.media_type,
+            headers={
+                "Cache-Control": "no-store",
+                "Content-Disposition": f"{disposition}; filename*=UTF-8''{encoded_filename}",
+                "X-Content-Type-Options": "nosniff",
+            },
+        )
 
     @app.get("/api/app/v1/company-assets/export")
     async def export_company_asset_library(
