@@ -1,7 +1,7 @@
 # Arvectum OS Phase 10 — Operational Work & Organizational Assets
 
 Status: `Active`
-Version: `1.0.8`
+Version: `1.0.9`
 Created: `2026-08-27`
 Updated: `2026-09-15`
 Owner: `ООО «Арвектум»`
@@ -16,11 +16,15 @@ Activation review: [`P10-00-post-M9-outcome-selection-and-phase-10-activation.md
 
 ## 0. Version note
 
-Version `1.0.8` records `R34 = Closed / PASS` and `M10-alpha = Achieved / PASS` after the first real owner-operated Company asset cycle, while retaining the prior ADR-0002/R34-D1/D2 durability evidence.
+Version `1.0.9` records `P10.06 — Real Action Request / Actionable Work boundary = Complete / PASS`. The bounded implementation and [`P10.06 closure`](../reviews/P10-06-real-action-request-actionable-work-closure-review.md) provide a domain-neutral non-authoritative projection over already-real Company/product-owned requests, no default/synthetic request source, explicit Organization/Actor + provenance/freshness validation, no urgency/responsibility/approval/authority inference and only a no-side-effect Workspace context entry. Productive Workspace advances to internal release `p10.06.1`, application contract `12`; the surface remains bounded/internal/provisional and non-public.
+
+P10.07 is the next critical-path item but remains **WAITING** for a naturally occurring genuine request and the applicable owning-product exact effective Product Contract/governed operation. No synthetic action evidence is admitted.
+
+Version `1.0.8` recorded `R34 = Closed / PASS` and `M10-alpha = Achieved / PASS` after the first real owner-operated Company asset cycle, while retaining the prior ADR-0002/R34-D1/D2 durability evidence.
 
 R34 is `Closed / PASS — 7/7`; durability blocker `B2` remains `CLOSED / TECHNICAL PASS`. R34-D1 implemented the bounded Company-local durable-state adapter and is merged at `5f65061095094d9b58a4b293b2a5a8f01d88ad10`. R34-D2 qualifies the actual Productive Workspace P10.04/P10.05 composition with restart, lost-response retry/no-replay, uncertainty, backup/restore, fail-closed schema/corruption, retained-byte and owner-local filesystem evidence; its exact technical qualification evidence head is `434976f24c9767f0e6b79c12beb66afcd9e54975`.
 
-R34 blocker `B1` is `CLOSED / LIVE PASS`. [`R34-B1 live evidence`](../reviews/R34-b1-owner-operated-company-asset-cycle-evidence-2026-09-15.md) records the real owner-provided/owner-attested Company template cycle. `M10-alpha = Achieved / PASS`; the next executable Lane B action is `P10.06 — Real Action Request / Actionable Work boundary`.
+R34 blocker `B1` is `CLOSED / LIVE PASS`. [`R34-B1 live evidence`](../reviews/R34-b1-owner-operated-company-asset-cycle-evidence-2026-09-15.md) records the real owner-provided/owner-attested Company template cycle. `M10-alpha = Achieved / PASS`; `P10.06 — Real Action Request / Actionable Work boundary` is now `Complete / PASS`, and P10.07 is the next critical-path item in truthful waiting state.
 
 P10.05 remains `Complete / PASS` for its exact bounded internal owner-facing/reference-runtime scope. Its closure correctly selected no new durable persistence mechanism at that task boundary. ADR-0002 and R34-D1/D2 are later R34-driven subordinate implementation/qualification work and do not retroactively change P10.05.
 
@@ -205,7 +209,7 @@ M10 does not require customer Production, public interfaces, multi-Organization 
 | **`P10.05`** | **Reviewed generated-output promotion boundary** | **🟩 Complete / PASS** | generated `TransientOutput` can be reviewed and, only when admitted, promoted to a governed Company document/asset version |
 | **`R34`** | **M10-alpha Asset Governance / Usability Review** | **🟩 Complete / PASS — 7/7** | real asset cycle safe, understandable, durable and reconstructable |
 | `M10-alpha` | First Governed Company Asset Cycle | 🟩 Achieved / PASS | first real asset cycle owner PASS |
-| **`P10.06`** | **Real Action Request / Actionable Work boundary** | **🟨 Current** | concrete product/company requests can appear truthfully without a universal Task primitive |
+| **`P10.06`** | **Real Action Request / Actionable Work boundary** | **🟩 Complete / PASS** | concrete product/company requests can appear truthfully without a universal Task primitive |
 | `P10.07` | First real governed operational action | ⬜ — waits genuine request | one natural genuine action reaches Governed Execution and truthful terminal/uncertain state |
 | `P10.08` | Product operational entry-point composition | ⬜ | Workspace can start/continue admitted product-owned actions without embedding product business logic in platform |
 | `R35` | Operational Work / Product Boundary / AI Authority Review | ⬜ gate | action semantics, authority and product ownership remain correct |
@@ -426,11 +430,17 @@ The real final B1 cycle is recorded in [`R34-B1 live evidence`](../reviews/R34-b
 
 A safe exact-version negative failed closed without mutation. No P0/P1 was observed; two P3 follow-ups remain. Final R34 functional cross-review `7/7` found no material objection.
 
-The Phase 10 critical path therefore advances to P10.06. No Product Contract/Platform Capability lifecycle, Production/readiness or conformance claim changes.
+The Phase 10 critical path advanced from R34/M10-alpha into P10.06; P10.06 is now closed/PASS and P10.07 is the next item in truthful waiting state. No Product Contract/Platform Capability lifecycle, Production/readiness or conformance claim changes.
 
 ## 14. P10.06 — Real Action Request / Actionable Work boundary
 
-Define a domain-neutral Workspace envelope over real product/company-owned action requests without standardizing product business semantics.
+Status: `Complete / PASS`.
+
+Canonical closure: [`P10-06-real-action-request-actionable-work-closure-review`](../reviews/P10-06-real-action-request-actionable-work-closure-review.md).
+
+Reviewed implementation head: `f9c1580712124be5e10618f07cbeb54df519deef`; Productive Workspace CI `34976262198 = success`; Reference Python CI `34976262340 = success`.
+
+The implemented boundary is a domain-neutral Workspace envelope over real product/company-owned action requests without standardizing product business semantics. Runtime registers no default sources, so absence of a genuine request produces an empty truthful projection rather than synthetic work. Workspace release is `p10.06.1`, internal application contract `12`; this is not a public/stable API claim.
 
 The Workspace projection may expose:
 
@@ -583,7 +593,7 @@ Phase 10 intentionally supports bounded concurrency.
 
 ### Lane B — Real Operational Work
 
-May design P10.06 in parallel because P10.01 semantics are fixed and the Workspace contract now contains the bounded Actionable Work/product-entry envelope. P10.07 still waits for the owning product's applicable effective Product Contract and a genuine real action request.
+P10.06 is complete. P10.07 still waits for the owning product's applicable effective Product Contract and a genuine real action request; no synthetic request may substitute for that condition.
 
 ### Lane C — Product ↔ Workspace operational composition
 
@@ -605,7 +615,7 @@ CI, recovery, observability, dependency/security, deterministic build and eviden
                          │        → R34 ✓ [ADR-0002 ✓ → D1 ✓ → D2 ✓ / B2 closed → B1 live cycle ✓] → M10-alpha ✓
                          │
 Phase 10 current main ───┼─ Lane B: Real work
-                         │   P10.06 ← CURRENT ──[genuine request + owning-product contract]──→ P10.07 → P10.08 → R35
+                         │   P10.06 ✓ ──→ P10.07 WAITING [genuine request + owning-product contract] → P10.08 → R35
                          │
                          ├─ Lane C: product-owned operational surfaces
                          ├─ Lane D: INT-B7 ──[wait real external endpoint]
@@ -635,6 +645,6 @@ Phase 10 does not by itself establish:
 
 ## 26. Current canonical action
 
-> **P10.06 — define the Real Action Request / Actionable Work boundary.**
+> **P10.07 — wait for and execute the first naturally occurring genuine governed operational action through the applicable owning-product Product Contract and current Governed Execution gates. Do not synthesize the request.**
 
-R34 and M10-alpha are closed/PASS. Define the smallest domain-neutral Workspace envelope for real product/company-owned action requests without creating a universal Kernel Task primitive or importing product-specific schemas/workflows/approval rules into platform behavior. P10.07 still requires a naturally occurring genuine request, the applicable owning-product Product Contract and fresh current Governed Execution gates. If no genuine action exists, do not fabricate one merely to advance the milestone sequence.
+R34, M10-alpha and P10.06 are closed/PASS. P10.07 remains waiting until a naturally occurring genuine request exists together with the applicable owning-product exact effective Product Contract/governed operation. At that point the request must enter through the bounded Workspace context and fresh current Governed Execution gates, with truthful completed/blocked/failed/uncertain outcome and reconstruction evidence. If no genuine action exists, do not fabricate one merely to advance the milestone sequence.
