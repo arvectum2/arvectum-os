@@ -1,7 +1,7 @@
 # Arvectum OS Canonical Roadmap
 
 Status: `Active`
-Version: `2.98.0`
+Version: `2.98.1`
 Created: `2026-08-07`
 Updated: `2026-09-15`
 Owner: `ООО «Арвектум»`
@@ -26,7 +26,7 @@ Roadmap status does not itself change Platform Capability lifecycle, Product Con
 
 Detailed phase plans, reviews and repository history retain implementation/evidence detail; this file defines current canonical sequencing when subordinate phase text is older or more restrictive.
 
-## 2. Version 2.98.0 — Phase 10 concurrency correction
+## 2. Version 2.98.1 — Phase 10 concurrency correction
 
 Phase 10 has progressed beyond the original serial plan:
 
@@ -74,12 +74,12 @@ This sequencing correction creates no Constitution/RFC/ADR amendment, Product Co
 | Phase 0 | Foundation / Architecture Bootstrap | 🟩 Complete | M0 |
 | Phase 1 | Reference Implementation | 🟩 Complete | M1 |
 | Phase 2 | Core Runtime | 🟩 Complete | M2 |
-| Phase 3 | Shared Platform Capabilities | 🟩 Complete | M3 |
-| Phase 4 | Workspace / Operator Experience | 🟩 Complete | M4 |
+| `Phase 3` | Shared Platform Capabilities | 🟩 Complete | `M3` Validated shared capability baseline |
+| `Phase 4` | Workspace / Operator Experience | 🟩 Complete | M4 |
 | Phase 5 | SDK, Contracts and Extension Experience | 🟩 Complete | M5 |
 | Phase 6 | Product-driven Platform Validation | 🟩 Complete / PASS | M6 |
 | Phase 7 | Operational / Enterprise Readiness | 🟩 Complete / PASS | M7 |
-| Phase 8 | Ecosystem and External Integration | 🟩 Complete / PASS | M8 |
+| `Phase 8` | Ecosystem and External Integration | 🟩 Complete / PASS | M8 — exact activated one-Organization scope |
 | Phase 9 | Productive Workspace & Daily Operations | 🟩 Complete / PASS | M9 |
 | **Phase 10** | **Operational Work & Organizational Assets** | **🟨 Active** | **M10 — Governed Daily Operations Baseline** |
 
