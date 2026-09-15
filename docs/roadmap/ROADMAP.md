@@ -1,7 +1,7 @@
 # Arvectum OS Canonical Roadmap
 
 Status: `Active`
-Version: `2.97.8`
+Version: `2.97.9`
 Created: `2026-08-07`
 Updated: `2026-09-15`
 Owner: `ООО «Арвектум»`
@@ -17,13 +17,17 @@ Detailed completed-phase evidence remains in the corresponding phase roadmaps, r
 
 ## 2. Version note
 
-Version `2.97.8` records closure of `R34 — M10-alpha Asset Governance / Usability Review` after the first real owner-operated Company asset cycle, while preserving the prior ADR-0002/R34-D1/D2 durability evidence.
+Version `2.97.9` records `P10.06 — Real Action Request / Actionable Work boundary = Complete / PASS` after bounded implementation, five functional review/revise iterations and exact-head GitHub CI. [`P10.06 closure`](../reviews/P10-06-real-action-request-actionable-work-closure-review.md) defines a domain-neutral non-authoritative projection over already-real Company/product-owned requests, intentionally registers no default request sources, introduces no universal `Task` primitive, infers no urgency/responsibility/approval/authority, and exposes only a no-side-effect context entry. Workspace advances to internal release `p10.06.1`, application contract `12`, still `bounded-internal-provisional` and non-public.
+
+P10.07 is now the next critical-path item but remains **WAITING** for a naturally occurring genuine request plus the applicable owning-product exact effective Product Contract/governed operation and current RFC-0005 gates. No synthetic request is admitted merely to advance the roadmap.
+
+Version `2.97.8` recorded closure of `R34 — M10-alpha Asset Governance / Usability Review` after the first real owner-operated Company asset cycle, while preserving the prior ADR-0002/R34-D1/D2 durability evidence.
 
 R34 is now `Closed / PASS — 7/7`. Durability blocker `B2` remains `CLOSED / TECHNICAL PASS`: R34-D1 is merged at `5f65061095094d9b58a4b293b2a5a8f01d88ad10`, and R34-D2 qualifies the actual Productive Workspace P10.04/P10.05 composition with restart, lost-response retry/no-replay, uncertainty, backup/restore, fail-closed schema/corruption, retained-byte and owner-local filesystem evidence. The exact technical qualification evidence head is `434976f24c9767f0e6b79c12beb66afcd9e54975`.
 
 R34 blocker `B1` is `CLOSED / LIVE PASS`. [`R34-B1 live evidence`](../reviews/R34-b1-owner-operated-company-asset-cycle-evidence-2026-09-15.md) records a real owner-provided/owner-attested Company template completing staging, review, Governed Execution admission, same-root restart/no-replay and genuine later exact-version use; generated output remained `TransientOutput`.
 
-`M10-alpha = Achieved / PASS`. The next executable critical-path action is `P10.06 — Real Action Request / Actionable Work boundary`; P10.07 still waits for a naturally occurring genuine request plus the applicable owning-product Product Contract and current Governed Execution gates.
+`M10-alpha = Achieved / PASS`. `P10.06 — Real Action Request / Actionable Work boundary` is now `Complete / PASS`. P10.07 is the next critical-path item but still waits for a naturally occurring genuine request plus the applicable owning-product Product Contract and current Governed Execution gates.
 
 P10.05 remains `Complete / PASS` for its exact bounded internal owner-facing/reference-runtime scope. Its historical closure correctly selected no durable persistence mechanism at that task boundary; ADR-0002 and R34-D1/D2 are later R34-driven subordinate implementation/qualification work and do not retroactively change the P10.05 claim.
 
@@ -122,7 +126,7 @@ M10 additionally requires at least one naturally occurring genuine product/compa
 | **`P10.05`** | **Reviewed generated-output promotion boundary** | **🟩 Complete / PASS** |
 | **`R34`** | **M10-alpha Asset Governance / Usability Review** | **🟩 Complete / PASS — 7/7** |
 | `M10-alpha` | First Governed Company Asset Cycle | 🟩 Achieved / PASS |
-| **`P10.06`** | **Real Action Request / Actionable Work boundary** | **🟨 Current** |
+| **`P10.06`** | **Real Action Request / Actionable Work boundary** | **🟩 Complete / PASS** |
 | `P10.07` | First real governed operational action | ⬜ — waits for genuine request |
 | `P10.08` | Product operational entry-point composition | ⬜ |
 | `R35` | Operational Work / Product Boundary / AI Authority Review | ⬜ gate |
@@ -155,7 +159,7 @@ R34 ✓ / 7-of-7 PASS
    ↓
 M10-alpha ✓ / Achieved
    ↓
-P10.06 ← CURRENT → P10.07 → P10.08
+P10.06 ✓ → P10.07 WAITING (genuine request) → P10.08
    ↓
 R35
    ↓
@@ -166,7 +170,7 @@ R36
 P10.12 / M10
 ```
 
-P10.06 design may overlap the asset stream because P10.01 semantics are fixed and the Product Contract is effective, but P10.07 cannot execute until the applicable owning-product Product Contract is effective and a genuine action request naturally exists.
+P10.06 is complete for the bounded projection/entry envelope. P10.07 cannot execute until the applicable owning-product Product Contract is effective and a genuine action request naturally exists; absence of such a request is a truthful waiting state, not a reason to manufacture evidence.
 
 ## 7. Phase 10 authority boundaries
 
@@ -237,9 +241,9 @@ If no genuine action naturally exists, Phase 10 may reach M10-alpha and remain A
 
 **Critical path:**
 
-> **P10.06 — define the Real Action Request / Actionable Work boundary.**
+> **P10.07 — wait for the first naturally occurring genuine governed operational action.**
 
-R34 and M10-alpha are closed/PASS. Define the smallest domain-neutral Workspace envelope for concrete product/company-owned action requests without inventing a universal Kernel Task primitive, product business semantics, urgency, responsibility, permission, approval or Organizational Authority. P10.07 still waits for a naturally occurring genuine request plus the applicable owning-product Product Contract and current Governed Execution gates; do not fabricate an action merely to advance the roadmap.
+P10.06 is closed/PASS. P10.07 is the next critical-path item but is not executable until a genuine product/company-owned request naturally exists and the applicable owning-product exact effective Product Contract/governed operation is available. When that condition occurs, revalidate current RFC-0005 gates and carry the request through truthful completed/blocked/failed/uncertain outcome and reconstruction evidence. Do not fabricate an action merely to advance the roadmap.
 
 **Parallel integrations:**
 
