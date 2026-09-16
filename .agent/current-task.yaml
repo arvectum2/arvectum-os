@@ -1,0 +1,21 @@
+version: 2
+repository: arvectum2/arvectum-os
+status: idle
+task_id: null
+goal: null
+authority: null
+definition_of_done: []
+completed: []
+current: null
+pending: []
+last_verified_commit: "8baebc4d43e8c071cbe7ee9537a2844cb7b30f8e"
+test_results: []
+updated_at: "2026-09-16T10:39:35Z"
+resume_instruction: "No active lease. Reconcile canonical main and roadmap, then select the first eligible item from .agent/execution-queue.yaml; currently expected P10.09-D."
+execution:
+  claimed_by: null
+  execution_id: null
+  branch: null
+  base_commit: null
+  lease_until: null
+  manual_override: false
