@@ -109,6 +109,16 @@ const admittedSource: CompanyAssetLibraryItem = {
   },
 };
 
+const draftSource: CompanyAssetLibraryItem = {
+  ...admittedSource,
+  material_id: "MAT-draftsource01",
+  version_id: "MV-draftsource0001",
+  title: "Draft-company-source.md",
+  canonical: null,
+  lifecycle_view: "drafts",
+  review: { state: "Draft", policy: { deletion_rule: "existing-retention", permitted_reuse: ["company-internal-document-generation"] }, reason: null, updated_at: null, canonical_authority: false },
+};
+
 const emptyLibrary: CompanyAssetLibraryProjection = {
   schema: "arvectum.workspace.company-asset-library/1",
   generated_at: "2026-08-26T20:00:00Z",
@@ -190,6 +200,38 @@ describe("P10.04 Company Asset owner journey", () => {
     ]);
     fireEvent.change(select, { target: { value: "other" } });
     expect(screen.getByLabelText("Другой тип")).toBeTruthy();
+  });
+
+  it("lets the owner explicitly enable exact-version Arvectum AI reuse without knowing the policy token", async () => {
+    const library: CompanyAssetLibraryProjection = {
+      ...emptyLibrary,
+      views: { ...emptyLibrary.views, drafts: [draftSource] },
+    };
+    const fetchMock = renderMaterials(library);
+    expect(await screen.findByRole("heading", { name: "Материалы компании" })).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Правило удаления"), { target: { value: "governed-retention" } });
+    const aiReuse = screen.getByLabelText("Разрешить Arvectum AI использовать эту версию как источник");
+    expect((aiReuse as HTMLInputElement).checked).toBe(false);
+    const genericReuse = screen.getByLabelText("Разрешённое повторное использование") as HTMLInputElement;
+    expect(genericReuse.value).toBe("company-internal-document-generation");
+    fireEvent.click(aiReuse);
+    expect((aiReuse as HTMLInputElement).checked).toBe(true);
+    expect(genericReuse.value).toContain("company-internal-document-generation");
+    expect(genericReuse.value).toContain("company-internal-ai-grounding");
+    fireEvent.click(aiReuse);
+    expect(genericReuse.value).toBe("company-internal-document-generation");
+    fireEvent.click(aiReuse);
+    fireEvent.click(screen.getByRole("button", { name: "Передать на рассмотрение" }));
+
+    await vi.waitFor(() => {
+      const call = fetchMock.mock.calls.find(([input, init]) => String(input).endsWith("/review") && init?.method === "POST");
+      expect(call).toBeTruthy();
+      const body = JSON.parse(String(call?.[1]?.body));
+      expect(body).toEqual({
+        deletion_rule: "governed-retention",
+        permitted_reuse: ["company-internal-document-generation", "company-internal-ai-grounding"],
+      });
+    });
   });
 
   it("selects exact current template, brand and source assets without requiring technical IDs", async () => {

@@ -24,6 +24,7 @@ import "./CompanyAssetLibrary.css";
 const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
+const AI_GROUNDING_REUSE = "company-internal-ai-grounding";
 const ACCEPTED_FILE_TYPES = ".docx,.pptx,.pdf,.png,.jpg,.jpeg,.webp,.txt,.md";
 const ALLOWED_MEDIA_TYPES = new Set([
   DOCX,
@@ -144,10 +145,17 @@ function MaterialCard({
       ? text("Staged · на рассмотрении", "Staged · in review")
       : rejected ? text("Staged · отклонено", "Staged · rejected") : text("Staged · черновик", "Staged · draft");
 
+  const reuseValues = () => Array.from(new Set(reuse.split(",").map((value) => value.trim()).filter(Boolean)));
+  const aiGroundingEnabled = reuseValues().includes(AI_GROUNDING_REUSE);
+  const setAiGrounding = (enabled: boolean) => {
+    const values = reuseValues().filter((value) => value !== AI_GROUNDING_REUSE);
+    if (enabled) values.push(AI_GROUNDING_REUSE);
+    setReuse(values.join(", "));
+  };
+
   const submitReview = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const values = reuse.split(",").map((value) => value.trim()).filter(Boolean);
-    await onReview(item, deletionRule, values);
+    await onReview(item, deletionRule, reuseValues());
   };
 
   const submitReject = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -193,6 +201,10 @@ function MaterialCard({
       {rejected && item.review.reason ? <p className="boundary-note">{text("Причина отклонения", "Rejection reason")}: {item.review.reason}</p> : null}
       <label>{text("Правило удаления", "Deletion rule")}<input value={deletionRule} onChange={(event) => setDeletionRule(event.target.value)} required maxLength={240} placeholder={text("Укажите явно", "State explicitly")} /></label>
       <label>{text("Разрешённое повторное использование", "Permitted reuse")}<input value={reuse} onChange={(event) => setReuse(event.target.value)} required maxLength={400} placeholder={text("Через запятую", "Comma separated")} /></label>
+      <label className="asset-generation-option">
+        <input type="checkbox" aria-label={text("Разрешить Arvectum AI использовать эту версию как источник", "Allow Arvectum AI to use this version as a source")} checked={aiGroundingEnabled} onChange={(event) => setAiGrounding(event.target.checked)} />
+        <span><strong>{text("Разрешить Arvectum AI использовать эту версию как источник", "Allow Arvectum AI to use this version as a source")}</strong><small>{text("Только для этой exact версии. Фактическое использование всё равно требует текущего доступа, действующего Product Contract и server-side revalidation.", "This applies only to this exact version. Actual use still requires current access, the effective Product Contract, and server-side revalidation.")}</small></span>
+      </label>
       <button type="submit" disabled={busy}>{text("Передать на рассмотрение", "Submit for review")}</button>
     </form> : null}
 
@@ -403,14 +415,14 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
   };
 
   if (state.kind === "loading") return <section className="company-page" aria-live="polite">{text("Открываем библиотеку материалов…", "Opening the asset library…")}</section>;
-  if (state.kind === "error") return <section className="company-page" role="alert"><p className="eyebrow">P10.04 · Provisional 0.2.0</p><h1>{text("Материалы компании недоступны", "Company materials unavailable")}</h1><code>{state.code}</code><div><button type="button" onClick={() => void refresh()}>{text("Повторить", "Retry")}</button></div></section>;
+  if (state.kind === "error") return <section className="company-page" role="alert"><p className="eyebrow">P10.04 · admission boundary Provisional 0.2.0 · AI grounding Provisional 0.3.0</p><h1>{text("Материалы компании недоступны", "Company materials unavailable")}</h1><code>{state.code}</code><div><button type="button" onClick={() => void refresh()}>{text("Повторить", "Retry")}</button></div></section>;
 
   const currentItems = state.data.views[activeView];
   const admissionAvailable = state.data.actions.governed_admission_available;
 
   return <section className="company-page" aria-labelledby="company-materials-title">
     <header className="company-page-head asset-library-head">
-      <p className="eyebrow">P10.04 / P10.09-A / P10.09-B · Product Contract Provisional 0.2.0</p>
+      <p className="eyebrow">P10.04 / P10.09-A / P10.09-B · admission boundary Provisional 0.2.0 · P10.09-C AI grounding Provisional 0.3.0</p>
       <h1 id="company-materials-title">{text("Материалы компании", "Company materials")}</h1>
       <p>{text("Принятые материалы доступны как обычная рабочая библиотека. Черновики и review остаются staged/non-canonical; только успешно завершённый Governed Execution создаёт принятую каноническую версию.", "Admitted assets are available as an ordinary working library. Drafts and review remain staged/non-canonical; only a successful Governed Execution creates an admitted canonical version.")}</p>
       <details className="company-boundary-details"><summary>{text("Граница authority", "Authority boundary")}</summary><p>{text("Workspace показывает состояние и инициирует команду, но не является источником authority. Authentication, Authorization, Organizational Authority, Data Governance, Validation и Consequential Approval не выводятся из видимости кнопки. Generated output остаётся Transient Output и не становится validated Knowledge.", "Workspace presents state and initiates a command but is not an authority source. Authentication, Authorization, Organizational Authority, Data Governance, Validation, and Consequential Approval are not inferred from button visibility. Generated output remains a Transient Output and does not become validated Knowledge.")}</p></details>
