@@ -1,6 +1,6 @@
 version: 1
 repository: arvectum2/arvectum-os
-updated_at: "2026-09-16T10:39:35Z"
+updated_at: "2026-09-16T18:10:00Z"
 owner_controls_order: true
 
 # Ordered executable projection of the canonical roadmap. Presence here grants no
@@ -10,7 +10,7 @@ items:
   - order: 10
     task_id: P10.09-D
     title: "Derived previews, text extraction and search/index projections"
-    status: ready
+    status: done
     authority: AUTO
     independent: true
     auto_merge: true

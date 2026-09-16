@@ -1,9 +1,9 @@
 version: 1
 task_id: P10.09-D
-status: in_progress
+status: done
 base_commit: 4c616846331a6380dd72f3b428d8f33d24bac532
 branch: null
-updated_at: "2026-09-16T16:04:00Z"
+updated_at: "2026-09-16T18:10:00Z"
 classification: product_specific
 checked:
   constitution: "1.2.0 Ratified"
@@ -48,3 +48,9 @@ slices:
       - "No submitted reviews or unresolved review threads on PR #9."
       - "Company AM-4 authority revalidated immediately before merge; PR #9 merged to main as 0eb7ee067f7239288a7ce75f0c5b7df18a6cbd8f."
 next_action: "Reconcile PR #11 repaired exact head b645e906 once; if green, revalidate Company AM-4 immediately before merge. Do not broaden into OCR, embeddings, vector infrastructure, persisted indexes, or Product Contract expansion."
+
+closure:
+  review_pr: 12
+  merge_commit: dbde6a10f13197a53829a18175d99a00a385180a
+  result: "Complete / PASS for bounded roadmap scope"
+  next_queue_item: P10.08-PREPARATION
