@@ -223,11 +223,11 @@ export function CompanyGeneratedOutputs({ csrfToken }: { csrfToken: string }) {
   };
 
   if (state.kind === "loading") return <section className="company-page" aria-live="polite">{text("Открываем generated outputs…", "Opening generated outputs…")}</section>;
-  if (state.kind === "error") return <section className="company-page" role="alert"><p className="eyebrow">P10.05 · Provisional 0.2.0</p><h1>{text("Generated outputs недоступны", "Generated outputs unavailable")}</h1><code>{state.code}</code><div><button type="button" onClick={() => void refresh()}>{text("Повторить", "Retry")}</button></div></section>;
+  if (state.kind === "error") return <section className="company-page" role="alert"><p className="eyebrow">P10.05 · operation boundary Provisional 0.2.0</p><h1>{text("Generated outputs недоступны", "Generated outputs unavailable")}</h1><code>{state.code}</code><div><button type="button" onClick={() => void refresh()}>{text("Повторить", "Retry")}</button></div></section>;
 
   return <section className="company-page" aria-labelledby="company-generated-outputs-title">
     <header className="company-page-head asset-library-head">
-      <p className="eyebrow">P10.05 · Product Contract Provisional 0.2.0</p>
+      <p className="eyebrow">P10.05 · operation boundary Provisional 0.2.0</p>
       <h1 id="company-generated-outputs-title">{text("Созданные документы · review", "Generated documents · review")}</h1>
       <p>{text(
         "Generated Artifact остаётся TransientOutput по умолчанию. Просмотр, скачивание, отклонение или повторное использование не делают его каноническим. Только отдельный успешно завершённый Governed Execution создаёт новую governed Document/Asset version.",

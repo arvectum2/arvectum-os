@@ -15,7 +15,7 @@ from .access import AccessContext, AccessResolver, P704AccessResolver, Workspace
 from .actionable_work import ActionableWorkError, ActionableWorkProvider, RuntimeActionableWorkProvider
 from .attention import AttentionProvider, RuntimeAttentionProvider
 from .config import WorkspaceSettings
-from .copilot import CopilotError, CopilotProvider, LoopbackChatModel, RuntimeCopilotProvider, normalize_question
+from .copilot import CopilotError, CopilotEvidenceSource, CopilotProvider, LoopbackChatModel, RuntimeCopilotProvider, normalize_question
 from .discovery import DiscoveryError, DiscoveryKind, DiscoveryProvider, ObjectUnavailable, RuntimeDiscoveryProvider
 from .dogfooding import DogfoodingError, DogfoodingInputError, DogfoodingStore
 from .governed import GovernedExperienceError, GovernedExperienceProvider, RuntimeGovernedExperienceProvider
@@ -112,6 +112,7 @@ def create_app(
     product_provider: ProductCompositionProvider | None = None,
     organization_provider: OrganizationCompositionProvider | None = None,
     copilot_provider: CopilotProvider | None = None,
+    supplemental_copilot_sources: tuple[CopilotEvidenceSource, ...] = (),
     dogfooding_store: DogfoodingStore | None = None,
     session_store: SessionStore | None = None,
     static_dir: Path | None = None,
@@ -134,7 +135,9 @@ def create_app(
         if settings.copilot_model_url
         else None
     )
-    copilot = copilot_provider or RuntimeCopilotProvider(discovery, products, model=model)
+    copilot = copilot_provider or RuntimeCopilotProvider(
+        discovery, products, model=model, supplemental_sources=supplemental_copilot_sources
+    )
     dogfooding = dogfooding_store or DogfoodingStore(settings.runtime_root)
     store = session_store or SessionStore(
         idle_seconds=settings.session_idle_seconds,

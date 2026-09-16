@@ -63,6 +63,24 @@ class CopilotEvidence:
     open_href: str
     semantic_role: str
     knowledge_role: str | None = None
+    model_context: str | None = None
+    server_provenance: tuple[str, ...] = ()
+
+    def for_model(self) -> "CopilotEvidence":
+        """Return the minimized model-facing view without server-only reconstruction evidence."""
+
+        return CopilotEvidence(
+            source_id=self.source_id,
+            label=self.label,
+            summary=self.summary,
+            authority=self.authority,
+            freshness=self.freshness,
+            open_href=self.open_href,
+            semantic_role=self.semantic_role,
+            knowledge_role=self.knowledge_role,
+            model_context=self.model_context,
+            server_provenance=(),
+        )
 
     def to_payload(self) -> dict[str, object]:
         return {
@@ -98,6 +116,14 @@ class ModelDescriptor:
     model: str
 
 
+class CopilotEvidenceSource(Protocol):
+    """Internal release-scoped source seam; not a public/stable plugin API."""
+
+    def evidence(
+        self, access: AccessContext, question: str
+    ) -> tuple[tuple[CopilotEvidence, ...], tuple[str, ...]]: ...
+
+
 class CopilotModel(Protocol):
     @property
     def descriptor(self) -> ModelDescriptor: ...
@@ -129,6 +155,7 @@ class LoopbackChatModel:
             {
                 "label": item.label,
                 "summary": item.summary,
+                **({"content": item.model_context} if item.model_context is not None else {}),
                 "authority": item.authority,
                 "freshness": item.freshness,
                 "semantic_role": item.semantic_role,
@@ -263,10 +290,12 @@ class RuntimeCopilotProvider:
         products: ProductCompositionProvider,
         *,
         model: CopilotModel | None = None,
+        supplemental_sources: tuple[CopilotEvidenceSource, ...] = (),
     ) -> None:
         self.discovery = discovery
         self.products = products
         self.model = model
+        self.supplemental_sources = supplemental_sources
 
     def _evidence(self, access: AccessContext, question: str) -> tuple[tuple[CopilotEvidence, ...], tuple[str, ...]]:
         question_tokens = _tokens(question)
@@ -343,6 +372,26 @@ class RuntimeCopilotProvider:
         except ProductCompositionError:
             limitations.append("Product-owned retained context is currently unavailable or failed integrity verification.")
 
+        for source in self.supplemental_sources:
+            try:
+                source_evidence, source_limitations = source.evidence(access, question)
+            except Exception:
+                limitations.append("A supplemental authorized evidence source is currently unavailable.")
+                continue
+            limitations.extend(source_limitations)
+            for evidence in source_evidence:
+                haystack = " ".join(
+                    value for value in (
+                        evidence.label, evidence.summary, evidence.semantic_role, evidence.authority, evidence.model_context or ""
+                    ) if value
+                )
+                score = _score(question_tokens, haystack, bonus=8)
+                if score <= 0:
+                    continue
+                current = ranked.get(evidence.source_id)
+                if current is None or score > current[0]:
+                    ranked[evidence.source_id] = (score, evidence)
+
         ordered = tuple(
             evidence
             for _, evidence in sorted(ranked.values(), key=lambda pair: (-pair[0], pair[1].source_id))[:MAX_EVIDENCE_ITEMS]
@@ -387,7 +436,9 @@ class RuntimeCopilotProvider:
             model_provider = descriptor.provider
             model_name = descriptor.model
             try:
-                synthesis = self.model.synthesize(normalized, evidence)
+                synthesis = self.model.synthesize(
+                    normalized, tuple(item.for_model() for item in evidence)
+                )
             except CopilotModelError:
                 model_failure = "MODEL_UNAVAILABLE"
                 claims.append(
@@ -440,6 +491,7 @@ __all__ = [
     "CopilotClaim",
     "CopilotError",
     "CopilotEvidence",
+    "CopilotEvidenceSource",
     "CopilotModel",
     "CopilotModelError",
     "CopilotProvider",

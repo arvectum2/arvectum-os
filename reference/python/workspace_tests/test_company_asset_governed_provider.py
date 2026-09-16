@@ -16,6 +16,12 @@ from workspace_app.company_asset_admission import (
     build_staged_document_candidate,
     resolve_exact_staged_material,
 )
+from workspace_app.company_asset_copilot import (
+    AI_GROUNDING_REUSE,
+    CompanyAssetCopilotEvidenceSource,
+    P1003CompanyAssetCopilotHandlingResolver,
+    P10_09_C_CANONICAL_BLOB_SHA,
+)
 from workspace_app.company_asset_governed_provider import (
     COMPANY_ASSET_ADMISSION_RESOURCE,
     P1004OwnerCompanyAssetAdmissionProvider,
@@ -96,6 +102,35 @@ class CompanyAssetGovernedProviderTests(unittest.TestCase):
 
         provision_company_asset_admission_grant(self.root)
         self.assertTrue(admission.available(self.access))
+
+    def test_productive_workspace_wires_exact_provisional_company_copilot_source(self) -> None:
+        app = build_workspace_app(self._settings())
+        copilot = app.state.copilot_provider
+        self.assertEqual(len(copilot.supplemental_sources), 1)
+        source = copilot.supplemental_sources[0]
+        self.assertIsInstance(source, CompanyAssetCopilotEvidenceSource)
+        self.assertTrue(source.contract.effective)
+        self.assertEqual(source.contract.canonical_source_blob_sha, P10_09_C_CANONICAL_BLOB_SHA)
+
+        provision_company_asset_admission_grant(self.root)
+        version = self._stage(label="copilot-grounding")
+        material_id = str(version["material_id"])
+        version_id = str(version["version_id"])
+        library = app.state.company_asset_library
+        library.submit_review(
+            self.access, material_id, version_id,
+            {
+                "deletion_rule": "delete-only-through-governed-retention-process",
+                "permitted_reuse": [AI_GROUNDING_REUSE],
+            },
+        )
+        library.admit(self.access, material_id, version_id)
+        answer = copilot.answer(self.access, "What is the Arvectum standard copilot-grounding?")
+        company_sources = tuple(item for item in answer.sources if item.source_id.startswith("company-asset:"))
+        self.assertEqual(len(company_sources), 1)
+        self.assertIn("Arvectum standard copilot-grounding", company_sources[0].model_context or "")
+        self.assertIn(f"contract_blob:{P10_09_C_CANONICAL_BLOB_SHA}", company_sources[0].server_provenance)
+        self.assertFalse(answer.to_payload()["generation"]["validated_knowledge"])
 
     def test_admission_grant_is_not_ambient_or_auto_provisioned(self) -> None:
         self.assertFalse(self.provider.available(self.access))
@@ -188,6 +223,22 @@ class CompanyAssetGovernedProviderTests(unittest.TestCase):
                 policy=CompanyAssetReviewPolicy.from_payload(self.review_payload()),
             )
         self.assertEqual(len(self.executor.state.committed), 0)
+
+    def test_copilot_handling_resolver_reads_canonical_designation_not_review_projection(self) -> None:
+        provision_company_asset_admission_grant(self.root)
+        version = self._stage()
+        material_id = str(version["material_id"])
+        version_id = str(version["version_id"])
+        payload = {
+            "deletion_rule": "delete-only-through-governed-retention-process",
+            "permitted_reuse": [AI_GROUNDING_REUSE],
+        }
+        self.library.submit_review(self.access, material_id, version_id, payload)
+        self.library.admit(self.access, material_id, version_id)
+        resolver = P1003CompanyAssetCopilotHandlingResolver(self.executor)
+        evidence = resolver.resolve(self.access, material_id, version_id)
+        self.assertEqual(evidence.permitted_reuse, (AI_GROUNDING_REUSE,))
+        self.assertEqual(evidence.content_sha256, str(version["content_sha256"]))
 
     def test_owner_admission_is_idempotent_and_uses_p10_03_guarded_state(self) -> None:
         provision_company_asset_admission_grant(self.root)

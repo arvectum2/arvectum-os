@@ -28,6 +28,7 @@ export function Guide({ release }: { release: string }) {
       <div className="home-actions" aria-label={text("Переходы из руководства", "Guide shortcuts")}>
         <WorkspaceLink href="/work">{text("Посмотреть задачи", "View tasks")}</WorkspaceLink>
         <WorkspaceLink href="/information">{text("Найти информацию", "Find information")}</WorkspaceLink>
+        <WorkspaceLink href="/company-materials">{text("Материалы компании", "Company materials")}</WorkspaceLink>
         <WorkspaceLink href="/copilot">{text("Спросить Arvectum AI", "Ask Arvectum AI")}</WorkspaceLink>
       </div>
       <p>{text(
@@ -42,7 +43,8 @@ export function Guide({ release }: { release: string }) {
         <div><dt>{text("Главная", "Home")}</dt><dd>{text("Показывает, что требует вашего внимания сейчас, и даёт короткие переходы к основным действиям.", "Shows what needs your attention now and provides shortcuts to primary actions.")}</dd></div>
         <div><dt>{text("Задачи", "Tasks")}</dt><dd>{text("Показывает только реальные текущие задачи владельца и доступные продуктовые контексты. Тестовые сценарии не выдаются за живую работу.", "Shows only real current owner tasks and available product contexts. Test scenarios are not presented as live work.")}</dd></div>
         <div><dt>{text("Документы", "Documents")}</dt><dd>{text("Ищет и открывает уже доступные Workspace записи, документы и знания с учётом текущих прав и организации.", "Searches and opens records, documents, and knowledge already available to Workspace under current access and organization scope.")}</dd></div>
-        <div><dt>Arvectum AI</dt><dd>{text("Отвечает на вопросы по доступному контексту и показывает источники. Ответ — вспомогательный результат: он не является решением, разрешением, организационным полномочием или автоматически подтверждённым знанием.", "Answers questions over available context and shows sources. The answer is assistive output: it is not a decision, permission, organizational authority, or automatically validated knowledge.")}</dd></div>
+        <div><dt>{text("Материалы компании", "Company materials")}</dt><dd>{text("Позволяет загружать поддерживаемые материалы ООО «Арвектум», отправлять точную staged-версию на review, принимать её через Governed Execution, находить текущие и заменённые версии и использовать принятые шаблоны и источники в разрешённых сценариях.", "Lets the owner upload supported Arvectum Company materials, submit an exact staged version for review, admit it through Governed Execution, find current and superseded versions, and reuse admitted templates and sources in permitted scenarios.")}</dd></div>
+        <div><dt>Arvectum AI</dt><dd>{text("Отвечает на вопросы по доступному контексту и показывает источники. Принятый материал компании может участвовать в ответе только как точная текущая версия с явно разрешённым AI-reuse; в первой версии содержимое передаётся модели только для TXT/Markdown и только в минимизированных фрагментах по вопросу. Ответ остаётся временным и не является решением, разрешением, организационным полномочием или автоматически подтверждённым знанием.", "Answers questions over available context and shows sources. An admitted Company material can participate only as an exact current version with explicit AI reuse permission; in this first slice, raw content reaches the model only for TXT/Markdown and only as question-scoped minimized excerpts. The answer remains transient and is not a decision, permission, organizational authority, or automatically validated knowledge.")}</dd></div>
         <div><dt>{text("Настройки", "Settings")}</dt><dd>{text("Содержат сведения об организации, активность, технические проверки, тестовые сценарии и форму обратной связи для dogfooding.", "Contains organization information, activity, technical checks, test scenarios, and dogfooding feedback.")}</dd></div>
       </dl>
     </section>
@@ -50,12 +52,12 @@ export function Guide({ release }: { release: string }) {
     <section aria-labelledby="guide-limits-title">
       <h2 id="guide-limits-title">{text("Чего пока нет", "What is not available yet")}</h2>
       <p>{text(
-        "В этой версии ещё нет общего приёма организационных материалов. Через Workspace пока нельзя загрузить логотип или брендбук, шаблон презентации .pptx, шаблон документа .docx, шаблон письма или произвольный файл-источник для последующего использования.",
-        "This release does not yet provide general organizational material intake. Workspace cannot yet upload a logo or brandbook, a .pptx presentation template, a .docx document template, an email template, or an arbitrary source file for later use.",
+        "Пока нет универсального RAG/индекса или автоматического извлечения текста из DOCX, PPTX, PDF и изображений для Arvectum AI. Такие форматы могут оставаться принятыми материалами и участвовать как проверяемые metadata-свидетельства, но их содержимое не OCR-ится и не интерпретируется этим AI-контуром.",
+        "There is not yet a general RAG/index or automatic text extraction from DOCX, PPTX, PDF, and images for Arvectum AI. Those formats may remain admitted materials and participate as inspectable metadata evidence, but this AI path does not OCR or interpret their content.",
       )}</p>
       <p>{text(
-        "Добавление такого механизма проектируется отдельно: сам факт загрузки не должен автоматически делать файл утверждённым знанием, стандартом, решением или источником полномочий.",
-        "That mechanism is being designed separately: uploading a file must not automatically make it validated knowledge, a standard, a decision, or a source of authority.",
+        "Загрузка или принятие материала сами по себе не разрешают AI-use и не превращают файл в подтверждённое знание, стандарт, решение или источник полномочий. Для AI-grounding требуется отдельное явное разрешение повторного использования точной канонически принятой версии.",
+        "Uploading or admitting a material does not by itself permit AI use or turn the file into validated knowledge, a standard, a decision, or an authority source. AI grounding requires a separate explicit reuse permission on the exact canonically admitted version.",
       )}</p>
     </section>
 

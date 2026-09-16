@@ -7,10 +7,18 @@ from pathlib import Path
 
 from workspace_app.access import P704AccessResolver, provision_workspace_grant
 from workspace_app.assets import verify_frontend_assets
+from workspace_app.company_asset_copilot import (
+    CompanyAssetCopilotContractGate,
+    CompanyAssetCopilotEvidenceSource,
+    P1003CompanyAssetCopilotHandlingResolver,
+)
 from workspace_app.company_asset_governed_provider import (
     P1004OwnerCompanyAssetAdmissionProvider,
     provision_company_asset_admission_grant,
 )
+from workspace_app.company_asset_library import CompanyAssetLibrary
+from workspace_app.company_asset_retrieval import CompanyAssetRetrieval
+from workspace_app.company_materials import CompanyMaterialsStore
 from workspace_app.company_durable_executors import build_durable_company_governed_executors
 from workspace_app.company_generated_output_governed_provider import (
     P1005OwnerCompanyGeneratedOutputPromotionProvider,
@@ -65,7 +73,22 @@ def build_workspace_app(settings: WorkspaceSettings):
     """
 
     admission, promotion = build_durable_company_governed_executors(settings.runtime_root)
-    app = install_f11_routes(create_app(settings), asset_admission=admission)
+    materials = CompanyMaterialsStore(Path(settings.runtime_root))
+    library = CompanyAssetLibrary(materials, admission)
+    retrieval = CompanyAssetRetrieval(library, materials)
+    company_copilot_source = CompanyAssetCopilotEvidenceSource(
+        library,
+        retrieval,
+        P1003CompanyAssetCopilotHandlingResolver(admission),
+        CompanyAssetCopilotContractGate.current(),
+    )
+    app = create_app(settings, supplemental_copilot_sources=(company_copilot_source,))
+    app = install_f11_routes(
+        app,
+        asset_admission=admission,
+        materials_store=materials,
+        asset_library=library,
+    )
     outputs = CompanyGeneratedOutputs(
         settings.runtime_root,
         app.state.company_materials_store,

@@ -16,10 +16,12 @@ describe("P9.11-F10A Workspace guide", () => {
     expect(screen.getByText("p9.11.f10-test")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Что работает сейчас" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Чего пока нет" })).toBeTruthy();
-    expect(screen.getByText(/ещё нет общего приёма организационных материалов/)).toBeTruthy();
+    expect(screen.getByText(/нет универсального RAG\/индекса/)).toBeTruthy();
+    expect(screen.getByText(/Принятый материал компании может участвовать/)).toBeTruthy();
     expect(screen.getByText(/не является решением, разрешением, организационным полномочием/)).toBeTruthy();
     expect(screen.getByRole("link", { name: "Посмотреть задачи" }).getAttribute("href")).toBe("/work");
     expect(screen.getByRole("link", { name: "Найти информацию" }).getAttribute("href")).toBe("/information");
+    expect(screen.getByRole("link", { name: "Материалы компании" }).getAttribute("href")).toBe("/company-materials");
     expect(screen.getByRole("link", { name: "Спросить Arvectum AI" }).getAttribute("href")).toBe("/copilot");
   });
 });
