@@ -1,0 +1,54 @@
+version: 1
+skill: project-watchdog
+repository: arvectum2/arvectum-os
+canonical_branch: main
+mode: roadmap_executor
+timezone: Europe/Moscow
+
+schedule:
+  provider: chatgpt_scheduled_task
+  cadence: hourly
+  timing_mode: exact_schedule
+  max_productive_quantum_minutes: 45
+  stale_progress_recovery_minutes: 90
+  self_disable_allowed: false
+  one_watchdog_per_project: true
+
+sources:
+  constitution: docs/constitution/CONSTITUTION.md
+  rfc_index: docs/rfc/README.md
+  roadmap: docs/roadmap/ROADMAP.md
+  current_task: .agent/current-task.yaml
+  execution_queue: .agent/execution-queue.yaml
+  executor_policy: .agent/executor-policy.yaml
+  checkpoints: .agent/checkpoints
+
+company_authority:
+  repository: arvectum2/arvectum-company
+  decision: docs/governance/decisions/DECISION-2026-09-14-POS-004-ROADMAP-EXECUTOR-AM4.md
+  assignment: docs/organization/POS-004-ROADMAP-EXECUTOR-AM4-AUTHORIZATION-v1.0.0.md
+  assignment_id: ASG-POS004-ROADMAP-EXECUTOR-2026-09-14
+  authority_mode: AM-4
+  mandatory_review_deadline: "2026-10-14"
+  automatic_merge_counter_limit: 10
+
+continuity:
+  resume_active_task_first: true
+  persist_checkpoint_after_material_stage: true
+  reconcile_against_repository_before_resume: true
+  do_not_repeat_verified_stages: true
+  continue_later_independent_auto_work_when_blocked: true
+
+merge:
+  default: fail_closed
+  require_queue_auto_merge_true: true
+  require_company_authority_valid: true
+  require_exact_head_ci_green: true
+  require_no_unresolved_review_gate: true
+  require_reversible_repository_effect: true
+  forbid_release_or_external_effect: true
+
+audit:
+  github_issue: 6
+  report_every_run: true
+  suppress_silent_noop: true
