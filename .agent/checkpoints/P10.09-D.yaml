@@ -1,0 +1,37 @@
+version: 1
+task_id: P10.09-D
+status: in_progress
+base_commit: d1ad8e54abb5bd19684cd96ecf608d74f2212d1f
+branch: feat/p10-09-d-derived-text-projection
+updated_at: "2026-09-16T11:06:00Z"
+classification: product_specific
+checked:
+  constitution: "1.2.0 Ratified"
+  rfc:
+    - "RFC-0001 1.0.0 Accepted"
+    - "RFC-0007 1.0.0 Accepted"
+    - "RFC-0008 1.0.0 Accepted"
+  roadmap: "3.01.0 — P10.09-D CURRENT"
+conflicts: none
+slice:
+  name: bounded_exact_text_projection
+  head: f08efeb24a54d68e59002cb424ec5f9cbd0dfded
+  pr: 8
+  scope: "Current exact admitted Company asset versions with text/plain or text/markdown UTF-8 content only."
+  invariants:
+    - non_authoritative
+    - rebuildable_from_exact_admitted_source_version
+    - organization_and_access_scoped_via_existing_library_and_retrieval
+    - source_version_and_sha_attributable
+    - unsupported_or_failed_extraction_explicit
+    - non_knowledge_by_default
+    - no_ocr
+    - no_embeddings
+    - no_vector_store
+    - no_new_product_contract_operation
+  evidence:
+    - "P10.09-D deterministic tests 5/5 PASS."
+    - "P10.09-C + P10.09-D combined regression 14/14 PASS."
+    - "Functional cross-review iteration 1/7: PASS WITH BOUNDED FOLLOW-UP; no material objection."
+    - "Exact-head CI was queued when checked once; no polling performed."
+next_action: "Reconcile PR #8 exact-head CI/reviews; repair failures or, if green, proceed to the next smallest Workspace preview/search usefulness slice. Do not close P10.09-D yet."
