@@ -99,7 +99,9 @@ class P1009DCompanyAssetSearchTests(unittest.TestCase):
         self.assertFalse(payload["limitations"]["semantic_search"])
 
     def test_opaque_sources_are_explicitly_counted_and_not_searched(self) -> None:
-        self.admit("opaque.pdf", b"needle-secret", media_type="application/pdf")
+        # The search assertion concerns opaque projection semantics, so keep
+        # the fixture valid at the existing material-ingress validation gate.
+        self.admit("opaque.pdf", b"%PDF-1.4\nneedle-secret\n%%EOF\n", media_type="application/pdf")
         payload = self.search.search(self.access, "needle")
         self.assertEqual(payload["hits"], [])
         self.assertEqual(payload["limitations"]["unsupported_current_sources"], 1)
