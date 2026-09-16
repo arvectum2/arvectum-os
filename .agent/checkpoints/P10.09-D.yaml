@@ -2,8 +2,8 @@ version: 1
 task_id: P10.09-D
 status: in_progress
 base_commit: 4c616846331a6380dd72f3b428d8f33d24bac532
-branch: feat/p10-09-d-bounded-search
-updated_at: "2026-09-16T12:59:00Z"
+branch: null
+updated_at: "2026-09-16T13:57:00Z"
 classification: product_specific
 checked:
   constitution: "1.2.0 Ratified"
@@ -12,7 +12,7 @@ checked:
     - "RFC-0007 1.0.0 Accepted"
     - "RFC-0008 1.0.0 Accepted"
   roadmap: "3.01.0 — P10.09-D CURRENT"
-  company_authority: "POS-004 / AI-ENG-001 / ASG-POS004-ROADMAP-EXECUTOR-2026-09-14 AM-4 remains the merge authority gate; no merge attempted this quantum"
+  company_authority: "POS-004 / AI-ENG-001 / ASG-POS004-ROADMAP-EXECUTOR-2026-09-14 AM-4 re-read immediately before PR #9 merge; valid and within mandatory review/counter gates."
 conflicts: none
 slices:
   - name: bounded_exact_text_projection
@@ -25,7 +25,7 @@ slices:
       - "Functional cross-review iteration 1/7: no material objection."
       - "Exact-head Reference Python CI SUCCESS and Productive Workspace CI SUCCESS."
   - name: bounded_rebuildable_substring_search
-    head: 0a3fb8f697e646f24f39d0fa65af942e55eaf2a2
+    merged_main: 0eb7ee067f7239288a7ce75f0c5b7df18a6cbd8f
     pr: 9
     scope: "On-demand case-insensitive substring search over exact current admitted ready text projections only."
     invariants:
@@ -43,8 +43,8 @@ slices:
       - no_new_product_contract_operation
     evidence:
       - "Functional cross-review iteration 1/7: no material governance/architecture objection."
-      - "Prior head 1a2fe535ef6a209e18a1e5782cf722e2f0c2db7c Reference Python CI SUCCESS."
-      - "Prior Productive Workspace SPA job SUCCESS; BFF suite 142 passed + 1 ERROR because the opaque PDF test fixture violated the existing %PDF content-signature validation before search execution."
-      - "Repair commit 51702e8bb9eb145f0b02a1c625e7eea1c5c4e070 changes only the fixture to a valid %PDF-prefixed opaque payload; product ingress validation remains unchanged."
-      - "Checkpoint commit 0a3fb8f697e646f24f39d0fa65af942e55eaf2a2 records the repair; exact-head CI not yet observed at the single post-fix check."
-next_action: "Reconcile PR #9 exact-head CI/reviews once; repair remaining failures if any. If green, evaluate only the smallest remaining Workspace-facing composition needed for P10.09-D closure."
+      - "Exact-head c397b07d1950672c2e288ecee22f74554f73da76 Reference Python CI SUCCESS."
+      - "Exact-head c397b07d1950672c2e288ecee22f74554f73da76 Productive Workspace CI SUCCESS: frontend build/test SUCCESS and BFF suite SUCCESS."
+      - "No submitted reviews or unresolved review threads on PR #9."
+      - "Company AM-4 authority revalidated immediately before merge; PR #9 merged to main as 0eb7ee067f7239288a7ce75f0c5b7df18a6cbd8f."
+next_action: "Inspect current Workspace composition and implement only the smallest useful UI/BFF exposure of the already-merged projection/search semantics if needed for ordinary-use closure; do not broaden into OCR, embeddings, vector infrastructure, or Product Contract expansion."
