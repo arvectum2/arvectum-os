@@ -1,23 +1,31 @@
 version: 2
 repository: arvectum2/arvectum-os
-status: idle
-task_id: null
-goal: null
-authority: null
-definition_of_done: []
+status: in_progress
+task_id: P10.08-PREPARATION
+goal: "Complete only bounded product-owned/read-only/no-side-effect operational-entry preparation already admitted before genuine P10.07 evidence."
+authority: AUTO
+definition_of_done:
+  - "Inventory explicit operational entry points already admitted by current Product Contracts."
+  - "Improve only read-only/product context surfaces or already-permitted routing preparation."
+  - "Missing Product Contract operations are identified rather than invented or silently relied upon."
+  - "Unavailable/blocked states fail closed."
+  - "No universal stable product-action API or reusable platform abstraction is inferred before real P10.07 evidence."
 completed:
-  - "P10.09-D closure review merged via PR #12 to main at dbde6a10f13197a53829a18175d99a00a385180a after prior implementation PRs #8/#9/#11 satisfied their exact-head evidence gates."
-current: null
-pending: []
-last_verified_commit: "dbde6a10f13197a53829a18175d99a00a385180a"
+  - "P10.09-D closure and roadmap synchronization integrated to main; P10.08-PREPARATION selected as next ordered eligible AUTO item."
+  - "Inventory/cross-review confirms existing Workspace Actionable Work and product surfaces already satisfy bounded no-side-effect routing/fail-closed preparation; no new consequential operation is admitted."
+current: "P10.08 preparation review evidence is on chore/p10-08-preparation; awaiting one repository reconciliation before integration."
+pending:
+  - "Reconcile exact review PR state once and integrate only if merge gates remain satisfied."
+  - "After integration mark P10.08-PREPARATION done; broader P10.08 remains evidence-gated on genuine P10.07/R35."
+last_verified_commit: "d62739dd84336cb6e6aab2489ebe07b1dabcc8dc"
 test_results:
-  - "P10.09-D closure relies on exact-head CI evidence already recorded for implementation PRs #8, #9 and #11; closure PR #12 changed review evidence only and repository main has no required status checks configured."
-updated_at: "2026-09-16T18:10:00Z"
-resume_instruction: "Select the first eligible queue item after P10.09-D; currently P10.08-PREPARATION. Reconcile canonical main/roadmap/contracts before claiming it."
+  - "Existing P10.06 Actionable Work deterministic coverage includes fresh entry, stale withholding, unsafe path rejection, non-effective Product Contract rejection, scope mismatch, missing provenance and source failure."
+updated_at: "2026-09-16T18:20:00Z"
+resume_instruction: "Reconcile P10.08 preparation review PR once; do not invent a concrete product action or treat preparation as P10.07 evidence."
 execution:
-  claimed_by: null
-  execution_id: null
-  branch: null
-  base_commit: null
-  lease_until: null
+  claimed_by: roadmap-executor
+  execution_id: "p10-08-preparation-20260916T1820Z"
+  branch: "chore/p10-08-preparation"
+  base_commit: "d62739dd84336cb6e6aab2489ebe07b1dabcc8dc"
+  lease_until: "2026-09-16T20:10:00Z"
   manual_override: false

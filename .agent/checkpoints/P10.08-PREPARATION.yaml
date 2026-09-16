@@ -1,0 +1,23 @@
+version: 1
+task_id: P10.08-PREPARATION
+status: in_progress
+base_commit: d62739dd84336cb6e6aab2489ebe07b1dabcc8dc
+branch: chore/p10-08-preparation
+updated_at: "2026-09-16T18:20:00Z"
+classification: product_specific
+checked:
+  constitution: "1.2.0 Ratified"
+  rfc:
+    - "RFC-0001 1.0.0 Accepted"
+    - "RFC-0004 1.0.0 Accepted"
+    - "RFC-0005 1.0.0 Accepted"
+  roadmap: "3.02.0 — P10.08 bounded preparation is first eligible AUTO queue item"
+  product_contract: "Arvectum Company ↔ Productive Workspace Provisional 0.3.0; preserves workspace.actionable-work.project-request and workspace.product-operation.enter"
+conflicts: none
+completed:
+  - "Inventoried lifecycle-current Company Workspace entry operations and retained Tender Operator/Discount Parser product context surfaces."
+  - "Verified actionable_work.py already enforces same-origin no-side-effect entry, freshness gating, effective Product Contract lifecycle, Organization/Actor scope, explicit provenance and fail-closed unsafe routing."
+  - "Verified product composition exposes Tender Operator and Discount Parser as inspect-only with no authority, canonical mutation or external effect."
+  - "Identified that no concrete consequential Tender Agent/Discount Parser operation is currently admitted through Workspace; truthful blocked/unavailable behavior is required until an owning-product exact contract/workflow exists."
+current: "Preparation review PR awaiting repository evidence integration."
+next_action: "Reconcile review PR once; if merge gates are satisfied, integrate preparation evidence and mark only P10.08-PREPARATION done. Do not declare broader P10.08/R35 complete before genuine P10.07 evidence."
