@@ -3,7 +3,7 @@ task_id: P10.09-D
 status: in_progress
 base_commit: 4c616846331a6380dd72f3b428d8f33d24bac532
 branch: null
-updated_at: "2026-09-16T13:57:00Z"
+updated_at: "2026-09-16T15:09:00Z"
 classification: product_specific
 checked:
   constitution: "1.2.0 Ratified"
@@ -47,4 +47,15 @@ slices:
       - "Exact-head c397b07d1950672c2e288ecee22f74554f73da76 Productive Workspace CI SUCCESS: frontend build/test SUCCESS and BFF suite SUCCESS."
       - "No submitted reviews or unresolved review threads on PR #9."
       - "Company AM-4 authority revalidated immediately before merge; PR #9 merged to main as 0eb7ee067f7239288a7ce75f0c5b7df18a6cbd8f."
-next_action: "Inspect current Workspace composition and implement only the smallest useful UI/BFF exposure of the already-merged projection/search semantics if needed for ordinary-use closure; do not broaden into OCR, embeddings, vector infrastructure, or Product Contract expansion."
+  - name: ordinary_workspace_content_search
+    branch: feat/p10-09-d-workspace-search
+    head: 64abfacc12f1f15528296eeb41ce35f558a88524
+    pr: 11
+    scope: "Session-protected same-origin BFF + ordinary Workspace UI over the existing bounded search service."
+    evidence:
+      - "Focused BFF/projection/search unittest: 15 PASS."
+      - "CompanyAssetDiscovery frontend: 3 PASS."
+      - "TypeScript + Vite production build: PASS."
+      - "Functional cross-review iteration 1/7: no material architecture/governance objection."
+    waiting: "Exact-head GitHub CI has not yet been observed; no polling and no merge attempted."
+next_action: "Reconcile PR #11 exact-head CI/reviews once; if green, revalidate Company AM-4 immediately before merge. Do not broaden into OCR, embeddings, vector infrastructure, persisted indexes, or Product Contract expansion."

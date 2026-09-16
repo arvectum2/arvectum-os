@@ -15,18 +15,18 @@ completed:
   - "Reconciled canonical main and authority chain; P10.09-D remains current with no higher-authority conflict."
   - "First exact UTF-8 text projection slice passed exact-head Reference Python CI and Productive Workspace CI and was auto-merged via PR #8 to main at 4c616846331a6380dd72f3b428d8f33d24bac532 after revalidating Company AM-4 authority."
   - "Second bounded on-demand case-insensitive substring search slice passed exact-head Reference Python CI and Productive Workspace CI; PR #9 had no reviews/threads and was auto-merged after fresh Company AM-4 revalidation to main at 0eb7ee067f7239288a7ce75f0c5b7df18a6cbd8f."
-current: "Merged projection/search primitives are canonical. Next inspect the current Workspace composition and expose only the smallest ordinary-use surface needed for P10.09-D closure."
+current: "PR #11 exposes the merged bounded content-search primitive through same-origin BFF and ordinary Workspace UI; local focused tests/build pass; exact-head CI has not yet been observed."
 pending:
-  - "Inspect current Workspace BFF/UI composition around admitted Company assets and determine whether projection/search is already reachable by ordinary product use."
-  - "If not, implement the smallest read-only composition surface with existing access scope and explicit non-authority/non-Knowledge semantics."
+  - "Reconcile PR #11 exact-head CI/reviews once; repair any failure without weakening scope or governance."
+  - "If exact-head evidence is green, revalidate Company AM-4 immediately before any automatic merge."
   - "Do not broaden into OCR, embeddings, vector infrastructure, persisted indexes, or Product Contract expansion."
   - "Do not mark P10.09-D complete until the full queue gate and exact-head evidence are satisfied."
 last_verified_commit: "0eb7ee067f7239288a7ce75f0c5b7df18a6cbd8f"
 test_results:
   - "PR #9 exact head c397b07d1950672c2e288ecee22f74554f73da76: Reference Python CI SUCCESS."
   - "PR #9 exact head c397b07d1950672c2e288ecee22f74554f73da76: Productive Workspace CI SUCCESS including frontend and BFF jobs."
-updated_at: "2026-09-16T13:57:00Z"
-resume_instruction: "Inspect current Workspace composition once; implement only a minimal bounded read-only exposure if ordinary-use reachability is missing."
+updated_at: "2026-09-16T15:09:00Z"
+resume_instruction: "Reconcile PR #11 exact-head CI/reviews once. Do not poll; merge only after fresh Company AM-4 revalidation and all merge gates."
 execution:
   claimed_by: null
   execution_id: null
