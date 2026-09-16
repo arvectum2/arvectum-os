@@ -1,9 +1,9 @@
 version: 1
 task_id: P10.09-D
 status: in_progress
-base_commit: d1ad8e54abb5bd19684cd96ecf608d74f2212d1f
-branch: feat/p10-09-d-derived-text-projection
-updated_at: "2026-09-16T11:06:00Z"
+base_commit: 4c616846331a6380dd72f3b428d8f33d24bac532
+branch: feat/p10-09-d-bounded-search
+updated_at: "2026-09-16T12:59:00Z"
 classification: product_specific
 checked:
   constitution: "1.2.0 Ratified"
@@ -12,26 +12,39 @@ checked:
     - "RFC-0007 1.0.0 Accepted"
     - "RFC-0008 1.0.0 Accepted"
   roadmap: "3.01.0 — P10.09-D CURRENT"
+  company_authority: "POS-004 / AI-ENG-001 / ASG-POS004-ROADMAP-EXECUTOR-2026-09-14 AM-4 remains the merge authority gate; no merge attempted this quantum"
 conflicts: none
-slice:
-  name: bounded_exact_text_projection
-  head: f08efeb24a54d68e59002cb424ec5f9cbd0dfded
-  pr: 8
-  scope: "Current exact admitted Company asset versions with text/plain or text/markdown UTF-8 content only."
-  invariants:
-    - non_authoritative
-    - rebuildable_from_exact_admitted_source_version
-    - organization_and_access_scoped_via_existing_library_and_retrieval
-    - source_version_and_sha_attributable
-    - unsupported_or_failed_extraction_explicit
-    - non_knowledge_by_default
-    - no_ocr
-    - no_embeddings
-    - no_vector_store
-    - no_new_product_contract_operation
-  evidence:
-    - "P10.09-D deterministic tests 5/5 PASS."
-    - "P10.09-C + P10.09-D combined regression 14/14 PASS."
-    - "Functional cross-review iteration 1/7: PASS WITH BOUNDED FOLLOW-UP; no material objection."
-    - "Exact-head CI was queued when checked once; no polling performed."
-next_action: "Reconcile PR #8 exact-head CI/reviews; repair failures or, if green, proceed to the next smallest Workspace preview/search usefulness slice. Do not close P10.09-D yet."
+slices:
+  - name: bounded_exact_text_projection
+    merged_main: 4c616846331a6380dd72f3b428d8f33d24bac532
+    pr: 8
+    scope: "Current exact admitted Company asset versions with text/plain or text/markdown UTF-8 content only."
+    evidence:
+      - "P10.09-D deterministic tests 5/5 PASS."
+      - "P10.09-C + P10.09-D combined regression 14/14 PASS."
+      - "Functional cross-review iteration 1/7: no material objection."
+      - "Exact-head Reference Python CI SUCCESS and Productive Workspace CI SUCCESS."
+  - name: bounded_rebuildable_substring_search
+    head: 0a3fb8f697e646f24f39d0fa65af942e55eaf2a2
+    pr: 9
+    scope: "On-demand case-insensitive substring search over exact current admitted ready text projections only."
+    invariants:
+      - non_authoritative
+      - rebuildable_from_exact_admitted_source_version
+      - organization_and_access_scoped_via_existing_library_projection
+      - source_version_sha_document_and_designation_attributable
+      - unsupported_sources_explicitly_counted_and_not_interpreted
+      - non_knowledge_by_default
+      - no_persisted_index
+      - no_semantic_search
+      - no_ocr
+      - no_embeddings
+      - no_vector_store
+      - no_new_product_contract_operation
+    evidence:
+      - "Functional cross-review iteration 1/7: no material governance/architecture objection."
+      - "Prior head 1a2fe535ef6a209e18a1e5782cf722e2f0c2db7c Reference Python CI SUCCESS."
+      - "Prior Productive Workspace SPA job SUCCESS; BFF suite 142 passed + 1 ERROR because the opaque PDF test fixture violated the existing %PDF content-signature validation before search execution."
+      - "Repair commit 51702e8bb9eb145f0b02a1c625e7eea1c5c4e070 changes only the fixture to a valid %PDF-prefixed opaque payload; product ingress validation remains unchanged."
+      - "Checkpoint commit 0a3fb8f697e646f24f39d0fa65af942e55eaf2a2 records the repair; exact-head CI not yet observed at the single post-fix check."
+next_action: "Reconcile PR #9 exact-head CI/reviews once; repair remaining failures if any. If green, evaluate only the smallest remaining Workspace-facing composition needed for P10.09-D closure."
