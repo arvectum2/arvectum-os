@@ -1,0 +1,30 @@
+version: 1
+task_id: P10.09-D
+status: in_progress
+base_commit: d1ad8e54abb5bd19684cd96ecf608d74f2212d1f
+branch: feat/p10-09-d-derived-text-projection
+updated_at: "2026-09-16T11:00:00Z"
+classification: product_specific
+checked:
+  constitution: "1.2.0 Ratified"
+  rfc:
+    - "RFC-0001 1.0.0 Accepted"
+    - "RFC-0007 1.0.0 Accepted"
+    - "RFC-0008 1.0.0 Accepted"
+  roadmap: "3.01.0 — P10.09-D CURRENT"
+conflicts: none
+slice:
+  name: bounded_exact_text_projection
+  scope: "Current exact admitted Company asset versions with text/plain or text/markdown UTF-8 content only."
+  invariants:
+    - non_authoritative
+    - rebuildable_from_exact_admitted_source_version
+    - organization_and_access_scoped_via_existing_library_and_retrieval
+    - source_version_and_sha_attributable
+    - unsupported_or_failed_extraction_explicit
+    - non_knowledge_by_default
+    - no_ocr
+    - no_embeddings
+    - no_vector_store
+    - no_new_product_contract_operation
+next_action: "Implement projection module plus deterministic tests, then run cross-review and CI."
