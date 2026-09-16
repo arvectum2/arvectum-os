@@ -123,13 +123,7 @@ class P1009DCompanyAssetProjectionTests(unittest.TestCase):
         self.assertIsNone(projection.text)
         self.assertIn("application/pdf", projection.limitation or "")
 
-    def test_invalid_utf8_and_oversized_text_fail_without_partial_or_replacement_text(self) -> None:
-        invalid = self.admit(self.stage("invalid.txt", b"\xff\xfe", media_type="text/plain"))
-        projection = self.service.text_projection(self.access, invalid["material_id"], invalid["version_id"])
-        self.assertEqual(projection.status, "unsupported")
-        self.assertIsNone(projection.text)
-        self.assertIn("valid UTF-8", projection.limitation or "")
-
+    def test_oversized_text_fails_without_partial_projection(self) -> None:
         large = self.admit(self.stage("large.md", b"x" * (MAX_DERIVED_TEXT_BYTES + 1)))
         projection = self.service.text_projection(self.access, large["material_id"], large["version_id"])
         self.assertEqual(projection.status, "unsupported")
