@@ -16,6 +16,7 @@ from workspace_app.company_asset_admission import (
     build_staged_document_candidate,
     resolve_exact_staged_material,
 )
+from workspace_app.company_asset_copilot import AI_GROUNDING_REUSE, P1003CompanyAssetCopilotHandlingResolver
 from workspace_app.company_asset_governed_provider import (
     COMPANY_ASSET_ADMISSION_RESOURCE,
     P1004OwnerCompanyAssetAdmissionProvider,
@@ -188,6 +189,20 @@ class CompanyAssetGovernedProviderTests(unittest.TestCase):
                 policy=CompanyAssetReviewPolicy.from_payload(self.review_payload()),
             )
         self.assertEqual(len(self.executor.state.committed), 0)
+
+    def test_copilot_handling_resolver_reads_canonical_designation_not_review_projection(self) -> None:
+        provision_company_asset_admission_grant(self.root)
+        version = self._stage()
+        material_id = str(version["material_id"])
+        version_id = str(version["version_id"])
+        payload = {
+            "deletion_rule": "delete-only-through-governed-retention-process",
+            "permitted_reuse": [AI_GROUNDING_REUSE],
+        }
+        self.library.submit_review(self.access, material_id, version_id, payload)
+        self.library.admit(self.access, material_id, version_id)
+        resolver = P1003CompanyAssetCopilotHandlingResolver(self.executor)
+        self.assertEqual(resolver.permitted_reuse(self.access, material_id, version_id), (AI_GROUNDING_REUSE,))
 
     def test_owner_admission_is_idempotent_and_uses_p10_03_guarded_state(self) -> None:
         provision_company_asset_admission_grant(self.root)
