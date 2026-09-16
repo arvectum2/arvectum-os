@@ -1,0 +1,119 @@
+version: 1
+repository: arvectum2/arvectum-os
+updated_at: "2026-09-16T10:39:35Z"
+owner_controls_order: true
+
+# Ordered executable projection of the canonical roadmap. Presence here grants no
+# authority beyond Constitution, Accepted RFC/ADR, approved Company delegation,
+# Product Contracts and the per-item authority class below.
+items:
+  - order: 10
+    task_id: P10.09-D
+    title: "Derived previews, text extraction and search/index projections"
+    status: ready
+    authority: AUTO
+    independent: true
+    auto_merge: true
+    roadmap_priority: primary
+    source: "docs/roadmap/ROADMAP.md#p1009--current-value-delivery-stream"
+    dependencies:
+      - P10.09-C
+    objective: "Implement only bounded derived preview/extraction/search projections that improve ordinary asset use without creating a second source of truth."
+    acceptance_criteria:
+      - "Projection is explicitly non-authoritative and rebuildable from exact admitted source/version."
+      - "Every result remains attributable to exact source/version and scoped by Organization/access/classification/purpose controls."
+      - "Unsupported or failed extraction is explicit and fail-closed; no fabricated content or silent partial success."
+      - "Derived output is non-Knowledge by default and does not create RFC-0007 promotion."
+      - "Implementation remains inside current Accepted architecture/Product Contract scope and introduces no hidden platform/product dependency."
+      - "Relevant deterministic tests, functional cross-review and exact-head CI/evidence pass before completion."
+    executor_scope: "May inspect current Workspace asset flows, implement the smallest reversible slice, add tests/evidence, and factually synchronize roadmap/checkpoint status. Any RFC/ADR/Product Contract/lifecycle change downgrades to REVIEW/OWNER instead of being inferred."
+
+  - order: 20
+    task_id: P10.08-PREPARATION
+    title: "Product operational entry-point composition — bounded preparation"
+    status: ready
+    authority: AUTO
+    independent: true
+    auto_merge: true
+    roadmap_priority: parallel
+    source: "docs/roadmap/ROADMAP.md#p1008--product-operational-preparation-in-parallel"
+    dependencies: []
+    objective: "Perform only product-owned/read-only/no-side-effect preparation already permitted by the current roadmap."
+    acceptance_criteria:
+      - "Inventory explicit operational entry points already admitted by current Product Contracts."
+      - "Improve only read-only/product context surfaces or already-permitted routing preparation."
+      - "Missing Product Contract operations are identified rather than invented or silently relied upon."
+      - "Unavailable/blocked states fail closed."
+      - "No universal stable product-action API or reusable platform abstraction is inferred before real P10.07 evidence."
+    executor_scope: "May implement reversible preparatory code/tests/docs within existing contracts. Must not expand a Product Contract, execute a consequential action, or treat preparation as P10.07 evidence."
+
+  - order: 30
+    task_id: P10.10-ASSET-DOGFOOD
+    title: "Asset-side real daily-operations dogfooding"
+    status: ready
+    authority: HUMAN
+    independent: true
+    auto_merge: false
+    roadmap_priority: parallel
+    source: "docs/roadmap/ROADMAP.md#p1010--progressive-dogfooding"
+    dependencies:
+      - P10.09-C
+    owner_gate: "Real owner dogfooding evidence must come from an actual owner session; automation must not synthesize usability evidence."
+    executor_scope: "May prepare instrumentation, diagnostics, friction-fix branches and evidence templates from real supplied/observed sessions; never claim a dogfooding PASS without genuine owner evidence."
+
+  - order: 40
+    task_id: P10.07-REAL-ACTION
+    title: "First real governed operational action"
+    status: blocked
+    authority: OWNER
+    independent: true
+    auto_merge: false
+    roadmap_priority: evidence_gate
+    source: "docs/roadmap/ROADMAP.md#p1007--real-action-evidence-gate"
+    dependencies: []
+    blocker: "Naturally occurring genuine Company/product-owned request plus applicable exact Product Contract/workflow/operation are required."
+    owner_gate: "Owner decision and fresh server-side gates are part of the genuine action journey."
+    executor_scope: "May detect/read a genuine request when one exists and prepare the governed execution path. Must not manufacture a request, approval, external effect or synthetic closure evidence."
+
+  - order: 50
+    task_id: INT-B7
+    title: "First real external-system connector evidence"
+    status: blocked
+    authority: HUMAN
+    independent: true
+    auto_merge: false
+    roadmap_priority: external_integration
+    source: "docs/roadmap/ROADMAP.md#external-integration-lane"
+    dependencies: []
+    blocker: "Requires a real exact endpoint/deployment/account and least-privilege credential binding."
+    executor_scope: "May maintain prepared read-only connector code/evidence. Must not invent endpoint/account/credential evidence or broaden external authority."
+
+  - order: 60
+    task_id: R35
+    title: "Operational Work / Product Boundary / AI Authority Review"
+    status: blocked
+    authority: REVIEW
+    independent: false
+    auto_merge: false
+    roadmap_priority: review_gate
+    source: "docs/roadmap/ROADMAP.md#active-phase-10-work"
+    dependencies:
+      - P10.07-REAL-ACTION
+      - P10.08-PREPARATION
+    blocker: "Requires genuine P10.07 action evidence and applicable P10.08 evidence."
+    executor_scope: "May prepare the review packet/cross-review from real evidence; cannot self-approve a reserved governance conclusion."
+
+  - order: 70
+    task_id: P10.11
+    title: "Lifecycle / platform-reuse / capability disposition"
+    status: blocked
+    authority: OWNER
+    independent: false
+    auto_merge: false
+    roadmap_priority: later
+    source: "docs/roadmap/ROADMAP.md#active-phase-10-work"
+    dependencies:
+      - R35
+      - P10.10-ASSET-DOGFOOD
+    blocker: "Waits sufficient Phase 10 evidence and may require lifecycle/platform-reuse decisions."
+    executor_scope: "May prepare evidence/options only; no lifecycle promotion, Product Contract transition or platform-reuse decision without applicable authority."
