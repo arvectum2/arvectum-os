@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import tempfile
 import unittest
@@ -12,8 +13,12 @@ from arvectum_os_ref.identity import Identity
 from workspace_app.access import AccessContext
 from workspace_app.company_asset_copilot import (
     AI_GROUNDING_REUSE,
+    CanonicalCompanyAssetGroundingEvidence,
     CompanyAssetCopilotContractGate,
     CompanyAssetCopilotEvidenceSource,
+    P10_09_C_APPROVED_DRAFT_BLOB_SHA,
+    P10_09_C_CANONICAL_BLOB_SHA,
+    P10_09_C_CANONICAL_CONTRACT_PATH,
     P10_09_C_OPERATION,
 )
 from workspace_app.company_asset_library import AdmittedCompanyAssetVersion, CompanyAssetLibrary, CompanyAssetReviewPolicy
@@ -28,6 +33,7 @@ class RecordingAdmission:
     def __init__(self) -> None:
         self.items: list[AdmittedCompanyAssetVersion] = []
         self.reuse_by_version: dict[str, tuple[str, ...]] = {}
+        self.sha_by_version: dict[str, str] = {}
 
     def available(self, access: AccessContext) -> bool:
         return True
@@ -36,6 +42,7 @@ class RecordingAdmission:
         return tuple(self.items)
 
     def admit(self, *, access, store, material_id, version_id, policy: CompanyAssetReviewPolicy):
+        version = store._version(access, material_id, version_id)
         self.items = [replace(item, current=False) if item.material_id == material_id and item.current else item for item in self.items]
         admitted = AdmittedCompanyAssetVersion(
             material_id=material_id,
@@ -51,6 +58,7 @@ class RecordingAdmission:
         )
         self.items.append(admitted)
         self.reuse_by_version[version_id] = policy.permitted_reuse
+        self.sha_by_version[version_id] = str(version["content_sha256"])
         return admitted
 
 
@@ -58,8 +66,19 @@ class FakeCanonicalHandling:
     def __init__(self, admission: RecordingAdmission) -> None:
         self.admission = admission
 
-    def permitted_reuse(self, access, material_id: str, version_id: str) -> tuple[str, ...]:
-        return self.admission.reuse_by_version.get(version_id, ())
+    def resolve(self, access, material_id: str, version_id: str) -> CanonicalCompanyAssetGroundingEvidence:
+        item = next(
+            value for value in self.admission.items
+            if value.material_id == material_id and value.version_id == version_id
+        )
+        return CanonicalCompanyAssetGroundingEvidence(
+            permitted_reuse=self.admission.reuse_by_version.get(version_id, ()),
+            content_sha256=self.admission.sha_by_version[version_id],
+            document_version=item.document_version,
+            designation_version=item.designation_version,
+            event_version=item.event_version,
+            provenance_refs=item.provenance_refs,
+        )
 
 
 class EmptyDiscovery:
@@ -144,6 +163,11 @@ class P1009CCompanyAssetCopilotTests(unittest.TestCase):
         evidence, limitations = self.source(self.gate("Draft")).evidence(self.access, "market research")
         self.assertEqual(evidence, ())
         self.assertTrue(any("Product Contract 0.3.0" in value for value in limitations))
+        bad_blob = CompanyAssetCopilotContractGate(
+            "0.3.0", "Provisional", P10_09_C_OPERATION, canonical_source_blob_sha="0" * 40
+        )
+        evidence, _ = self.source(bad_blob).evidence(self.access, "market research")
+        self.assertEqual(evidence, ())
         self.assertTrue(item["material_id"].startswith("MAT-"))
 
     def test_exact_current_permitted_text_reaches_model_context_without_browser_raw_leak(self) -> None:
@@ -157,7 +181,10 @@ class P1009CCompanyAssetCopilotTests(unittest.TestCase):
         company = [source for source in answer.sources if source.source_id.startswith("company-asset:")]
         self.assertEqual(len(company), 1)
         self.assertEqual(company[0].model_context, secret_text)
+        self.assertTrue(any(value.startswith("material_id:") for value in company[0].server_provenance))
+        self.assertTrue(any(value.startswith("content_sha256:") for value in company[0].server_provenance))
         self.assertEqual(model.evidence[0].model_context, secret_text)
+        self.assertEqual(model.evidence[0].server_provenance, ())
         rendered = str(payload)
         self.assertNotIn(secret_text, rendered)
         self.assertNotIn(item["material_id"], rendered)
@@ -188,6 +215,36 @@ class P1009CCompanyAssetCopilotTests(unittest.TestCase):
         self.assertNotIn("Old approved grounding content.", contexts)
         self.assertIn("Current approved grounding content.", contexts)
         self.assertTrue(denied["material_id"].startswith("MAT-"))
+
+    def test_question_scoped_minimization_excludes_unrelated_file_regions(self) -> None:
+        unrelated = "UNRELATED-SECRET-TAIL " * 180
+        content = ("Aurora budget is 42 units. " + unrelated).encode()
+        self.admit(self.stage("long-research.md", content))
+        model = RecordingModel()
+        answer = RuntimeCopilotProvider(
+            EmptyDiscovery(), EmptyProducts(), model=model, supplemental_sources=(self.source(),)
+        ).answer(self.access, "What is the Aurora budget?")
+        company = next(source for source in answer.sources if source.source_id.startswith("company-asset:"))
+        self.assertIn("Aurora budget is 42 units", company.model_context or "")
+        self.assertLess(len((company.model_context or "").encode("utf-8")), len(content))
+        self.assertNotIn("UNRELATED-SECRET-TAIL " * 50, company.model_context or "")
+
+    def test_staged_blob_manifest_cannot_diverge_from_canonical_artifact_integrity(self) -> None:
+        item = self.admit(self.stage("integrity.md", b"Canonical integrity evidence for Aurora."))
+        self.admission.sha_by_version[item["version_id"]] = "0" * 64
+        evidence, limitations = self.source().evidence(self.access, "Aurora integrity")
+        self.assertEqual(evidence, ())
+        self.assertTrue(any("canonical admission evidence" in value for value in limitations))
+
+    def test_exact_contract_blob_constants_match_repository_files(self) -> None:
+        repo_root = Path(__file__).resolve().parents[3]
+        def git_blob_sha(path: Path) -> str:
+            data = path.read_bytes()
+            return hashlib.sha1(f"blob {len(data)}\0".encode() + data).hexdigest()
+        provisional = repo_root / P10_09_C_CANONICAL_CONTRACT_PATH
+        draft = repo_root / "docs/contracts/P10-09-C-ARVECTUM-COMPANY-WORKSPACE-PRODUCT-CONTRACT-DRAFT-v0.3.0.md"
+        self.assertEqual(git_blob_sha(provisional), P10_09_C_CANONICAL_BLOB_SHA)
+        self.assertEqual(git_blob_sha(draft), P10_09_C_APPROVED_DRAFT_BLOB_SHA)
 
     def test_non_text_asset_is_metadata_only_and_not_binary_model_context(self) -> None:
         logo = self.admit(self.stage("company-logo.png", b"\x89PNG\r\n\x1a\nlogo", role="logo", media_type="image/png"))

@@ -64,6 +64,23 @@ class CopilotEvidence:
     semantic_role: str
     knowledge_role: str | None = None
     model_context: str | None = None
+    server_provenance: tuple[str, ...] = ()
+
+    def for_model(self) -> "CopilotEvidence":
+        """Return the minimized model-facing view without server-only reconstruction evidence."""
+
+        return CopilotEvidence(
+            source_id=self.source_id,
+            label=self.label,
+            summary=self.summary,
+            authority=self.authority,
+            freshness=self.freshness,
+            open_href=self.open_href,
+            semantic_role=self.semantic_role,
+            knowledge_role=self.knowledge_role,
+            model_context=self.model_context,
+            server_provenance=(),
+        )
 
     def to_payload(self) -> dict[str, object]:
         return {
@@ -419,7 +436,9 @@ class RuntimeCopilotProvider:
             model_provider = descriptor.provider
             model_name = descriptor.model
             try:
-                synthesis = self.model.synthesize(normalized, evidence)
+                synthesis = self.model.synthesize(
+                    normalized, tuple(item.for_model() for item in evidence)
+                )
             except CopilotModelError:
                 model_failure = "MODEL_UNAVAILABLE"
                 claims.append(
