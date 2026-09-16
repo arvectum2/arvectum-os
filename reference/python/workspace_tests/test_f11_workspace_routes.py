@@ -304,6 +304,28 @@ class F11WorkspaceRouteTests(unittest.TestCase):
         self.assertEqual(download.headers["content-type"], DOCX_MEDIA_TYPE)
         self.assertGreater(len(download.content), 100)
 
+    def test_content_search_is_session_scoped_rebuildable_and_non_authoritative(self) -> None:
+        payload = {
+            "project_id": "COMPANY", "filename": "policy.md", "media_type": "text/markdown",
+            "semantic_role": "source", "classification": "internal", "purpose": "company policy",
+            "rights": "company-internal-use", "retention_rule": "until-replaced",
+            "content_base64": base64.b64encode(b"Internal procurement policy alpha").decode("ascii"),
+        }
+        staged = self.client.post("/api/app/v1/company-materials", headers=self.command_headers, json=payload).json()["material"]
+        self.submit_review(staged)
+        admitted = self.client.post(f"/api/app/v1/company-assets/{staged['material_id']}/versions/{staged['version_id']}/admit", headers=self.command_headers)
+        self.assertEqual(admitted.status_code, 200)
+        response = self.client.get("/api/app/v1/company-assets/search?q=procurement", headers=self.release_headers)
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        self.assertEqual(result["hits"][0]["version_id"], staged["version_id"] )
+        self.assertFalse(result["governance"]["canonical_authority"] )
+        self.assertFalse(result["governance"]["validated_knowledge_created"] )
+        self.assertFalse(result["limitations"]["persisted_index"] )
+        self.client.cookies.clear()
+        denied = self.client.get("/api/app/v1/company-assets/search?q=procurement", headers=self.release_headers)
+        self.assertEqual(denied.status_code, 401)
+
     def test_export_is_session_scoped_and_bounded(self) -> None:
         self.stage_template()
         response = self.client.get("/api/app/v1/company-assets/export?limit=1", headers=self.release_headers)

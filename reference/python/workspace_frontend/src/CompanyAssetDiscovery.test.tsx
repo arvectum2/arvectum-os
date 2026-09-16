@@ -1,11 +1,11 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CompanyAssetDiscovery } from "./CompanyAssetDiscovery";
-import { fetchCompanyAssetContent } from "./f11Api";
+import { fetchCompanyAssetContent, searchCompanyAssets } from "./f11Api";
 import type { CompanyAssetLibraryItem, CompanyAssetLibraryProjection } from "./f11Types";
 import { LanguageProvider } from "./i18n";
 
-vi.mock("./f11Api", () => ({ fetchCompanyAssetContent: vi.fn() }));
+vi.mock("./f11Api", () => ({ fetchCompanyAssetContent: vi.fn(), searchCompanyAssets: vi.fn() }));
 
 function item(overrides: Partial<CompanyAssetLibraryItem> = {}): CompanyAssetLibraryItem {
   return {
@@ -125,4 +125,19 @@ describe("P10.09-A admitted asset discovery", () => {
     fireEvent.click(screen.getByRole("button", { name: "Использовать как шаблон" }));
     expect(reuse).toHaveBeenCalledWith(expect.objectContaining({ material_id: "material-current", version_id: "version-current" }));
   });
+  it("exposes bounded server-side content search with explicit non-authority semantics", async () => {
+    vi.mocked(searchCompanyAssets).mockResolvedValue({
+      schema: "arvectum.workspace.company-asset-search/1", query: "policy",
+      hits: [{ material_id: "material-current", version_id: "version-current", title: "Policy.md", content_sha256: "b".repeat(64), document_version: "document-version:current", designation_version: "asset-version:current", excerpt: "Company policy text", canonical_authority: false, knowledge_status: "not-validated-knowledge", rebuildable: true }],
+      limitations: { mode: "bounded-case-insensitive-substring", persisted_index: false, semantic_search: false, unsupported_current_sources: 1 },
+      governance: { canonical_authority: false, rebuildable_from_exact_admitted_sources: true, validated_knowledge_created: false, organization_scope_resolved_server_side: true },
+    });
+    render(<LanguageProvider initialLanguage="en"><CompanyAssetDiscovery data={library} projects={[]} onReuse={() => undefined} /></LanguageProvider>);
+    fireEvent.change(screen.getByLabelText("Text inside asset"), { target: { value: "policy" } });
+    fireEvent.click(screen.getByRole("button", { name: "Search text" }));
+    await waitFor(() => expect(searchCompanyAssets).toHaveBeenCalledWith("policy"));
+    expect(screen.getByText("Company policy text")).toBeTruthy();
+    expect(screen.getByText(/not authority or validated knowledge/i)).toBeTruthy();
+  });
+
 });

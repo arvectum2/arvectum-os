@@ -182,6 +182,27 @@ export type CompanyAssetLibraryProjection = {
   };
 };
 
+export type CompanyAssetSearchHit = {
+  material_id: string;
+  version_id: string;
+  title: string;
+  content_sha256: string;
+  document_version: string;
+  designation_version: string;
+  excerpt: string;
+  canonical_authority: false;
+  knowledge_status: "not-validated-knowledge";
+  rebuildable: true;
+};
+
+export type CompanyAssetSearchProjection = {
+  schema: "arvectum.workspace.company-asset-search/1";
+  query: string;
+  hits: CompanyAssetSearchHit[];
+  limitations: { mode: "bounded-case-insensitive-substring"; persisted_index: false; semantic_search: false; unsupported_current_sources: number };
+  governance: { canonical_authority: false; rebuildable_from_exact_admitted_sources: true; validated_knowledge_created: false; organization_scope_resolved_server_side: true };
+};
+
 export type CompanyAssetLibraryExport = {
   schema: "arvectum.workspace.company-asset-library-export/1";
   generated_at: string;

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { fetchCompanyAssetContent } from "./f11Api";
+import { fetchCompanyAssetContent, searchCompanyAssets } from "./f11Api";
+import type { CompanyAssetSearchProjection } from "./f11Types";
 import type { CompanyAssetLibraryItem, CompanyAssetLibraryProjection } from "./f11Types";
 import { useWorkspaceLanguage } from "./i18n";
 import "./CompanyAssetDiscovery.css";
@@ -47,6 +48,9 @@ export function CompanyAssetDiscovery({ data, projects, onReuse }: {
   const [lifecycle, setLifecycle] = useState<LifecycleFilter>("all");
   const [retrieving, setRetrieving] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [contentSearch, setContentSearch] = useState("");
+  const [searchingContent, setSearchingContent] = useState(false);
+  const [contentResults, setContentResults] = useState<CompanyAssetSearchProjection | null>(null);
   const companyWide = text("Компания в целом", "Company-wide");
   const all = useMemo(() => admittedItems(data), [data]);
   const roles = useMemo(() => [...new Set(all.map((item) => item.semantic_role))].sort(), [all]);
@@ -64,6 +68,21 @@ export function CompanyAssetDiscovery({ data, projects, onReuse }: {
     return [item.title, roleLabel(item.semantic_role, language), projectLabel(item.project_id, projects, companyWide), item.purpose]
       .join(" ").toLocaleLowerCase(language === "ru" ? "ru-RU" : "en-US").includes(normalizedQuery);
   }), [all, companyWide, language, lifecycle, normalizedQuery, project, projects, role, version]);
+
+  const searchContent = async () => {
+    const value = contentSearch.trim();
+    if (!value) { setContentResults(null); return; }
+    setMessage(null);
+    setSearchingContent(true);
+    try {
+      setContentResults(await searchCompanyAssets(value));
+    } catch (error) {
+      setContentResults(null);
+      setMessage(error instanceof Error ? error.message : "COMPANY_ASSET_SEARCH_UNAVAILABLE");
+    } finally {
+      setSearchingContent(false);
+    }
+  };
 
   const retrieve = async (item: CompanyAssetLibraryItem, download: boolean) => {
     setMessage(null);
@@ -106,6 +125,17 @@ export function CompanyAssetDiscovery({ data, projects, onReuse }: {
       <label>{text("Проект", "Project")}<select value={project} onChange={(event) => setProject(event.target.value)}><option value="all">{text("Все проекты", "All projects")}</option>{projectIds.map((value) => <option key={value} value={value}>{projectLabel(value, projects, companyWide)}</option>)}</select></label>
       <label>{text("Версия", "Version")}<select value={version} onChange={(event) => setVersion(event.target.value as VersionFilter)}><option value="all">{text("Текущие и заменённые", "Current and superseded")}</option><option value="current">{text("Только текущие", "Current only")}</option><option value="superseded">{text("Только заменённые", "Superseded only")}</option></select></label>
       <label>{text("Состояние", "Lifecycle")}<select value={lifecycle} onChange={(event) => setLifecycle(event.target.value as LifecycleFilter)}><option value="all">{text("Принято и архив", "Accepted and archive")}</option><option value="accepted">{text("Принято", "Accepted")}</option><option value="archive">{text("Архив", "Archive")}</option></select></label>
+    </div>
+    <div className="asset-content-search">
+      <div><strong>{text("Поиск по тексту материалов", "Search inside asset text")}</strong><p>{text("Ищет только в текущих принятых TXT/Markdown. Результат — производная подсказка, не источник истины и не подтверждённое знание.", "Searches current admitted TXT/Markdown only. Results are derived hints, not authority or validated knowledge.")}</p></div>
+      <form onSubmit={(event) => { event.preventDefault(); void searchContent(); }}>
+        <label>{text("Текст внутри материала", "Text inside asset")}<input type="search" value={contentSearch} maxLength={200} onChange={(event) => setContentSearch(event.target.value)} /></label>
+        <button type="submit" disabled={searchingContent || !contentSearch.trim()}>{searchingContent ? text("Ищем…", "Searching…") : text("Найти в тексте", "Search text")}</button>
+      </form>
+      {contentResults ? <div className="asset-content-results" aria-live="polite">
+        <p>{text(`Найдено: ${contentResults.hits.length}. Неподдерживаемых текущих источников: ${contentResults.limitations.unsupported_current_sources}.`, `Found: ${contentResults.hits.length}. Unsupported current sources: ${contentResults.limitations.unsupported_current_sources}.`)}</p>
+        {contentResults.hits.map((hit) => <article key={hit.version_id}><strong>{hit.title}</strong><p>{hit.excerpt}</p><details><summary>{text("Точная производная ссылка", "Exact derived attribution")}</summary><code>{hit.document_version}</code><br/><code>{hit.content_sha256}</code></details></article>)}
+      </div> : null}
     </div>
     {message ? <p className="company-message" role="status">{message}</p> : null}
     {filtered.length ? <div className="asset-discovery-results">{filtered.map((item) => {

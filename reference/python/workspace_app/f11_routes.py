@@ -16,6 +16,8 @@ from .company_asset_library import (
     CompanyAssetLibraryError,
     CompanyAssetReviewError,
 )
+from .company_asset_projections import CompanyAssetDerivedProjectionService
+from .company_asset_search import CompanyAssetSearchError, CompanyAssetSearchService
 from .company_asset_retrieval import (
     CompanyAssetContentUnavailable,
     CompanyAssetRetrieval,
@@ -83,10 +85,14 @@ def install_f11_routes(
     materials = materials_store or CompanyMaterialsStore(Path(settings.runtime_root))
     library = asset_library or CompanyAssetLibrary(materials, asset_admission)
     retrieval = CompanyAssetRetrieval(library, materials)
+    projections = CompanyAssetDerivedProjectionService(library, retrieval)
+    search = CompanyAssetSearchService(library, projections)
     app.state.company_portfolio_provider = portfolio
     app.state.company_materials_store = materials
     app.state.company_asset_library = library
     app.state.company_asset_retrieval = retrieval
+    app.state.company_asset_projections = projections
+    app.state.company_asset_search = search
 
     # Existing Workspace creates the SPA catch-all before this product boundary is
     # composed. Temporarily remove exactly that route so API routes remain reachable,
@@ -169,6 +175,21 @@ def install_f11_routes(
             return library.project(access)
         except (CompanyAssetLibraryError, CompanyMaterialsError):
             raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="COMPANY_ASSET_LIBRARY_UNAVAILABLE") from None
+
+    @app.get("/api/app/v1/company-assets/search")
+    async def search_company_assets(
+        q: str = "",
+        limit: int = 10,
+        current: tuple[WorkspaceSession, AccessContext] = Depends(authorize_current),
+    ) -> dict[str, Any]:
+        _, access = current
+        try:
+            return search.search(access, q, limit=limit)
+        except CompanyAssetSearchError as exc:
+            detail = str(exc)
+            if "query" in detail or "limit" in detail:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="COMPANY_ASSET_SEARCH_INVALID") from None
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="COMPANY_ASSET_SEARCH_UNAVAILABLE") from None
 
     @app.get("/api/app/v1/company-assets/{material_id}/versions/{version_id}/content")
     async def retrieve_company_asset_content(

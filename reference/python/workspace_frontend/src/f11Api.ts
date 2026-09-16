@@ -2,6 +2,7 @@ import type {
   AdmittedCompanyAsset,
   CompanyAssetLibraryExport,
   CompanyAssetLibraryProjection,
+  CompanyAssetSearchProjection,
   CompanyMaterialsProjection,
   CompanyPortfolioProjection,
   GeneratedCompanyOutput,
@@ -61,6 +62,11 @@ export function loadCompanyMaterials(): Promise<CompanyMaterialsProjection> {
 
 export function loadCompanyAssetLibrary(): Promise<CompanyAssetLibraryProjection> {
   return request<CompanyAssetLibraryProjection>("/api/app/v1/company-assets");
+}
+
+export function searchCompanyAssets(query: string, limit = 10): Promise<CompanyAssetSearchProjection> {
+  const params = new URLSearchParams({ q: query, limit: String(limit) });
+  return request<CompanyAssetSearchProjection>(`/api/app/v1/company-assets/search?${params.toString()}`);
 }
 
 export function exportCompanyAssetLibrary(limit = 100): Promise<CompanyAssetLibraryExport> {
