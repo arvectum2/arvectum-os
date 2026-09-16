@@ -246,6 +246,17 @@ class P1009CCompanyAssetCopilotTests(unittest.TestCase):
         self.assertEqual(git_blob_sha(provisional), P10_09_C_CANONICAL_BLOB_SHA)
         self.assertEqual(git_blob_sha(draft), P10_09_C_APPROVED_DRAFT_BLOB_SHA)
 
+    def test_common_question_words_do_not_select_or_disclose_unrelated_asset(self) -> None:
+        secret = b"This current Company note contains unrelated-private-material only."
+        self.admit(self.stage("private-note.md", secret))
+        model = RecordingModel()
+        answer = RuntimeCopilotProvider(
+            EmptyDiscovery(), EmptyProducts(), model=model, supplemental_sources=(self.source(),)
+        ).answer(self.access, "What is the current status?")
+        self.assertFalse(any(item.source_id.startswith("company-asset:") for item in answer.sources))
+        self.assertFalse(hasattr(model, "evidence"))
+        self.assertNotIn("unrelated-private-material", str(answer.to_payload()))
+
     def test_non_text_asset_is_metadata_only_and_not_binary_model_context(self) -> None:
         logo = self.admit(self.stage("company-logo.png", b"\x89PNG\r\n\x1a\nlogo", role="logo", media_type="image/png"))
         evidence, limitations = self.source().evidence(self.access, "company logo")

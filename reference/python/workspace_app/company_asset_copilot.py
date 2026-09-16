@@ -34,6 +34,12 @@ MAX_COMPANY_TEXT_CONTEXT_BYTES = 16 * 1024
 MAX_COMPANY_MODEL_CONTEXT_BYTES = 4 * 1024
 MAX_COMPANY_EVIDENCE = 3
 _TEXT_MEDIA = frozenset({"text/plain", "text/markdown"})
+_QUESTION_STOPWORDS = frozenset({
+    "what", "which", "where", "when", "with", "from", "this", "that", "have", "about",
+    "current", "please", "какой", "какая", "какое", "какие", "где", "когда", "этот", "эта",
+    "это", "эти", "почему", "сейчас", "текущий", "текущая", "текущее", "текущие", "мне",
+    "про", "для", "или", "есть", "источник", "точный", "точная",
+})
 
 
 def _minimized_text_context(text: str, tokens: tuple[str, ...]) -> str | None:
@@ -202,7 +208,13 @@ class CompanyAssetCopilotEvidenceSource:
 
     @staticmethod
     def _tokens(question: str) -> tuple[str, ...]:
-        return tuple(dict.fromkeys(re.findall(r"[\w.-]{3,}", question.casefold(), flags=re.UNICODE)))
+        return tuple(
+            dict.fromkeys(
+                token
+                for token in re.findall(r"[\w.-]{3,}", question.casefold(), flags=re.UNICODE)
+                if token not in _QUESTION_STOPWORDS
+            )
+        )
 
     @staticmethod
     def _opaque_source_id(access: AccessContext, material_id: str, version_id: str) -> str:
