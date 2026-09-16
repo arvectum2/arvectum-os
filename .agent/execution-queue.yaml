@@ -1,6 +1,6 @@
 version: 1
 repository: arvectum2/arvectum-os
-updated_at: "2026-09-16T18:10:00Z"
+updated_at: "2026-09-16T18:35:00Z"
 owner_controls_order: true
 
 # Ordered executable projection of the canonical roadmap. Presence here grants no
@@ -31,7 +31,7 @@ items:
   - order: 20
     task_id: P10.08-PREPARATION
     title: "Product operational entry-point composition — bounded preparation"
-    status: ready
+    status: done
     authority: AUTO
     independent: true
     auto_merge: true
