@@ -2,7 +2,7 @@ version: 2
 repository: arvectum2/arvectum-os
 status: in_progress
 task_id: P10.09-D
-goal: "Introduce a bounded rebuildable exact-source/version text extraction projection for current admitted UTF-8 Company assets, preserving access scope and non-Knowledge/non-authority semantics."
+goal: "Introduce bounded rebuildable exact-source/version derived projections for admitted Company assets while preserving access scope and non-Knowledge/non-authority semantics."
 authority: AUTO
 definition_of_done:
   - "Projection is explicitly non-authoritative and rebuildable from exact admitted source/version."
@@ -13,15 +13,22 @@ definition_of_done:
   - "Relevant deterministic tests, functional cross-review and exact-head CI/evidence pass before completion."
 completed:
   - "Reconciled canonical main d1ad8e54abb5bd19684cd96ecf608d74f2212d1f, Constitution 1.2.0, RFC Index, RFC-0001, RFC-0007, RFC-0008, roadmap 3.01.0 and watchdog policy/queue."
-  - "Inspected P10.09-C retrieval/Copilot paths; selected a bounded UTF-8 text projection that reuses exact admitted retrieval instead of introducing OCR/index infrastructure prematurely."
-current: "Implement product-local derived text projection and deterministic tests on feat/p10-09-d-derived-text-projection."
+  - "Implemented product-local exact current admitted UTF-8 text projection; opaque media and oversized text are explicit unsupported states; no partial/replacement extraction."
+  - "Projection reuses Company Asset Library + exact retrieval for Organization/access/integrity/source-version attribution and explicitly remains non-authoritative, rebuildable and non-Knowledge."
+  - "Local P10.09-D deterministic tests: 5/5 PASS. Combined P10.09-C + P10.09-D regression: 14/14 PASS."
+  - "Opened PR #8 at head ae424baccd2003033cc729be7e2a81cc85553507. Functional cross-review iteration 1/7: PASS WITH BOUNDED FOLLOW-UP; no material objection to first slice."
+current: "PR #8 exact-head Productive Workspace CI and Reference Python CI are queued; checked once and did not poll."
 pending:
-  - "Run deterministic tests and functional cross-review."
-  - "Open PR and inspect exact-head CI/evidence."
-last_verified_commit: "d1ad8e54abb5bd19684cd96ecf608d74f2212d1f"
-test_results: []
-updated_at: "2026-09-16T11:00:00Z"
-resume_instruction: "Resume P10.09-D on feat/p10-09-d-derived-text-projection; do not broaden into OCR/vector search or Product Contract evolution without a separate fit gate."
+  - "On next quantum, reconcile PR #8 exact-head CI/reviews and repair any failure."
+  - "If first slice is green, decide the next smallest P10.09-D usefulness slice (Workspace preview/search integration) without broadening into OCR/vector infrastructure prematurely."
+  - "Do not mark P10.09-D complete until bounded preview/search usefulness and closure evidence satisfy the full queue gate."
+last_verified_commit: "ae424baccd2003033cc729be7e2a81cc85553507"
+test_results:
+  - "python3 -m unittest workspace_tests.test_p10_09_d_company_asset_projections -v => 5/5 PASS"
+  - "python3 -m unittest workspace_tests.test_p10_09_c_company_asset_copilot workspace_tests.test_p10_09_d_company_asset_projections -v => 14/14 PASS"
+  - "GitHub Actions on ae424baccd2003033cc729be7e2a81cc85553507: Productive Workspace CI queued; Reference Python CI queued at single check."
+updated_at: "2026-09-16T11:06:00Z"
+resume_instruction: "Resume PR #8 first. Check exact-head CI/review state once; if waiting, persist and continue with an independent bounded P10.09-D follow-up only if it does not destabilize the in-flight evidence head."
 execution:
   claimed_by: "project-watchdog"
   execution_id: "p10-09-d-20260916t1400"
