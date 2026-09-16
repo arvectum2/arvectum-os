@@ -1,9 +1,9 @@
 # Arvectum OS Canonical Roadmap
 
 Status: `Active`
-Version: `3.02.0`
+Version: `3.03.0`
 Created: `2026-08-07`
-Updated: `2026-09-16`
+Updated: `2026-09-17`
 Owner: `ООО «Арвектум»`
 Task classification: `governance`
 
@@ -26,7 +26,7 @@ Roadmap status does not itself change Platform Capability lifecycle, Product Con
 
 Detailed phase plans, reviews and repository history retain implementation/evidence detail; this file defines current canonical sequencing when subordinate phase text is older or more restrictive.
 
-## 2. Version 3.02.0 — P10.09-D closure and bounded P10.08 preparation
+## 2. Version 3.03.0 — bounded P10.08 preparation closure
 
 Phase 10 has progressed beyond the original serial plan:
 
@@ -39,6 +39,7 @@ Phase 10 has progressed beyond the original serial plan:
 - `P10.09-B — asset-aware generation = Complete / PASS`;
 - `P10.09-C — asset-grounded Copilot fit-check and bounded use = Complete / PASS`;
 - `P10.09-D — bounded derived text projection, on-demand substring search and ordinary Workspace search composition = Complete / PASS`;
+- bounded pre-P10.07 `P10.08` product-owned/read-only/no-side-effect preparation is `Complete / PASS — preparation scope only`;
 - lifecycle-current Arvectum Company ↔ Productive Workspace Product Contract is `Provisional 0.3.0` for the exact declared scope;
 - `P10.07` truthfully waits for a naturally occurring genuine request and may not use synthetic evidence.
 
@@ -50,13 +51,14 @@ The prior sequencing incorrectly allowed the P10.07 waiting state to appear to f
 
 Accordingly:
 
-- **P10.09-D is Complete / PASS for its bounded roadmap scope; the next eligible autonomous queue item is bounded P10.08 product-owned/no-side-effect preparation**;
-- P10.08 may perform bounded product-owned/no-side-effect preparation, but evidence-based reusable platform generalization still waits for the first real P10.07 action;
-- P10.10 may begin asset-side dogfooding, but full P10.10 PASS still requires the P10.07 action journey;
+- **P10.09-D is Complete / PASS for its bounded roadmap scope**;
+- **the bounded pre-P10.07 P10.08 preparation slice is Complete / PASS; no further independent AUTO preparation item is currently admitted by the execution queue**;
+- evidence-based reusable P10.08 generalization/completion still waits for the first real P10.07 action;
+- P10.10 may begin asset-side dogfooding only from genuine owner sessions, and full P10.10 PASS still requires the P10.07 action journey;
 - R35 remains blocked until real action evidence exists;
 - P10.07 remains mandatory for M10 closure.
 
-This sequencing correction creates no Constitution/RFC/ADR amendment, Product Contract expansion, Stable/Active lifecycle promotion, public interface, customer Production or authority claim.
+This status synchronization creates no Constitution/RFC/ADR amendment, Product Contract expansion, Stable/Active lifecycle promotion, public interface, customer Production or authority claim.
 
 ## 3. Architecture and governance baseline
 
@@ -118,9 +120,9 @@ M10-alpha proves a real Company-owned material can complete staging → review �
 | ID | Work item | Current status |
 |---|---|---:|
 | **P10.07** | First real governed operational action | **⏸ WAITING — genuine request required; mandatory M10 evidence** |
-| **P10.08** | Product operational entry-point composition | **🟨 CURRENT EXECUTABLE PREPARATION** — bounded product-owned/read-only/no-side-effect scope only; reusable generalization waits real P10.07 evidence |
+| **P10.08** | Product operational entry-point composition | **🟦 PREPARATION COMPLETE / WAITING** — bounded pre-P10.07 preparation passed; evidence-informed completion/generalization waits genuine P10.07 evidence |
 | **P10.09** | Source-grounded use of admitted assets in Workspace / AI / generation | **🟩 COMPLETE / PASS through P10.09-D bounded scope** |
-| **P10.10** | Real daily-operations dogfooding + friction closure | **🟦 PARTIALLY OPEN** — asset-side sessions may start; full PASS waits P10.07 |
+| **P10.10** | Real daily-operations dogfooding + friction closure | **🟦 PARTIALLY OPEN / HUMAN** — asset-side genuine owner sessions may start; full PASS waits P10.07 |
 | P10.11 | Lifecycle / platform-reuse / capability disposition | ⬜ waits sufficient Phase 10 evidence |
 | **R35** | Operational Work / Product Boundary / AI Authority Review | **🔒 blocked on real P10.07 action + applicable P10.08 evidence** |
 | R36 | M10 Hardening + Milestone Code Health Gate | ⬜ later gate |
@@ -210,7 +212,9 @@ Before P10.07 occurs, permitted preparatory work is limited to bounded, product-
 - identify missing owning-product Product Contract operations;
 - prepare fail-closed unavailable/blocked states.
 
-Do **not** infer a universal stable product-action API or platform abstraction before real reuse evidence exists.
+The admitted pre-P10.07 preparation slice is `Complete / PASS — preparation scope only` based on the bounded inventory/cross-review merged through PR #14 and durable checkpoint closure merged through PR #15. Existing Workspace Actionable Work/product composition already provides the permitted read-only/no-side-effect entry boundary; no concrete consequential product operation was invented or admitted.
+
+No further independent AUTO P10.08 preparation item is currently admitted. Do **not** infer a universal stable product-action API or platform abstraction before real reuse evidence exists.
 
 After P10.07, evaluate what is genuinely reusable and finish P10.08/R35 from actual evidence.
 
@@ -241,7 +245,7 @@ Full P10.10 closure still requires the genuine P10.07 action journey.
                            │      ↓
                            │   P10.09-D COMPLETE / PASS — bounded derived projections/search
                            │      ↓
-                           │   asset-side P10.10 dogfooding
+                           │   asset-side P10.10 dogfooding [HUMAN genuine-session evidence]
                            │
 Phase 10 current main ─────┼─ REAL ACTION EVIDENCE
                            │   P10.07 WAITING [genuine request]
@@ -249,13 +253,14 @@ Phase 10 current main ─────┼─ REAL ACTION EVIDENCE
                            │   P10.08 evidence-informed completion → R35
                            │
                            ├─ PRODUCT PREPARATION
-                           │   bounded P10.08 read-only/no-side-effect preparation
+                           │   bounded pre-P10.07 P10.08 preparation COMPLETE / PASS
+                           │   further completion waits real P10.07 evidence
                            │
                            ├─ EXTERNAL INTEGRATIONS
                            │   INT-B7 WAITING [real endpoint/deployment/account]
                            │
                            └─ RELIABILITY / DX
-                               continuous bounded engineering work
+                               continuous bounded engineering work only when separately admitted by canonical task source/queue
 
 (asset evidence + real-action evidence + R35 + full dogfooding)
                            ↓
@@ -294,14 +299,18 @@ M10 still requires all applicable evidence, including:
 
 ## 14. Current canonical actions
 
-**Primary executable preparation action:**
+**Current autonomous execution state:**
 
-> **P10.08 — perform only bounded product-owned/read-only/no-side-effect operational-entry preparation already admitted by current Product Contracts: inventory explicit entry points, improve product context/routing where already permitted, identify missing operations, and fail closed without inferring a universal stable product-action API.**
+> **No independent AUTO item is currently admitted in the repository execution queue after bounded P10.08 preparation closure. Do not invent a new priority merely to create activity.**
 
 **Waiting evidence action:**
 
 > **P10.07 — execute the first naturally occurring genuine governed operational action when a real request and applicable owning-product contract/operation exist. Do not synthesize it.**
 
-**Available parallel work:**
+**Human evidence lane:**
 
-> bounded P10.08 product-owned/no-side-effect preparation; asset-side P10.10 dogfooding as P10.09 slices land; reliability/DX work; INT-B7 only if a real external endpoint becomes available.
+> **P10.10 — asset-side dogfooding may proceed only through genuine owner sessions; automation may record and repair observed friction but must not manufacture usability evidence.**
+
+**Available conditional parallel work:**
+
+> reliability/DX work only when separately admitted by an approved canonical task source/queue; INT-B7 only if a real external endpoint/deployment/account and least-privilege credential binding become available; no synthetic P10.07/P10.10 evidence and no inferred reusable platform abstraction.
