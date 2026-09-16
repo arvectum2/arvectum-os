@@ -3,7 +3,7 @@ task_id: P10.09-D
 status: in_progress
 base_commit: 4c616846331a6380dd72f3b428d8f33d24bac532
 branch: feat/p10-09-d-bounded-search
-updated_at: "2026-09-16T12:08:00Z"
+updated_at: "2026-09-16T12:59:00Z"
 classification: product_specific
 checked:
   constitution: "1.2.0 Ratified"
@@ -12,7 +12,7 @@ checked:
     - "RFC-0007 1.0.0 Accepted"
     - "RFC-0008 1.0.0 Accepted"
   roadmap: "3.01.0 — P10.09-D CURRENT"
-  company_authority: "POS-004 / AI-ENG-001 / ASG-POS004-ROADMAP-EXECUTOR-2026-09-14 AM-4 revalidated before PR #8 merge"
+  company_authority: "POS-004 / AI-ENG-001 / ASG-POS004-ROADMAP-EXECUTOR-2026-09-14 AM-4 remains the merge authority gate; no merge attempted this quantum"
 conflicts: none
 slices:
   - name: bounded_exact_text_projection
@@ -25,7 +25,7 @@ slices:
       - "Functional cross-review iteration 1/7: no material objection."
       - "Exact-head Reference Python CI SUCCESS and Productive Workspace CI SUCCESS."
   - name: bounded_rebuildable_substring_search
-    head: 9aa1f14c7599ff47979760b47abfbfd17245da04
+    head: 0a3fb8f697e646f24f39d0fa65af942e55eaf2a2
     pr: 9
     scope: "On-demand case-insensitive substring search over exact current admitted ready text projections only."
     invariants:
@@ -42,6 +42,9 @@ slices:
       - no_vector_store
       - no_new_product_contract_operation
     evidence:
-      - "Functional cross-review iteration 1/7: no material governance/architecture objection; CI verification remains."
-      - "Exact-head CI on implementation head ccd519ab5c27a55d0e200ec1ba815c7242466fc7 was queued at the single permitted check."
-next_action: "Reconcile PR #9 exact-head CI/reviews once; repair failures if any. If green, evaluate only the smallest remaining Workspace-facing composition needed for P10.09-D closure."
+      - "Functional cross-review iteration 1/7: no material governance/architecture objection."
+      - "Prior head 1a2fe535ef6a209e18a1e5782cf722e2f0c2db7c Reference Python CI SUCCESS."
+      - "Prior Productive Workspace SPA job SUCCESS; BFF suite 142 passed + 1 ERROR because the opaque PDF test fixture violated the existing %PDF content-signature validation before search execution."
+      - "Repair commit 51702e8bb9eb145f0b02a1c625e7eea1c5c4e070 changes only the fixture to a valid %PDF-prefixed opaque payload; product ingress validation remains unchanged."
+      - "Checkpoint commit 0a3fb8f697e646f24f39d0fa65af942e55eaf2a2 records the repair; exact-head CI not yet observed at the single post-fix check."
+next_action: "Reconcile PR #9 exact-head CI/reviews once; repair remaining failures if any. If green, evaluate only the smallest remaining Workspace-facing composition needed for P10.09-D closure."
