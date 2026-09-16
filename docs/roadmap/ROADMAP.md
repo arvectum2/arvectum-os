@@ -1,7 +1,7 @@
 # Arvectum OS Canonical Roadmap
 
 Status: `Active`
-Version: `3.01.0`
+Version: `3.02.0`
 Created: `2026-08-07`
 Updated: `2026-09-16`
 Owner: `ООО «Арвектум»`
@@ -26,7 +26,7 @@ Roadmap status does not itself change Platform Capability lifecycle, Product Con
 
 Detailed phase plans, reviews and repository history retain implementation/evidence detail; this file defines current canonical sequencing when subordinate phase text is older or more restrictive.
 
-## 2. Version 3.01.0 — P10.09-C closure and P10.09-D activation
+## 2. Version 3.02.0 — P10.09-D closure and bounded P10.08 preparation
 
 Phase 10 has progressed beyond the original serial plan:
 
@@ -38,6 +38,7 @@ Phase 10 has progressed beyond the original serial plan:
 - `P10.09-A — admitted-asset discovery and ordinary retrieval = Complete / PASS`;
 - `P10.09-B — asset-aware generation = Complete / PASS`;
 - `P10.09-C — asset-grounded Copilot fit-check and bounded use = Complete / PASS`;
+- `P10.09-D — bounded derived text projection, on-demand substring search and ordinary Workspace search composition = Complete / PASS`;
 - lifecycle-current Arvectum Company ↔ Productive Workspace Product Contract is `Provisional 0.3.0` for the exact declared scope;
 - `P10.07` truthfully waits for a naturally occurring genuine request and may not use synthetic evidence.
 
@@ -49,7 +50,7 @@ The prior sequencing incorrectly allowed the P10.07 waiting state to appear to f
 
 Accordingly:
 
-- **P10.09 remains the primary current development stream; P10.09-D is now CURRENT after P10.09-C closure**;
+- **P10.09-D is Complete / PASS for its bounded roadmap scope; the next eligible autonomous queue item is bounded P10.08 product-owned/no-side-effect preparation**;
 - P10.08 may perform bounded product-owned/no-side-effect preparation, but evidence-based reusable platform generalization still waits for the first real P10.07 action;
 - P10.10 may begin asset-side dogfooding, but full P10.10 PASS still requires the P10.07 action journey;
 - R35 remains blocked until real action evidence exists;
@@ -108,6 +109,7 @@ Completed:
 | P10.09-A | Admitted-asset discovery and ordinary retrieval | 🟩 Complete / PASS |
 | P10.09-B | Asset-aware generation from exact admitted Company asset versions | 🟩 Complete / PASS |
 | P10.09-C | Asset-grounded Copilot fit-check and bounded use | 🟩 Complete / PASS — `Provisional 0.3.0` |
+| P10.09-D | Bounded derived text projection + rebuildable substring search + ordinary Workspace composition | 🟩 Complete / PASS |
 
 M10-alpha proves a real Company-owned material can complete staging → review → Governed Execution admission → immutable asset/version/provenance → restart/no-replay reconstruction → later exact-version use through Workspace while generated output remains `TransientOutput` by default.
 
@@ -116,8 +118,8 @@ M10-alpha proves a real Company-owned material can complete staging → review �
 | ID | Work item | Current status |
 |---|---|---:|
 | **P10.07** | First real governed operational action | **⏸ WAITING — genuine request required; mandatory M10 evidence** |
-| **P10.08** | Product operational entry-point composition | **🟦 PARALLEL PREPARATION AVAILABLE**; final reusable generalization waits real P10.07 evidence |
-| **P10.09** | Source-grounded use of admitted assets in Workspace / AI / generation | **🟨 CURRENT / PRIMARY DEVELOPMENT STREAM — P10.09-D** |
+| **P10.08** | Product operational entry-point composition | **🟨 CURRENT EXECUTABLE PREPARATION** — bounded product-owned/read-only/no-side-effect scope only; reusable generalization waits real P10.07 evidence |
+| **P10.09** | Source-grounded use of admitted assets in Workspace / AI / generation | **🟩 COMPLETE / PASS through P10.09-D bounded scope** |
 | **P10.10** | Real daily-operations dogfooding + friction closure | **🟦 PARTIALLY OPEN** — asset-side sessions may start; full PASS waits P10.07 |
 | P10.11 | Lifecycle / platform-reuse / capability disposition | ⬜ waits sufficient Phase 10 evidence |
 | **R35** | Operational Work / Product Boundary / AI Authority Review | **🔒 blocked on real P10.07 action + applicable P10.08 evidence** |
@@ -185,9 +187,11 @@ The bounded runtime uses only exact current admitted asset versions whose canoni
 
 AI may retrieve, explain, compare, summarize and draft. It does not independently approve, admit assets, create authority, execute consequential actions or convert document/model content into RFC-0007 validated Knowledge.
 
-### P10.09-D — derived previews/search indexes — CURRENT
+### P10.09-D — derived previews/search indexes — COMPLETE / PASS
 
-Bounded preview, text extraction and search/index projections may be introduced when useful, provided they remain:
+Closure review: [`P10.09-D Derived Projections Closure Review — 2026-09-16`](../reviews/P10-09-D-derived-projections-closure-review-2026-09-16.md) is `Complete / PASS`.
+
+The delivered bounded projection/search slice remains:
 
 - non-authoritative;
 - rebuildable;
@@ -235,7 +239,7 @@ Full P10.10 closure still requires the genuine P10.07 action journey.
                            │      ↓
                            │   P10.09-C COMPLETE / PASS — Product Contract 0.3.0 + bounded AI grounding
                            │      ↓
-                           │   P10.09-D CURRENT — derived previews/search indexes
+                           │   P10.09-D COMPLETE / PASS — bounded derived projections/search
                            │      ↓
                            │   asset-side P10.10 dogfooding
                            │
@@ -290,9 +294,9 @@ M10 still requires all applicable evidence, including:
 
 ## 14. Current canonical actions
 
-**Primary development action:**
+**Primary executable preparation action:**
 
-> **P10.09-D — introduce only bounded derived previews, text extraction and search/index projections that remain non-authoritative, rebuildable, exact-source/version attributable, Organization/access/purpose scoped, explicit about extraction failure and non-Knowledge by default.**
+> **P10.08 — perform only bounded product-owned/read-only/no-side-effect operational-entry preparation already admitted by current Product Contracts: inventory explicit entry points, improve product context/routing where already permitted, identify missing operations, and fail closed without inferring a universal stable product-action API.**
 
 **Waiting evidence action:**
 

@@ -1,32 +1,19 @@
 version: 2
 repository: arvectum2/arvectum-os
-status: in_progress
-task_id: P10.09-D
-goal: "Introduce bounded rebuildable exact-source/version derived projections for admitted Company assets while preserving access scope and non-Knowledge/non-authority semantics."
-authority: AUTO
-definition_of_done:
-  - "Projection is explicitly non-authoritative and rebuildable from exact admitted source/version."
-  - "Every result remains attributable to exact source/version and scoped by Organization/access/classification/purpose controls."
-  - "Unsupported or failed extraction is explicit and fail-closed; no fabricated content or silent partial success."
-  - "Derived output is non-Knowledge by default and does not create RFC-0007 promotion."
-  - "Implementation remains inside current Accepted architecture/Product Contract scope and introduces no hidden platform/product dependency."
-  - "Relevant deterministic tests, functional cross-review and exact-head CI/evidence pass before completion."
+status: idle
+task_id: null
+goal: null
+authority: null
+definition_of_done: []
 completed:
-  - "Reconciled canonical main and authority chain; P10.09-D remains current with no higher-authority conflict."
-  - "First exact UTF-8 text projection slice passed exact-head Reference Python CI and Productive Workspace CI and was auto-merged via PR #8 to main at 4c616846331a6380dd72f3b428d8f33d24bac532 after revalidating Company AM-4 authority."
-  - "Second bounded on-demand case-insensitive substring search slice passed exact-head Reference Python CI and Productive Workspace CI; PR #9 had no reviews/threads and was auto-merged after fresh Company AM-4 revalidation to main at 0eb7ee067f7239288a7ce75f0c5b7df18a6cbd8f."
-current: "PR #11 ordinary Workspace content-search composition repaired after exact-head CI identified stale committed production assets; repaired exact head b645e906 is awaiting one later CI reconciliation."
-pending:
-  - "Reconcile repaired PR #11 exact-head CI/reviews once; repair any remaining failure without weakening scope or governance."
-  - "If exact-head evidence is green, revalidate Company AM-4 immediately before any automatic merge."
-  - "Do not broaden into OCR, embeddings, vector infrastructure, persisted indexes, or Product Contract expansion."
-  - "Do not mark P10.09-D complete until the full queue gate and exact-head evidence are satisfied."
-last_verified_commit: "0eb7ee067f7239288a7ce75f0c5b7df18a6cbd8f"
+  - "P10.09-D closure review merged via PR #12 to main at dbde6a10f13197a53829a18175d99a00a385180a after prior implementation PRs #8/#9/#11 satisfied their exact-head evidence gates."
+current: null
+pending: []
+last_verified_commit: "dbde6a10f13197a53829a18175d99a00a385180a"
 test_results:
-  - "PR #9 exact head c397b07d1950672c2e288ecee22f74554f73da76: Reference Python CI SUCCESS."
-  - "PR #9 exact head c397b07d1950672c2e288ecee22f74554f73da76: Productive Workspace CI SUCCESS including frontend and BFF jobs."
-updated_at: "2026-09-16T16:04:00Z"
-resume_instruction: "Reconcile PR #11 repaired exact head b645e906 once. Do not poll; merge only after fresh Company AM-4 revalidation and all merge gates."
+  - "P10.09-D closure relies on exact-head CI evidence already recorded for implementation PRs #8, #9 and #11; closure PR #12 changed review evidence only and repository main has no required status checks configured."
+updated_at: "2026-09-16T18:10:00Z"
+resume_instruction: "Select the first eligible queue item after P10.09-D; currently P10.08-PREPARATION. Reconcile canonical main/roadmap/contracts before claiming it."
 execution:
   claimed_by: null
   execution_id: null
