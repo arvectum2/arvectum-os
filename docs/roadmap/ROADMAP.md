@@ -1,9 +1,9 @@
 # Arvectum OS Canonical Roadmap
 
 Status: `Active`
-Version: `3.00.0`
+Version: `3.01.0`
 Created: `2026-08-07`
-Updated: `2026-09-15`
+Updated: `2026-09-16`
 Owner: `ООО «Арвектум»`
 Task classification: `governance`
 
@@ -26,7 +26,7 @@ Roadmap status does not itself change Platform Capability lifecycle, Product Con
 
 Detailed phase plans, reviews and repository history retain implementation/evidence detail; this file defines current canonical sequencing when subordinate phase text is older or more restrictive.
 
-## 2. Version 3.00.0 — P10.09-B closure and P10.09-C activation
+## 2. Version 3.01.0 — P10.09-C closure and P10.09-D activation
 
 Phase 10 has progressed beyond the original serial plan:
 
@@ -34,9 +34,11 @@ Phase 10 has progressed beyond the original serial plan:
 - `M10-alpha = Achieved / PASS` through a real owner-operated governed Company asset cycle;
 - ADR-0002 durable Company Workspace state is accepted and qualified in the bounded owner-local scope;
 - `P10.06 — Real Action Request / Actionable Work boundary = Complete / PASS`;
-- Workspace internal release is `p10.09.2`, application contract `14`;
+- Workspace internal release is `p10.09.3`, application contract `15`;
 - `P10.09-A — admitted-asset discovery and ordinary retrieval = Complete / PASS`;
 - `P10.09-B — asset-aware generation = Complete / PASS`;
+- `P10.09-C — asset-grounded Copilot fit-check and bounded use = Complete / PASS`;
+- lifecycle-current Arvectum Company ↔ Productive Workspace Product Contract is `Provisional 0.3.0` for the exact declared scope;
 - `P10.07` truthfully waits for a naturally occurring genuine request and may not use synthetic evidence.
 
 The prior sequencing incorrectly allowed the P10.07 waiting state to appear to freeze all later useful development.
@@ -47,7 +49,7 @@ The prior sequencing incorrectly allowed the P10.07 waiting state to appear to f
 
 Accordingly:
 
-- **P10.09 remains the primary current development stream; P10.09-C is now CURRENT after P10.09-B closure**;
+- **P10.09 remains the primary current development stream; P10.09-D is now CURRENT after P10.09-C closure**;
 - P10.08 may perform bounded product-owned/no-side-effect preparation, but evidence-based reusable platform generalization still waits for the first real P10.07 action;
 - P10.10 may begin asset-side dogfooding, but full P10.10 PASS still requires the P10.07 action journey;
 - R35 remains blocked until real action evidence exists;
@@ -64,7 +66,7 @@ This sequencing correction creates no Constitution/RFC/ADR amendment, Product Co
 - Decision Authority Policy — `Proposed 0.2.1`; residual authority remains with the owner under Accepted governance;
 - Engineering Quality and Refactoring Gates remain binding;
 - CAP-001 through CAP-004 remain `Incubating / Provisional`;
-- Arvectum Company ↔ Productive Workspace Product Contract is lifecycle-current `Provisional 0.2.0` for its exact declared scope;
+- Arvectum Company ↔ Productive Workspace Product Contract is lifecycle-current `Provisional 0.3.0` for its exact declared scope; predecessor `0.2.0` remains immutable historical/operation-pinned evidence where applicable;
 - operating environment remains `Local / Persistent Internal / owner-operated` with scoped conformance;
 - canonical repository for current work is `arvectum2/arvectum-os`;
 - no public/stable SDK/API/wire/browser/connector surface, external/customer Production, SLA/support/certification or broader conformance claim exists.
@@ -105,6 +107,7 @@ Completed:
 | P10.06 | Real Action Request / Actionable Work boundary | 🟩 Complete / PASS |
 | P10.09-A | Admitted-asset discovery and ordinary retrieval | 🟩 Complete / PASS |
 | P10.09-B | Asset-aware generation from exact admitted Company asset versions | 🟩 Complete / PASS |
+| P10.09-C | Asset-grounded Copilot fit-check and bounded use | 🟩 Complete / PASS — `Provisional 0.3.0` |
 
 M10-alpha proves a real Company-owned material can complete staging → review → Governed Execution admission → immutable asset/version/provenance → restart/no-replay reconstruction → later exact-version use through Workspace while generated output remains `TransientOutput` by default.
 
@@ -114,7 +117,7 @@ M10-alpha proves a real Company-owned material can complete staging → review �
 |---|---|---:|
 | **P10.07** | First real governed operational action | **⏸ WAITING — genuine request required; mandatory M10 evidence** |
 | **P10.08** | Product operational entry-point composition | **🟦 PARALLEL PREPARATION AVAILABLE**; final reusable generalization waits real P10.07 evidence |
-| **P10.09** | Source-grounded use of admitted assets in Workspace / AI / generation | **🟨 CURRENT / PRIMARY DEVELOPMENT STREAM — P10.09-C** |
+| **P10.09** | Source-grounded use of admitted assets in Workspace / AI / generation | **🟨 CURRENT / PRIMARY DEVELOPMENT STREAM — P10.09-D** |
 | **P10.10** | Real daily-operations dogfooding + friction closure | **🟦 PARTIALLY OPEN** — asset-side sessions may start; full PASS waits P10.07 |
 | P10.11 | Lifecycle / platform-reuse / capability disposition | ⬜ waits sufficient Phase 10 evidence |
 | **R35** | Operational Work / Product Boundary / AI Authority Review | **🔒 blocked on real P10.07 action + applicable P10.08 evidence** |
@@ -146,6 +149,8 @@ P10.09 starts immediately from the already-achieved governed Company asset found
 
 [`P10.09-B Asset-Aware Generation Closure Review — 2026-09-15`](../reviews/P10-09-B-asset-aware-generation-closure-review.md) is `Complete / PASS`.
 
+[`P10.09-C Asset-Grounded Copilot Closure Review — 2026-09-16`](../reviews/P10-09-C-asset-grounded-copilot-closure-review.md) is `Complete / PASS`.
+
 ### P10.09-A — admitted-asset discovery and ordinary retrieval — COMPLETE / PASS
 
 Make governed Company assets easy to find and use through normal Workspace UX:
@@ -172,17 +177,15 @@ Use exact admitted Company assets as explicit UI-selectable generation inputs:
 
 Generated outputs remain `TransientOutput` unless the already-governed reviewed promotion path succeeds.
 
-### P10.09-C — asset-grounded Copilot fit-check and bounded use — CURRENT
+### P10.09-C — asset-grounded Copilot fit-check and bounded use — COMPLETE / PASS
 
-Before admitted Company assets become material AI/Copilot context, record one explicit fit decision:
+The explicit fit decision was `CONTRACT_EVOLUTION_REQUIRED`. Product Contract `0.3.0` was independently owner-approved and published as `Provisional` before real Company-asset Copilot grounding was enabled.
 
-- `COVERED` — current effective Product Contract already covers the exact intended bounded use;
-- `CONTRACT_EVOLUTION_REQUIRED` — publish the minimum sufficient new immutable Product Contract version before reliance;
-- `DEFER` — unresolved need/rights/security boundary.
+The bounded runtime uses only exact current admitted asset versions whose canonical Organizational Asset designation explicitly permits `company-internal-ai-grounding`; publication does not retroactively grant AI reuse to older assets. Direct model context is limited to bounded valid UTF-8 TXT/Markdown under the existing loopback model boundary.
 
-AI may retrieve, explain, compare, summarize and draft. It does not independently approve, admit assets, create authority or convert document content into RFC-0007 validated Knowledge.
+AI may retrieve, explain, compare, summarize and draft. It does not independently approve, admit assets, create authority, execute consequential actions or convert document/model content into RFC-0007 validated Knowledge.
 
-### P10.09-D — derived previews/search indexes
+### P10.09-D — derived previews/search indexes — CURRENT
 
 Bounded preview, text extraction and search/index projections may be introduced when useful, provided they remain:
 
@@ -230,9 +233,11 @@ Full P10.10 closure still requires the genuine P10.07 action journey.
                            │      ↓
                            │   P10.09-B COMPLETE / PASS
                            │      ↓
-                           │   P10.09-C CURRENT — fit gate → bounded AI use if admitted
+                           │   P10.09-C COMPLETE / PASS — Product Contract 0.3.0 + bounded AI grounding
                            │      ↓
-                           │   P10.09-D / asset-side P10.10 dogfooding
+                           │   P10.09-D CURRENT — derived previews/search indexes
+                           │      ↓
+                           │   asset-side P10.10 dogfooding
                            │
 Phase 10 current main ─────┼─ REAL ACTION EVIDENCE
                            │   P10.07 WAITING [genuine request]
@@ -287,7 +292,7 @@ M10 still requires all applicable evidence, including:
 
 **Primary development action:**
 
-> **P10.09-C — record the explicit Product Contract fit decision before admitted Company assets become material AI/Copilot context; only proceed with bounded AI use when the effective contract permits it.**
+> **P10.09-D — introduce only bounded derived previews, text extraction and search/index projections that remain non-authoritative, rebuildable, exact-source/version attributable, Organization/access/purpose scoped, explicit about extraction failure and non-Knowledge by default.**
 
 **Waiting evidence action:**
 
