@@ -68,6 +68,17 @@ class P706Tests(unittest.TestCase):
         self.assertEqual(plan["source_release"], SHA1)
         self.assertEqual(plan["target_release"], SHA2)
 
+    def test_arvectum1_legacy_source_and_current_target_are_admitted(self):
+        self._release(SHA1, "arvectum.p7_03.durable-store/1", "arvectum1/arvectum-os")
+        plan = m.build_plan(self.root, SHA2, "owner:test")
+        self.assertEqual(plan["source_release"], SHA1)
+        self.assertEqual(plan["target_release"], SHA2)
+
+    def test_current_source_and_arvectum1_legacy_target_are_rejected(self):
+        self._release(SHA2, "arvectum.p7_03.durable-store/1", "arvectum1/arvectum-os")
+        with self.assertRaises(m.IntegrityError):
+            m.build_plan(self.root, SHA2, "owner:test")
+
     def test_current_source_and_legacy_target_are_rejected(self):
         self._release(SHA2, "arvectum.p7_03.durable-store/1", "arvectum/arvectum-os")
         with self.assertRaises(m.IntegrityError):
