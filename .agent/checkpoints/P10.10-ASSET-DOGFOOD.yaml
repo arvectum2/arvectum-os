@@ -1,0 +1,34 @@
+version: 1
+repository: arvectum2/arvectum-os
+task_id: P10.10-ASSET-DOGFOOD
+authority: HUMAN
+status: in_progress_human
+updated_at: "2026-09-17T11:57:18Z"
+canonical_main: "4ee9e57f99dffdc3a074a8c6a2cf7e2513ccfa37"
+owner_decision: "docs/governance/decisions/DECISION-2026-09-17-P10-10-OWNER-DOGFOODING-START.md"
+evidence: "docs/reviews/P10-10-selected-mac-live-start-2026-09-17.md"
+verified:
+  - "Owner decision is Approved and selected-Mac live-start evidence is canonical on main."
+  - "A genuine owner session supplied concrete friction evidence: Company Materials exposed deletion-rule/review lifecycle/English technical terminology and required too many clicks to use a template."
+  - "PR #22 contains a bounded frontend friction fix; implementation commit 497166e83c22558050d0c50d8b96312962f7b69c preserves the existing server-side review and governed-admission boundaries."
+  - "One owner action now records the exact reviewed handling policy and then invokes the existing governed admission endpoint; if admission fails, the reviewed item remains in Review for explicit retry rather than bypassing gates."
+  - "Accepted-template reuse remains exact-version scoped and now routes directly from the Working library to the document form."
+  - "Focused Company Materials/asset discovery/usability tests PASS 11/11, including fail-closed admission-unavailable behavior; npm typecheck PASS; npm build PASS."
+  - "Full frontend suite PASS 56/56 on the final local source state."
+  - "A separate-origin review preview was attempted without touching the managed backend; bootstrap failed closed with ORIGIN_REJECTED. The preview was stopped and the Origin gate was not bypassed."
+  - "PR #22 final implementation head 6264b1a63edd4aaa827b4f48856fb5981a41e487 has exact-head Productive Workspace CI SUCCESS and Reference Python CI SUCCESS."
+  - "This is genuine friction evidence and a review-ready remediation only; it does not prove P10.10 usability PASS."
+human_gate:
+  required: true
+  condition: "P10.10 remains HUMAN. PR #22 must not be auto-merged; genuine owner use after integration is required to evaluate whether the friction is actually closed."
+next_human_evidence:
+  - "ordinary template use after the friction fix is integrated"
+  - "content search"
+  - "exact-version generation"
+  - "asset-grounded Copilot"
+automation_scope:
+  - "May inspect real supplied/observed session evidence."
+  - "May prepare instrumentation, diagnostics, friction-fix branches and evidence templates from that real evidence."
+  - "Must not claim dogfooding PASS or fabricate owner-use evidence."
+lease: null
+resume_instruction: "PR #22 final implementation head CI is green. Do not merge automatically. Wait for HUMAN integration/review and genuine owner reuse; record only observed friction results. If a later independent AUTO item is canonically admitted, it may proceed while this HUMAN gate waits."

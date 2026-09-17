@@ -25,6 +25,8 @@ const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.doc
 const PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
 const AI_GROUNDING_REUSE = "company-internal-ai-grounding";
+const DOCUMENT_GENERATION_REUSE = "company-internal-document-generation";
+const LEGACY_DOCUMENT_GENERATION_REUSE = "company-document-generation";
 const ACCEPTED_FILE_TYPES = ".docx,.pptx,.pdf,.png,.jpg,.jpeg,.webp,.txt,.md";
 const ALLOWED_MEDIA_TYPES = new Set([
   DOCX,
@@ -45,6 +47,49 @@ const MATERIAL_ROLE_OPTIONS = [
   { value: "other", ru: "Другое", en: "Other" },
 ] as const;
 
+
+function materialRoleLabel(value: string, text: (ru: string, en: string) => string): string {
+  const option = MATERIAL_ROLE_OPTIONS.find((candidate) => candidate.value === value);
+  return option ? text(option.ru, option.en) : value;
+}
+
+function classificationLabel(value: string, text: (ru: string, en: string) => string): string {
+  return value === "internal" ? text("Внутренний", "Internal") : value;
+}
+
+function rightsLabel(value: string, text: (ru: string, en: string) => string): string {
+  return value === "company-internal-use" ? text("Для использования внутри компании", "Company internal use") : value;
+}
+
+function retentionLabel(value: string, text: (ru: string, en: string) => string): string {
+  return value === "until-replaced-or-explicit-deletion"
+    ? text("До замены или явного удаления", "Until replaced or explicitly deleted")
+    : value === "until-replaced"
+      ? text("До замены новой версией", "Until replaced")
+      : value;
+}
+
+function deletionLabel(value: string, text: (ru: string, en: string) => string): string {
+  const known: Record<string, [string, string]> = {
+    "governed-retention": ["По действующим правилам хранения", "Under the governed retention rules"],
+    "existing-retention": ["По действующему сроку хранения", "Under the existing retention rule"],
+    "delete-through-governed-retention": ["Только после проверки правил хранения", "Only after retention checks"],
+    "delete-only-through-governed-retention-process": ["Только после проверки правил хранения", "Only after retention checks"],
+  };
+  const label = known[value];
+  return label ? text(label[0], label[1]) : value;
+}
+
+function permittedReuseLabels(values: string[], text: (ru: string, en: string) => string): string[] {
+  return values.map((value) => {
+    if (value === DOCUMENT_GENERATION_REUSE || value === LEGACY_DOCUMENT_GENERATION_REUSE) {
+      return text("Создание документов внутри компании", "Internal document generation");
+    }
+    if (value === AI_GROUNDING_REUSE) return text("Использование как источника для Arvectum AI", "Use as a source for Arvectum AI");
+    return value;
+  });
+}
+
 type MaterialRoleChoice = typeof MATERIAL_ROLE_OPTIONS[number]["value"] | "";
 type ViewKey = keyof CompanyAssetLibraryProjection["views"];
 type State =
@@ -54,7 +99,7 @@ type State =
 
 const VIEW_OPTIONS: Array<{ key: ViewKey; ru: string; en: string }> = [
   { key: "drafts", ru: "Черновики", en: "Drafts" },
-  { key: "review", ru: "На рассмотрении", en: "In review" },
+  { key: "review", ru: "Проверка", en: "Review" },
   { key: "accepted", ru: "Принято", en: "Accepted" },
   { key: "archive", ru: "Архив / заменено", en: "Archive / superseded" },
 ];
@@ -108,7 +153,7 @@ function assetApplicationLabel(item: CompanyAssetLibraryItem, text: (ru: string,
   if (["text/plain", "text/markdown"].includes(item.media_type)) {
     return text("текст будет включён", "text will be included");
   }
-  return text("будет закреплён как точный reference", "will be pinned as an exact reference");
+  return text("будет использован как ссылка на точную версию", "will be used as an exact-version reference");
 }
 
 function prettyDate(value: string): string {
@@ -120,7 +165,7 @@ function MaterialCard({
   item,
   busy,
   admissionAvailable,
-  onReview,
+  onReviewAndAdmit,
   onReject,
   onAdmit,
   onNewVersion,
@@ -128,34 +173,40 @@ function MaterialCard({
   item: CompanyAssetLibraryItem;
   busy: boolean;
   admissionAvailable: boolean;
-  onReview: (item: CompanyAssetLibraryItem, deletionRule: string, permittedReuse: string[]) => Promise<void>;
+  onReviewAndAdmit: (item: CompanyAssetLibraryItem, deletionRule: string, permittedReuse: string[]) => Promise<void>;
   onReject: (item: CompanyAssetLibraryItem, reason: string) => Promise<void>;
   onAdmit: (item: CompanyAssetLibraryItem) => Promise<void>;
   onNewVersion: (item: CompanyAssetLibraryItem) => void;
 }) {
   const { text } = useWorkspaceLanguage();
+  const initialReuse = item.review.policy?.permitted_reuse ?? [];
   const [deletionRule, setDeletionRule] = useState(item.review.policy?.deletion_rule ?? "");
-  const [reuse, setReuse] = useState(item.review.policy?.permitted_reuse.join(", ") ?? "");
+  const [reuse, setReuse] = useState<string[]>(initialReuse);
   const [rejectReason, setRejectReason] = useState("");
   const rejected = item.review.state === "Rejected";
   const canonical = item.canonical;
   const badge = canonical
-    ? canonical.current ? text("Канонически принято", "Canonically accepted") : text("Заменено", "Superseded")
+    ? canonical.current ? text("Принят", "Accepted") : text("Заменён", "Superseded")
     : item.review.state === "InReview"
-      ? text("Staged · на рассмотрении", "Staged · in review")
-      : rejected ? text("Staged · отклонено", "Staged · rejected") : text("Staged · черновик", "Staged · draft");
+      ? text("Ждёт подтверждения", "Awaiting confirmation")
+      : rejected ? text("Отклонён", "Rejected") : text("Черновик", "Draft");
 
-  const reuseValues = () => Array.from(new Set(reuse.split(",").map((value) => value.trim()).filter(Boolean)));
-  const aiGroundingEnabled = reuseValues().includes(AI_GROUNDING_REUSE);
+  const generationReuseEnabled = reuse.some((value) => value === DOCUMENT_GENERATION_REUSE || value === LEGACY_DOCUMENT_GENERATION_REUSE);
+  const aiGroundingEnabled = reuse.includes(AI_GROUNDING_REUSE);
+  const setGenerationReuse = (enabled: boolean) => {
+    const values = reuse.filter((value) => value !== DOCUMENT_GENERATION_REUSE && value !== LEGACY_DOCUMENT_GENERATION_REUSE);
+    if (enabled) values.push(DOCUMENT_GENERATION_REUSE);
+    setReuse(values);
+  };
   const setAiGrounding = (enabled: boolean) => {
-    const values = reuseValues().filter((value) => value !== AI_GROUNDING_REUSE);
+    const values = reuse.filter((value) => value !== AI_GROUNDING_REUSE);
     if (enabled) values.push(AI_GROUNDING_REUSE);
-    setReuse(values.join(", "));
+    setReuse(values);
   };
 
   const submitReview = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    await onReview(item, deletionRule, reuseValues());
+    await onReviewAndAdmit(item, deletionRule, Array.from(new Set(reuse)));
   };
 
   const submitReject = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -167,7 +218,7 @@ function MaterialCard({
   return <article className="company-card asset-library-card">
     <header className="company-card-head">
       <div>
-        <p className="eyebrow">{item.semantic_role}</p>
+        <p className="eyebrow">{materialRoleLabel(item.semantic_role, text)}</p>
         <h2>{item.title}</h2>
         <p className="project-source-updated">{text("Получено", "Received")}: {prettyDate(item.received_at)}</p>
       </div>
@@ -176,43 +227,53 @@ function MaterialCard({
 
     <dl className="company-facts asset-human-facts">
       <div><dt>{text("Проект", "Project")}</dt><dd>{item.project_id === "COMPANY" ? text("Компания в целом", "Company-wide") : item.project_id}</dd></div>
-      <div><dt>{text("Тип материала", "Material type")}</dt><dd>{item.semantic_role}</dd></div>
-      <div><dt>{text("Классификация", "Classification")}</dt><dd>{item.classification}</dd></div>
+      <div><dt>{text("Тип", "Type")}</dt><dd>{materialRoleLabel(item.semantic_role, text)}</dd></div>
+      <div><dt>{text("Доступ", "Access")}</dt><dd>{rightsLabel(item.rights, text)}</dd></div>
       <div><dt>{text("Назначение", "Purpose")}</dt><dd>{item.purpose}</dd></div>
-      <div><dt>{text("Права использования", "Rights")}</dt><dd>{item.rights}</dd></div>
-      <div><dt>Retention</dt><dd>{item.retention_rule}</dd></div>
-      {item.review.policy ? <><div><dt>{text("Удаление", "Deletion")}</dt><dd>{item.review.policy.deletion_rule}</dd></div><div><dt>{text("Разрешённое повторное использование", "Permitted reuse")}</dt><dd>{item.review.policy.permitted_reuse.join(", ")}</dd></div></> : null}
+      <div><dt>{text("Хранение", "Retention")}</dt><dd>{retentionLabel(item.retention_rule, text)}</dd></div>
+      {item.review.policy ? <>
+        <div><dt>{text("Удаление", "Deletion")}</dt><dd>{deletionLabel(item.review.policy.deletion_rule, text)}</dd></div>
+        <div><dt>{text("Можно использовать для", "Permitted use")}</dt><dd>{permittedReuseLabels(item.review.policy.permitted_reuse, text).join(", ") || text("не указано", "not specified")}</dd></div>
+      </> : null}
     </dl>
 
-    {item.review.state === "InReview" ? <section className="asset-review-proof" aria-label={text("Точная версия для подтверждения", "Exact version for confirmation")}>
-      <h3>{text("Перед подтверждением", "Before confirmation")}</h3>
-      <p>{text("Проверьте точный источник и правила этой версии. Кнопка не создаёт authority: сервер заново проверяет Governed Execution и независимые gates.", "Verify the exact source and handling rules for this version. The button does not create authority: the server revalidates Governed Execution and independent gates.")}</p>
+    {item.review.state === "InReview" ? <section className="asset-review-proof" aria-label={text("Версия для подтверждения", "Version for confirmation")}>
+      <h3>{text("Готово к принятию", "Ready to accept")}</h3>
+      <p>{text("Проверьте, что это нужный файл и условия использования указаны верно. Перед принятием сервер ещё раз проверит действующие права и ограничения.", "Verify the file and its use conditions. The server will re-check current access and restrictions before acceptance.")}</p>
       <dl className="company-facts">
-        <div><dt>{text("Источник", "Source")}</dt><dd>{item.title}</dd></div>
-        <div><dt>{text("Роль", "Role")}</dt><dd>{item.semantic_role}</dd></div>
-        <div><dt>{text("Классификация", "Classification")}</dt><dd>{item.classification}</dd></div>
-        <div><dt>Retention</dt><dd>{item.retention_rule}</dd></div>
-        <div><dt>SHA-256</dt><dd><code>{item.content_sha256}</code></dd></div>
+        <div><dt>{text("Файл", "File")}</dt><dd>{item.title}</dd></div>
+        <div><dt>{text("Тип", "Type")}</dt><dd>{materialRoleLabel(item.semantic_role, text)}</dd></div>
+        <div><dt>{text("Доступ", "Access")}</dt><dd>{rightsLabel(item.rights, text)}</dd></div>
+        <div><dt>{text("Хранение", "Retention")}</dt><dd>{retentionLabel(item.retention_rule, text)}</dd></div>
       </dl>
     </section> : null}
 
     {!canonical && item.review.state !== "InReview" ? <form className="asset-inline-form" onSubmit={(event) => void submitReview(event)}>
-      <h3>{rejected ? text("Вернуть на рассмотрение", "Return to review") : text("Передать на рассмотрение", "Submit for review")}</h3>
+      <h3>{rejected ? text("Исправить условия", "Update conditions") : text("Подготовить к использованию", "Prepare for use")}</h3>
+      <p>{text("Это одноразовая настройка для новой или изменённой версии. После принятия шаблон можно будет выбирать напрямую в библиотеке.", "This is a one-time setup for a new or changed version. Once accepted, the template can be selected directly from the library.")}</p>
       {rejected && item.review.reason ? <p className="boundary-note">{text("Причина отклонения", "Rejection reason")}: {item.review.reason}</p> : null}
-      <label>{text("Правило удаления", "Deletion rule")}<input value={deletionRule} onChange={(event) => setDeletionRule(event.target.value)} required maxLength={240} placeholder={text("Укажите явно", "State explicitly")} /></label>
-      <label>{text("Разрешённое повторное использование", "Permitted reuse")}<input value={reuse} onChange={(event) => setReuse(event.target.value)} required maxLength={400} placeholder={text("Через запятую", "Comma separated")} /></label>
+      <label>{text("Когда материал можно удалить", "When the material may be deleted")}<input aria-label={text("Когда материал можно удалить", "When the material may be deleted")} value={deletionRule} onChange={(event) => setDeletionRule(event.target.value)} required maxLength={240} placeholder={text("Например: после замены новой версией", "For example: after it is replaced by a new version")} /><small>{text("Это условие задаётся один раз для новой версии. При обычном использовании принятого шаблона его повторно вводить не нужно.", "Set this once for a new version. You do not re-enter it when using an accepted template.")}</small></label>
+      <label className="asset-generation-option">
+        <input type="checkbox" aria-label={text("Разрешить использовать материал при создании документов", "Allow use in document generation")} checked={generationReuseEnabled} onChange={(event) => setGenerationReuse(event.target.checked)} />
+        <span><strong>{text("Использовать при создании документов", "Use in document generation")}</strong><small>{text("Для шаблонов, логотипов и исходных материалов внутри компании.", "For templates, logos and source materials inside the company.")}</small></span>
+      </label>
       <label className="asset-generation-option">
         <input type="checkbox" aria-label={text("Разрешить Arvectum AI использовать эту версию как источник", "Allow Arvectum AI to use this version as a source")} checked={aiGroundingEnabled} onChange={(event) => setAiGrounding(event.target.checked)} />
-        <span><strong>{text("Разрешить Arvectum AI использовать эту версию как источник", "Allow Arvectum AI to use this version as a source")}</strong><small>{text("Только для этой exact версии. Фактическое использование всё равно требует текущего доступа, действующего Product Contract и server-side revalidation.", "This applies only to this exact version. Actual use still requires current access, the effective Product Contract, and server-side revalidation.")}</small></span>
+        <span><strong>{text("Разрешить Arvectum AI использовать эту версию как источник", "Allow Arvectum AI to use this version as a source")}</strong><small>{text("Отдельное разрешение только для этой версии. Само разрешение не даёт ИИ права менять документы или принимать решения.", "A separate permission for this version only. It does not let AI change documents or make decisions.")}</small></span>
       </label>
-      <button type="submit" disabled={busy}>{text("Передать на рассмотрение", "Submit for review")}</button>
+      <button type="submit" disabled={busy || !admissionAvailable}>{text("Принять материал", "Accept material")}</button>
+      {!admissionAvailable ? <p className="boundary-note">{text("Принятие сейчас временно недоступно. Черновик сохранён; вернитесь к нему, когда серверная проверка восстановится.", "Acceptance is temporarily unavailable. The draft is saved; return when the server-side check is available again.")}</p> : null}
+      <details className="project-technical-details">
+        <summary>{text("Служебные разрешения", "Service permissions")}</summary>
+        <p>{permittedReuseLabels(reuse, text).join(", ") || text("Дополнительные разрешения не выбраны.", "No additional permissions selected.")}</p>
+      </details>
     </form> : null}
 
     {item.review.state === "InReview" && !canonical ? <div className="asset-review-actions">
-      <button type="button" disabled={busy || !admissionAvailable} onClick={() => void onAdmit(item)}>{text("Принять через Governed Execution", "Admit through Governed Execution")}</button>
-      {!admissionAvailable ? <p className="boundary-note">{text("Текущий server-side admission provider недоступен: каноническое изменение заблокировано.", "The current server-side admission provider is unavailable: canonical change is blocked.")}</p> : null}
+      <button type="button" disabled={busy || !admissionAvailable} onClick={() => void onAdmit(item)}>{text("Принять материал", "Accept material")}</button>
+      {!admissionAvailable ? <p className="boundary-note">{text("Сейчас материал нельзя безопасно принять: серверная проверка недоступна. Попробуйте позже.", "The material cannot be safely accepted now because the server-side check is unavailable. Try again later.")}</p> : null}
       <form className="asset-reject-form" onSubmit={(event) => void submitReject(event)}>
-        <label>{text("Причина отклонения", "Rejection reason")}<input value={rejectReason} onChange={(event) => setRejectReason(event.target.value)} required maxLength={600} /></label>
+        <label>{text("Почему не принимаем", "Why reject it")}<input value={rejectReason} onChange={(event) => setRejectReason(event.target.value)} required maxLength={600} /></label>
         <button type="submit" disabled={busy}>{text("Отклонить", "Reject")}</button>
       </form>
     </div> : null}
@@ -220,8 +281,12 @@ function MaterialCard({
     {canonical?.current ? <div className="asset-card-actions"><button type="button" disabled={busy} onClick={() => onNewVersion(item)}>{text("Добавить новую версию", "Add new version")}</button></div> : null}
 
     <details className="project-technical-details">
-      <summary>{text("Техническая идентичность и provenance", "Technical identity and provenance")}</summary>
+      <summary>{text("Технические сведения", "Technical details")}</summary>
       <dl className="company-facts">
+        <div><dt>{text("Внутренний тип", "Internal role")}</dt><dd><code>{item.semantic_role}</code></dd></div>
+        <div><dt>{text("Классификация", "Classification")}</dt><dd><code>{item.classification}</code></dd></div>
+        <div><dt>{text("Права", "Rights")}</dt><dd><code>{item.rights}</code></dd></div>
+        <div><dt>{text("Правило хранения", "Retention rule")}</dt><dd><code>{item.retention_rule}</code></dd></div>
         <div><dt>Material</dt><dd><code>{item.material_id}</code></dd></div>
         <div><dt>Staged version</dt><dd><code>{item.version_id}</code></dd></div>
         <div><dt>{text("Предшественник", "Predecessor")}</dt><dd><code>{item.predecessor_version_id ?? "—"}</code></dd></div>
@@ -232,7 +297,6 @@ function MaterialCard({
     </details>
   </article>;
 }
-
 export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
   const { text } = useWorkspaceLanguage();
   const [state, setState] = useState<State>({ kind: "loading" });
@@ -319,7 +383,7 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
         retention_rule: String(data.get("retention_rule") ?? ""),
         content_base64: await fileToBase64(file),
       }, csrfToken);
-      setMessage(text(`Черновик ${staged.filename} сохранён как новая immutable staged-версия. Канонический state не изменён.`, `${staged.filename} was saved as a new immutable staged draft. Canonical state did not change.`));
+      setMessage(text(`Черновик ${staged.filename} сохранён. Теперь проверьте условия использования и примите материал.`, `${staged.filename} was saved as a draft. Review its use conditions and accept it when ready.`));
       form.reset();
       setSemanticRoleChoice("");
       setSelectedMaterialId("");
@@ -369,8 +433,8 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
       }, csrfToken);
       setGenerated(output);
       setMessage(text(
-        `Документ создан как Transient Output из точного шаблона и ${assetInputs.length} дополнительных принятых материалов.`,
-        `Document created as a Transient Output from the exact template and ${assetInputs.length} additional admitted assets.`,
+        `Документ создан по выбранному шаблону и ${assetInputs.length} дополнительным материалам.`,
+        `Document created from the selected template and ${assetInputs.length} additional materials.`,
       ));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "COMPANY_GENERATION_FAILED");
@@ -415,18 +479,18 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
   };
 
   if (state.kind === "loading") return <section className="company-page" aria-live="polite">{text("Открываем библиотеку материалов…", "Opening the asset library…")}</section>;
-  if (state.kind === "error") return <section className="company-page" role="alert"><p className="eyebrow">P10.04 · admission boundary Provisional 0.2.0 · AI grounding Provisional 0.3.0</p><h1>{text("Материалы компании недоступны", "Company materials unavailable")}</h1><code>{state.code}</code><div><button type="button" onClick={() => void refresh()}>{text("Повторить", "Retry")}</button></div></section>;
+  if (state.kind === "error") return <section className="company-page" role="alert"><h1>{text("Материалы компании недоступны", "Company materials unavailable")}</h1><p>{text("Не удалось безопасно загрузить библиотеку. Повторите попытку; технический код доступен ниже.", "The library could not be loaded safely. Try again; the technical code is available below.")}</p><details className="project-technical-details"><summary>{text("Технические сведения", "Technical details")}</summary><code>{state.code}</code></details><div><button type="button" onClick={() => void refresh()}>{text("Повторить", "Retry")}</button></div></section>;
 
   const currentItems = state.data.views[activeView];
   const admissionAvailable = state.data.actions.governed_admission_available;
 
   return <section className="company-page" aria-labelledby="company-materials-title">
     <header className="company-page-head asset-library-head">
-      <p className="eyebrow">P10.04 / P10.09-A / P10.09-B · admission boundary Provisional 0.2.0 · P10.09-C AI grounding Provisional 0.3.0</p>
+
       <h1 id="company-materials-title">{text("Материалы компании", "Company materials")}</h1>
-      <p>{text("Принятые материалы доступны как обычная рабочая библиотека. Черновики и review остаются staged/non-canonical; только успешно завершённый Governed Execution создаёт принятую каноническую версию.", "Admitted assets are available as an ordinary working library. Drafts and review remain staged/non-canonical; only a successful Governed Execution creates an admitted canonical version.")}</p>
-      <details className="company-boundary-details"><summary>{text("Граница authority", "Authority boundary")}</summary><p>{text("Workspace показывает состояние и инициирует команду, но не является источником authority. Authentication, Authorization, Organizational Authority, Data Governance, Validation и Consequential Approval не выводятся из видимости кнопки. Generated output остаётся Transient Output и не становится validated Knowledge.", "Workspace presents state and initiates a command but is not an authority source. Authentication, Authorization, Organizational Authority, Data Governance, Validation, and Consequential Approval are not inferred from button visibility. Generated output remains a Transient Output and does not become validated Knowledge.")}</p></details>
-      <button type="button" disabled={busy} onClick={() => void downloadExport()}>{text("Экспортировать доступную историю", "Export accessible history")}</button>
+      <p>{text("Здесь можно найти принятые материалы и сразу использовать текущий шаблон. Для нового или изменённого файла подтверждение выполняется один раз перед первым использованием.", "Find accepted materials here and use the current template directly. A new or changed file is confirmed once before first use.")}</p>
+      <details className="company-boundary-details"><summary>{text("Почему новый материал нужно подтвердить", "Why a new material needs confirmation")}</summary><p>{text("До принятия файл считается подготовительным: можно проверить его назначение, срок хранения и разрешённые способы использования. При принятии сервер повторно проверяет текущие права. Это не требуется каждый раз, когда вы используете уже принятый шаблон.", "Before acceptance the file is preparatory: its purpose, retention and allowed uses can be checked. The server re-checks current access at acceptance. This is not repeated every time an accepted template is used.")}</p></details>
+      <details className="company-boundary-details"><summary>{text("Служебные действия", "Service actions")}</summary><button type="button" disabled={busy} onClick={() => void downloadExport()}>{text("Экспортировать доступную историю", "Export accessible history")}</button></details>
     </header>
 
     <CompanyAssetDiscovery
@@ -434,12 +498,13 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
       projects={projectOptions}
       onReuse={(item) => {
         setReuseSourceVersion(`${item.material_id}::${item.version_id}`);
-        setMessage(text(`Для генерации выбрана точная принятая версия «${item.title}».`, `The exact admitted version “${item.title}” is selected for generation.`));
+        setMessage(text(`Шаблон «${item.title}» выбран. Заполните документ ниже.`, `Template “${item.title}” selected. Fill in the document below.`));
+        window.setTimeout(() => document.getElementById("company-docx-generator")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
       }}
     />
 
     <section aria-labelledby="company-asset-governance-title">
-      <div className="company-page-head"><p className="eyebrow">P10.04</p><h2 id="company-asset-governance-title">{text("Управление поступлением и версиями", "Admission and version management")}</h2><p>{text("Этот раздел нужен для загрузки, review и governed admission. Для обычного поиска и открытия используйте библиотеку выше.", "Use this section for upload, review, and governed admission. For ordinary discovery and opening, use the library above.")}</p></div>
+      <div className="company-page-head"><h2 id="company-asset-governance-title">{text("Новые и изменённые материалы", "New and changed materials")}</h2><p>{text("Этот раздел нужен только для одноразовой подготовки нового файла или новой версии. Уже принятые материалы используйте через библиотеку выше.", "Use this section only for one-time setup of a new file or version. Use accepted materials from the library above.")}</p></div>
       <nav className="asset-library-tabs" aria-label={text("Состояния материалов", "Material lifecycle views")}>
         {VIEW_OPTIONS.map((view) => <button key={view.key} type="button" className={activeView === view.key ? "active" : ""} onClick={() => setActiveView(view.key)}>{text(view.ru, view.en)} <span>{state.data.views[view.key].length}</span></button>)}
       </nav>
@@ -450,20 +515,26 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
           item={item}
           busy={busy}
           admissionAvailable={admissionAvailable}
-          onReview={async (target, deletionRule, permittedReuse) => run(async () => {
+          onReviewAndAdmit={async (target, deletionRule, permittedReuse) => run(async () => {
             await submitCompanyAssetReview(target.material_id, target.version_id, { deletion_rule: deletionRule, permitted_reuse: permittedReuse }, csrfToken);
             setActiveView("review");
-            setMessage(text("Точная staged-версия передана на рассмотрение; canonical state не изменён.", "The exact staged version entered review; canonical state did not change."));
+            try {
+              await admitCompanyAssetVersion(target.material_id, target.version_id, csrfToken);
+              setActiveView("accepted");
+              setMessage(text("Материал принят и теперь доступен в рабочей библиотеке.", "Material accepted and now available in the working library."));
+            } catch {
+              setMessage(text("Условия сохранены, но принять материал сейчас не удалось. Он остался в разделе «Проверка» — можно повторить принятие позже.", "Conditions were saved, but acceptance could not complete. The material remains in Review and can be accepted later."));
+            }
           })}
           onReject={async (target, reason) => run(async () => {
             await rejectCompanyAssetVersion(target.material_id, target.version_id, reason, csrfToken);
             setActiveView("archive");
-            setMessage(text("Версия отклонена без canonical mutation.", "Version rejected without canonical mutation."));
+            setMessage(text("Версия отклонена. Принятая библиотека не изменилась.", "Version rejected. The accepted library was not changed."));
           })}
           onAdmit={async (target) => run(async () => {
             await admitCompanyAssetVersion(target.material_id, target.version_id, csrfToken);
             setActiveView("accepted");
-            setMessage(text("Governed admission завершён; точная версия отображается как канонически принятая.", "Governed admission completed; the exact version is now shown as canonically accepted."));
+            setMessage(text("Материал принят и теперь доступен в рабочей библиотеке.", "Material accepted and now available in the working library."));
           })}
           onNewVersion={(target) => {
             setSelectedMaterialId(target.material_id);
@@ -483,30 +554,30 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
         <label>{text("Файл", "File")}<input name="file" type="file" accept={ACCEPTED_FILE_TYPES} required /></label>
         <label>{text("Тип материала", "Material type")}<select name="semantic_role_choice" value={semanticRoleChoice} onChange={(event) => setSemanticRoleChoice(event.target.value as MaterialRoleChoice)} required><option value="" disabled>{text("Выберите тип", "Choose type")}</option>{MATERIAL_ROLE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{text(option.ru, option.en)}</option>)}</select></label>
         {semanticRoleChoice === "other" ? <label>{text("Другой тип", "Other type")}<input name="semantic_role_other" required maxLength={96} /></label> : null}
-        <label>{text("Классификация", "Classification")}<input name="classification" required maxLength={96} defaultValue="internal" /></label>
+        <label>{text("Классификация", "Classification")}<select name="classification" defaultValue="internal"><option value="internal">{text("Внутренний", "Internal")}</option></select></label>
         <label>{text("Назначение", "Purpose")}<input name="purpose" required maxLength={240} /></label>
-        <label>{text("Права использования", "Rights")}<input name="rights" required maxLength={240} defaultValue="company-internal-use" /></label>
-        <label>Retention rule<input name="retention_rule" required maxLength={240} defaultValue="until-replaced-or-explicit-deletion" /></label>
+        <label>{text("Использование", "Use") }<select name="rights" defaultValue="company-internal-use"><option value="company-internal-use">{text("Внутри компании", "Inside the company")}</option></select></label>
+        <label>{text("Хранение", "Retention")}<select name="retention_rule" defaultValue="until-replaced-or-explicit-deletion"><option value="until-replaced-or-explicit-deletion">{text("До замены или явного удаления", "Until replaced or explicitly deleted")}</option></select></label>
         <button type="submit" disabled={busy}>{busy ? text("Сохраняем…", "Saving…") : text("Сохранить как черновик", "Save as draft")}</button>
       </form>
 
       <form id="company-docx-generator" className="company-form" onSubmit={(event) => void submitGenerate(event)}>
-        <h2>{text("Создать DOCX из принятых материалов", "Generate DOCX from admitted assets")}</h2>
-        <p>{text("Выберите текущую принятую версию шаблона и, при необходимости, дополнительные принятые assets. Логотип PNG/JPEG встраивается в DOCX, TXT/MD включается как текст, остальные материалы закрепляются как точные references. Результат остаётся Transient Output.", "Choose the current admitted template version and optional admitted assets. PNG/JPEG logos are embedded in the DOCX, TXT/MD content is included as text, and other assets are pinned as exact references. The result remains a Transient Output.")}</p>
-        <label>{text("Текущий принятый шаблон", "Current admitted template")}<select name="source_version" required value={reuseSourceVersion} onChange={(event) => setReuseSourceVersion(event.target.value)}><option value="" disabled>{text("Выберите шаблон", "Choose template")}</option>{docxVersions.map((item) => <option key={item.version_id} value={`${item.material_id}::${item.version_id}`}>{item.title} · {prettyDate(item.received_at)}</option>)}</select></label>
+        <h2>{text("Создать документ по шаблону", "Create a document from a template")}</h2>
+        <p>{text("Выберите принятый шаблон. При необходимости добавьте логотип или исходные материалы. Созданный файл можно скачать сразу; в библиотеку он не добавляется автоматически.", "Choose an accepted template and optionally add a logo or source materials. The generated file can be downloaded immediately and is not automatically added to the library.")}</p>
+        <label>{text("Шаблон", "Template")}<select name="source_version" required value={reuseSourceVersion} onChange={(event) => setReuseSourceVersion(event.target.value)}><option value="" disabled>{text("Выберите шаблон", "Choose template")}</option>{docxVersions.map((item) => <option key={item.version_id} value={`${item.material_id}::${item.version_id}`}>{item.title} · {prettyDate(item.received_at)}</option>)}</select></label>
         <section className="asset-generation-inputs" aria-labelledby="asset-generation-inputs-title">
           <h3 id="asset-generation-inputs-title">{text("Дополнительные материалы", "Additional assets")}</h3>
-          <p>{text("Используются только текущие канонически принятые версии. Технические идентификаторы подставляются сервером и не требуются для выбора.", "Only current canonically admitted versions are eligible. The server resolves exact technical identities; they are not required for selection.")}</p>
+          <p>{text("Показываются только принятые текущие версии. Технические номера выбирать не нужно.", "Only accepted current versions are shown. Technical identifiers are not needed for selection.")}</p>
           {brandInputs.length ? <fieldset><legend>{text("Бренд", "Brand")}</legend>{brandInputs.map((item) => <label className="asset-generation-option" key={item.version_id}><input type="checkbox" name="asset_input" value={`brand::${item.material_id}::${item.version_id}`} /><span><strong>{item.title}</strong><small>{assetApplicationLabel(item, text)}</small></span></label>)}</fieldset> : null}
           {sourceInputs.length ? <fieldset><legend>{text("Исходные материалы", "Source materials")}</legend>{sourceInputs.map((item) => <label className="asset-generation-option" key={item.version_id}><input type="checkbox" name="asset_input" value={`source::${item.material_id}::${item.version_id}`} /><span><strong>{item.title}</strong><small>{assetApplicationLabel(item, text)}</small></span></label>)}</fieldset> : null}
-          {referenceInputs.length ? <fieldset><legend>{text("References", "References")}</legend>{referenceInputs.map((item) => <label className="asset-generation-option" key={item.version_id}><input type="checkbox" name="asset_input" value={`reference::${item.material_id}::${item.version_id}`} /><span><strong>{item.title}</strong><small>{assetApplicationLabel(item, text)}</small></span></label>)}</fieldset> : null}
+          {referenceInputs.length ? <fieldset><legend>{text("Другие материалы", "Other materials")}</legend>{referenceInputs.map((item) => <label className="asset-generation-option" key={item.version_id}><input type="checkbox" name="asset_input" value={`reference::${item.material_id}::${item.version_id}`} /><span><strong>{item.title}</strong><small>{assetApplicationLabel(item, text)}</small></span></label>)}</fieldset> : null}
         </section>
         <label>{text("Заголовок", "Title")}<input name="title" required maxLength={320} /></label>
         <label>{text("Текст", "Body")}<textarea name="body" required maxLength={6000} rows={9} /></label>
         <label>{text("Дата", "Date")}<input name="date" required maxLength={80} defaultValue={new Date().toLocaleDateString("ru-RU")} /></label>
-        <button type="submit" disabled={busy || docxVersions.length === 0}>{text("Создать transient DOCX", "Generate transient DOCX")}</button>
-        {docxVersions.length === 0 ? <p className="boundary-note">{text("Сначала примите DOCX-шаблон через governed admission.", "First admit a DOCX template through governed admission.")}</p> : null}
-        {generated ? <div className="company-output"><strong>Transient Output</strong><p>{text("Шаблон", "Template")}: {docxVersions.find((item) => item.version_id === generated.output.source_version_id)?.title ?? text("точная принятая версия", "exact admitted version")}</p>{generated.output.input_assets?.length ? <div><p><strong>{text("Использованные материалы", "Used assets")}</strong></p><ul>{generated.output.input_assets.map((item) => <li key={`${item.material_id}-${item.version_id}`}>{item.title} · {item.application === "embedded-image" ? text("встроен", "embedded") : item.application === "text-included" ? text("текст включён", "text included") : text("точный reference", "exact reference")}</li>)}</ul></div> : null}<button type="button" disabled={busy} onClick={() => void downloadGenerated(generated)}>{text("Скачать DOCX", "Download DOCX")}</button><details><summary>{text("Технические сведения", "Technical details")}</summary><code>{generated.output.output_id}</code><br /><code>{generated.output.source_version_id}</code>{generated.output.generation_input_digest ? <><br /><code>{generated.output.generation_input_digest}</code></> : null}</details></div> : null}
+        <button type="submit" disabled={busy || docxVersions.length === 0}>{text("Создать документ", "Create document")}</button>
+        {docxVersions.length === 0 ? <p className="boundary-note">{text("Принятых DOCX-шаблонов пока нет. Новый шаблон нужно один раз проверить и принять в разделе выше.", "There are no accepted DOCX templates yet. A new template must be reviewed and accepted once in the section above.")}</p> : null}
+        {generated ? <div className="company-output"><strong>{text("Документ готов", "Document ready")}</strong><p>{text("Шаблон", "Template")}: {docxVersions.find((item) => item.version_id === generated.output.source_version_id)?.title ?? text("точная принятая версия", "exact admitted version")}</p>{generated.output.input_assets?.length ? <div><p><strong>{text("Использованные материалы", "Used assets")}</strong></p><ul>{generated.output.input_assets.map((item) => <li key={`${item.material_id}-${item.version_id}`}>{item.title} · {item.application === "embedded-image" ? text("встроен", "embedded") : item.application === "text-included" ? text("текст включён", "text included") : text("ссылка на точную версию", "exact-version reference")}</li>)}</ul></div> : null}<button type="button" disabled={busy} onClick={() => void downloadGenerated(generated)}>{text("Скачать DOCX", "Download DOCX")}</button><details><summary>{text("Технические сведения", "Technical details")}</summary><code>{generated.output.output_id}</code><br /><code>{generated.output.source_version_id}</code>{generated.output.generation_input_digest ? <><br /><code>{generated.output.generation_input_digest}</code></> : null}</details></div> : null}
       </form>
     </div>
   </section>;
