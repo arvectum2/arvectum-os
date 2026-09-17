@@ -206,6 +206,7 @@ describe("P10.04 Company Asset owner journey", () => {
     const library: CompanyAssetLibraryProjection = {
       ...emptyLibrary,
       views: { ...emptyLibrary.views, drafts: [draftSource] },
+      actions: { governed_admission_available: true },
     };
     const fetchMock = renderMaterials(library);
     expect(await screen.findByRole("heading", { name: "Материалы компании" })).toBeTruthy();
@@ -232,6 +233,18 @@ describe("P10.04 Company Asset owner journey", () => {
       });
       expect(fetchMock.mock.calls.some(([input, init]) => String(input).endsWith("/admit") && init?.method === "POST")).toBe(true);
     });
+  });
+
+  it("fails closed before the owner starts acceptance when the admission check is unavailable", async () => {
+    const library: CompanyAssetLibraryProjection = {
+      ...emptyLibrary,
+      views: { ...emptyLibrary.views, drafts: [draftSource] },
+      actions: { governed_admission_available: false },
+    };
+    renderMaterials(library);
+    expect(await screen.findByRole("heading", { name: "Draft-company-source.md" })).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Принять материал" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText(/Принятие сейчас временно недоступно/)).toBeTruthy();
   });
 
   it("keeps the ordinary draft view human-readable while preserving technical details on demand", async () => {

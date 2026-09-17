@@ -3,7 +3,7 @@ repository: arvectum2/arvectum-os
 task_id: P10.10-ASSET-DOGFOOD
 authority: HUMAN
 status: in_progress_human
-updated_at: "2026-09-17T10:29:00Z"
+updated_at: "2026-09-17T10:35:00Z"
 canonical_main: "4ee9e57f99dffdc3a074a8c6a2cf7e2513ccfa37"
 owner_decision: "docs/governance/decisions/DECISION-2026-09-17-P10-10-OWNER-DOGFOODING-START.md"
 evidence: "docs/reviews/P10-10-selected-mac-live-start-2026-09-17.md"
@@ -13,9 +13,10 @@ verified:
   - "PR #22 contains a bounded frontend friction fix; implementation commit 497166e83c22558050d0c50d8b96312962f7b69c preserves the existing server-side review and governed-admission boundaries."
   - "One owner action now records the exact reviewed handling policy and then invokes the existing governed admission endpoint; if admission fails, the reviewed item remains in Review for explicit retry rather than bypassing gates."
   - "Accepted-template reuse remains exact-version scoped and now routes directly from the Working library to the document form."
-  - "Focused Company Materials/asset discovery/usability tests PASS 10/10; npm typecheck PASS; npm build PASS."
-  - "Full parallel frontend suite reached 53/55; P907 timed out and R30 missed an async state only in the concurrent run, while an immediate isolated rerun passed 2/2. No touched-scope test failed."
-  - "Previous PR head 0592425c734646ab5fbbcc6a1f982aa1e77ad896 had exact-head Productive Workspace CI and Reference Python CI success; final-head CI must be rechecked after this update."
+  - "Focused Company Materials/asset discovery/usability tests PASS 11/11, including fail-closed admission-unavailable behavior; npm typecheck PASS; npm build PASS."
+  - "Full frontend suite PASS 56/56 on the final local source state."
+  - "A separate-origin review preview was attempted without touching the managed backend; bootstrap failed closed with ORIGIN_REJECTED. The preview was stopped and the Origin gate was not bypassed."
+  - "Previous PR head 0592425c734646ab5fbbcc6a1f982aa1e77ad896 had exact-head Productive Workspace CI and Reference Python CI success; final-head CI must be rechecked after the final push."
   - "This is genuine friction evidence and a review-ready remediation only; it does not prove P10.10 usability PASS."
 human_gate:
   required: true

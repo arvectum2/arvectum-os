@@ -261,7 +261,8 @@ function MaterialCard({
         <input type="checkbox" aria-label={text("Разрешить Arvectum AI использовать эту версию как источник", "Allow Arvectum AI to use this version as a source")} checked={aiGroundingEnabled} onChange={(event) => setAiGrounding(event.target.checked)} />
         <span><strong>{text("Разрешить Arvectum AI использовать эту версию как источник", "Allow Arvectum AI to use this version as a source")}</strong><small>{text("Отдельное разрешение только для этой версии. Само разрешение не даёт ИИ права менять документы или принимать решения.", "A separate permission for this version only. It does not let AI change documents or make decisions.")}</small></span>
       </label>
-      <button type="submit" disabled={busy}>{text("Принять материал", "Accept material")}</button>
+      <button type="submit" disabled={busy || !admissionAvailable}>{text("Принять материал", "Accept material")}</button>
+      {!admissionAvailable ? <p className="boundary-note">{text("Принятие сейчас временно недоступно. Черновик сохранён; вернитесь к нему, когда серверная проверка восстановится.", "Acceptance is temporarily unavailable. The draft is saved; return when the server-side check is available again.")}</p> : null}
       <details className="project-technical-details">
         <summary>{text("Служебные разрешения", "Service permissions")}</summary>
         <p>{permittedReuseLabels(reuse, text).join(", ") || text("Дополнительные разрешения не выбраны.", "No additional permissions selected.")}</p>
