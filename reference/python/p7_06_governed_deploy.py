@@ -25,7 +25,7 @@ MIGRATION_SCHEMA = "arvectum.p7_06.migration-plan/1"
 OPERATING_MODE = "Persistent Internal / owner-operated"
 ORGANIZATION_SCOPE = "ООО «Арвектум»"
 CURRENT_CANONICAL_REPOSITORY = "arvectum2/arvectum-os"
-LEGACY_CANONICAL_REPOSITORIES = frozenset({"arvectum/arvectum-os"})
+LEGACY_CANONICAL_REPOSITORIES = frozenset({"arvectum/arvectum-os", "arvectum1/arvectum-os"})
 REQUIRED_RELEASE_FILES = (
     "source/reference/python/p7_02_persistent_runtime.py",
     "source/reference/python/p7_02_macos_service.sh",
