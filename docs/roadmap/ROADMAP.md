@@ -1,7 +1,7 @@
 # Arvectum OS Canonical Roadmap
 
 Status: `Active`
-Version: `3.03.1`
+Version: `3.03.2`
 Created: `2026-08-07`
 Updated: `2026-09-17`
 Owner: `ООО «Арвектум»`
@@ -26,11 +26,12 @@ Roadmap status does not itself change Platform Capability lifecycle, Product Con
 
 Detailed phase plans, reviews and repository history retain implementation/evidence detail; this file defines current canonical sequencing when subordinate phase text is older or more restrictive.
 
-## 2. Version 3.03.1 — P10.10 genuine owner-session start
+## 2. Version 3.03.2 — P10.10 selected-Mac live start
 
 Phase 10 has progressed beyond the original serial plan:
 
 - owner decision [`DECISION-2026-09-17-P10-10-OWNER-DOGFOODING-START`](../governance/decisions/DECISION-2026-09-17-P10-10-OWNER-DOGFOODING-START.md) is `Approved`;
+- [`P10.10 selected-Mac live start evidence`](../reviews/P10-10-selected-mac-live-start-2026-09-17.md) records governed update `470878b… → 281febf3…`, verified pre-update backup, runtime/observer health PASS, Productive Workspace `CURRENT_EXACT`, release `p10.09.3`, and real Safari session bootstrap/Company Assets/portfolio HTTP `200`;
 - `P10.10` genuine owner dogfooding is now `IN PROGRESS / HUMAN`, beginning with exact-release selected-Mac deployment and real owner use;
 - deployment migration remediation PR #17 permits the already-installed `arvectum1/arvectum-os` release only as historical source provenance while keeping new targets restricted to canonical `arvectum2/arvectum-os`;
 
