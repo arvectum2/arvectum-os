@@ -99,7 +99,7 @@ type State =
 
 const VIEW_OPTIONS: Array<{ key: ViewKey; ru: string; en: string }> = [
   { key: "drafts", ru: "Черновики", en: "Drafts" },
-  { key: "review", ru: "На рассмотрении", en: "In review" },
+  { key: "review", ru: "Проверка", en: "Review" },
   { key: "accepted", ru: "Принято", en: "Accepted" },
   { key: "archive", ru: "Архив / заменено", en: "Archive / superseded" },
 ];
@@ -153,7 +153,7 @@ function assetApplicationLabel(item: CompanyAssetLibraryItem, text: (ru: string,
   if (["text/plain", "text/markdown"].includes(item.media_type)) {
     return text("текст будет включён", "text will be included");
   }
-  return text("будет закреплён как точный reference", "will be pinned as an exact reference");
+  return text("будет использован как ссылка на точную версию", "will be used as an exact-version reference");
 }
 
 function prettyDate(value: string): string {
@@ -165,7 +165,7 @@ function MaterialCard({
   item,
   busy,
   admissionAvailable,
-  onReview,
+  onReviewAndAdmit,
   onReject,
   onAdmit,
   onNewVersion,
@@ -173,7 +173,7 @@ function MaterialCard({
   item: CompanyAssetLibraryItem;
   busy: boolean;
   admissionAvailable: boolean;
-  onReview: (item: CompanyAssetLibraryItem, deletionRule: string, permittedReuse: string[]) => Promise<void>;
+  onReviewAndAdmit: (item: CompanyAssetLibraryItem, deletionRule: string, permittedReuse: string[]) => Promise<void>;
   onReject: (item: CompanyAssetLibraryItem, reason: string) => Promise<void>;
   onAdmit: (item: CompanyAssetLibraryItem) => Promise<void>;
   onNewVersion: (item: CompanyAssetLibraryItem) => void;
@@ -206,7 +206,7 @@ function MaterialCard({
 
   const submitReview = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    await onReview(item, deletionRule, Array.from(new Set(reuse)));
+    await onReviewAndAdmit(item, deletionRule, Array.from(new Set(reuse)));
   };
 
   const submitReject = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -252,7 +252,7 @@ function MaterialCard({
       <h3>{rejected ? text("Исправить условия", "Update conditions") : text("Подготовить к использованию", "Prepare for use")}</h3>
       <p>{text("Это одноразовая настройка для новой или изменённой версии. После принятия шаблон можно будет выбирать напрямую в библиотеке.", "This is a one-time setup for a new or changed version. Once accepted, the template can be selected directly from the library.")}</p>
       {rejected && item.review.reason ? <p className="boundary-note">{text("Причина отклонения", "Rejection reason")}: {item.review.reason}</p> : null}
-      <label>{text("Когда материал можно удалить", "When the material may be deleted")}<input value={deletionRule} onChange={(event) => setDeletionRule(event.target.value)} required maxLength={240} placeholder={text("Например: только после окончания срока хранения", "For example: only after the retention period ends")} /></label>
+      <label>{text("Когда материал можно удалить", "When the material may be deleted")}<input aria-label={text("Когда материал можно удалить", "When the material may be deleted")} value={deletionRule} onChange={(event) => setDeletionRule(event.target.value)} required maxLength={240} placeholder={text("Например: после замены новой версией", "For example: after it is replaced by a new version")} /><small>{text("Это условие задаётся один раз для новой версии. При обычном использовании принятого шаблона его повторно вводить не нужно.", "Set this once for a new version. You do not re-enter it when using an accepted template.")}</small></label>
       <label className="asset-generation-option">
         <input type="checkbox" aria-label={text("Разрешить использовать материал при создании документов", "Allow use in document generation")} checked={generationReuseEnabled} onChange={(event) => setGenerationReuse(event.target.checked)} />
         <span><strong>{text("Использовать при создании документов", "Use in document generation")}</strong><small>{text("Для шаблонов, логотипов и исходных материалов внутри компании.", "For templates, logos and source materials inside the company.")}</small></span>
@@ -261,7 +261,7 @@ function MaterialCard({
         <input type="checkbox" aria-label={text("Разрешить Arvectum AI использовать эту версию как источник", "Allow Arvectum AI to use this version as a source")} checked={aiGroundingEnabled} onChange={(event) => setAiGrounding(event.target.checked)} />
         <span><strong>{text("Разрешить Arvectum AI использовать эту версию как источник", "Allow Arvectum AI to use this version as a source")}</strong><small>{text("Отдельное разрешение только для этой версии. Само разрешение не даёт ИИ права менять документы или принимать решения.", "A separate permission for this version only. It does not let AI change documents or make decisions.")}</small></span>
       </label>
-      <button type="submit" disabled={busy}>{text("Проверить условия", "Review conditions")}</button>
+      <button type="submit" disabled={busy}>{text("Принять материал", "Accept material")}</button>
       <details className="project-technical-details">
         <summary>{text("Служебные разрешения", "Service permissions")}</summary>
         <p>{permittedReuseLabels(reuse, text).join(", ") || text("Дополнительные разрешения не выбраны.", "No additional permissions selected.")}</p>
@@ -382,7 +382,7 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
         retention_rule: String(data.get("retention_rule") ?? ""),
         content_base64: await fileToBase64(file),
       }, csrfToken);
-      setMessage(text(`Черновик ${staged.filename} сохранён как новая immutable staged-версия. Канонический state не изменён.`, `${staged.filename} was saved as a new immutable staged draft. Canonical state did not change.`));
+      setMessage(text(`Черновик ${staged.filename} сохранён. Теперь проверьте условия использования и примите материал.`, `${staged.filename} was saved as a draft. Review its use conditions and accept it when ready.`));
       form.reset();
       setSemanticRoleChoice("");
       setSelectedMaterialId("");
@@ -432,8 +432,8 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
       }, csrfToken);
       setGenerated(output);
       setMessage(text(
-        `Документ создан как Transient Output из точного шаблона и ${assetInputs.length} дополнительных принятых материалов.`,
-        `Document created as a Transient Output from the exact template and ${assetInputs.length} additional admitted assets.`,
+        `Документ создан по выбранному шаблону и ${assetInputs.length} дополнительным материалам.`,
+        `Document created from the selected template and ${assetInputs.length} additional materials.`,
       ));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "COMPANY_GENERATION_FAILED");
@@ -478,7 +478,7 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
   };
 
   if (state.kind === "loading") return <section className="company-page" aria-live="polite">{text("Открываем библиотеку материалов…", "Opening the asset library…")}</section>;
-  if (state.kind === "error") return <section className="company-page" role="alert"><p className="eyebrow">P10.04 · admission boundary Provisional 0.2.0 · AI grounding Provisional 0.3.0</p><h1>{text("Материалы компании недоступны", "Company materials unavailable")}</h1><code>{state.code}</code><div><button type="button" onClick={() => void refresh()}>{text("Повторить", "Retry")}</button></div></section>;
+  if (state.kind === "error") return <section className="company-page" role="alert"><h1>{text("Материалы компании недоступны", "Company materials unavailable")}</h1><p>{text("Не удалось безопасно загрузить библиотеку. Повторите попытку; технический код доступен ниже.", "The library could not be loaded safely. Try again; the technical code is available below.")}</p><details className="project-technical-details"><summary>{text("Технические сведения", "Technical details")}</summary><code>{state.code}</code></details><div><button type="button" onClick={() => void refresh()}>{text("Повторить", "Retry")}</button></div></section>;
 
   const currentItems = state.data.views[activeView];
   const admissionAvailable = state.data.actions.governed_admission_available;
@@ -514,10 +514,16 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
           item={item}
           busy={busy}
           admissionAvailable={admissionAvailable}
-          onReview={async (target, deletionRule, permittedReuse) => run(async () => {
+          onReviewAndAdmit={async (target, deletionRule, permittedReuse) => run(async () => {
             await submitCompanyAssetReview(target.material_id, target.version_id, { deletion_rule: deletionRule, permitted_reuse: permittedReuse }, csrfToken);
             setActiveView("review");
-            setMessage(text("Условия сохранены. Теперь подтвердите принятие этой версии.", "Conditions saved. Now confirm acceptance of this version."));
+            try {
+              await admitCompanyAssetVersion(target.material_id, target.version_id, csrfToken);
+              setActiveView("accepted");
+              setMessage(text("Материал принят и теперь доступен в рабочей библиотеке.", "Material accepted and now available in the working library."));
+            } catch {
+              setMessage(text("Условия сохранены, но принять материал сейчас не удалось. Он остался в разделе «Проверка» — можно повторить принятие позже.", "Conditions were saved, but acceptance could not complete. The material remains in Review and can be accepted later."));
+            }
           })}
           onReject={async (target, reason) => run(async () => {
             await rejectCompanyAssetVersion(target.material_id, target.version_id, reason, csrfToken);

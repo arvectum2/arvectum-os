@@ -220,16 +220,17 @@ describe("P10.04 Company Asset owner journey", () => {
     expect((aiReuse as HTMLInputElement).checked).toBe(false);
     expect(documentReuse.checked).toBe(true);
     fireEvent.click(aiReuse);
-    fireEvent.click(screen.getByRole("button", { name: "Проверить условия" }));
+    fireEvent.click(screen.getByRole("button", { name: "Принять материал" }));
 
     await vi.waitFor(() => {
-      const call = fetchMock.mock.calls.find(([input, init]) => String(input).endsWith("/review") && init?.method === "POST");
-      expect(call).toBeTruthy();
-      const body = JSON.parse(String(call?.[1]?.body));
+      const reviewCall = fetchMock.mock.calls.find(([input, init]) => String(input).endsWith("/review") && init?.method === "POST");
+      expect(reviewCall).toBeTruthy();
+      const body = JSON.parse(String(reviewCall?.[1]?.body));
       expect(body).toEqual({
         deletion_rule: "governed-retention",
         permitted_reuse: ["company-internal-document-generation", "company-internal-ai-grounding"],
       });
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).endsWith("/admit") && init?.method === "POST")).toBe(true);
     });
   });
 
@@ -245,7 +246,7 @@ describe("P10.04 Company Asset owner journey", () => {
     expect(screen.getByText("Для использования внутри компании")).toBeTruthy();
     expect(screen.getAllByText("До замены или явного удаления").length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: "Подготовить к использованию" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Проверить условия" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Принять материал" })).toBeTruthy();
     const details = screen.getAllByText("Технические сведения")[0].closest("details") as HTMLDetailsElement;
     expect(details.open).toBe(false);
     expect(screen.queryByText("Staged · черновик")).toBeNull();
