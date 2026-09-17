@@ -1,7 +1,7 @@
 # Arvectum OS Canonical Roadmap
 
 Status: `Active`
-Version: `3.03.0`
+Version: `3.03.1`
 Created: `2026-08-07`
 Updated: `2026-09-17`
 Owner: `ООО «Арвектум»`
@@ -26,9 +26,13 @@ Roadmap status does not itself change Platform Capability lifecycle, Product Con
 
 Detailed phase plans, reviews and repository history retain implementation/evidence detail; this file defines current canonical sequencing when subordinate phase text is older or more restrictive.
 
-## 2. Version 3.03.0 — bounded P10.08 preparation closure
+## 2. Version 3.03.1 — P10.10 genuine owner-session start
 
 Phase 10 has progressed beyond the original serial plan:
+
+- owner decision [`DECISION-2026-09-17-P10-10-OWNER-DOGFOODING-START`](../governance/decisions/DECISION-2026-09-17-P10-10-OWNER-DOGFOODING-START.md) is `Approved`;
+- `P10.10` genuine owner dogfooding is now `IN PROGRESS / HUMAN`, beginning with exact-release selected-Mac deployment and real owner use;
+- deployment migration remediation PR #17 permits the already-installed `arvectum1/arvectum-os` release only as historical source provenance while keeping new targets restricted to canonical `arvectum2/arvectum-os`;
 
 - `R34 = Complete / PASS — 7/7`;
 - `M10-alpha = Achieved / PASS` through a real owner-operated governed Company asset cycle;
@@ -122,7 +126,7 @@ M10-alpha proves a real Company-owned material can complete staging → review �
 | **P10.07** | First real governed operational action | **⏸ WAITING — genuine request required; mandatory M10 evidence** |
 | **P10.08** | Product operational entry-point composition | **🟦 PREPARATION COMPLETE / WAITING** — bounded pre-P10.07 preparation passed; evidence-informed completion/generalization waits genuine P10.07 evidence |
 | **P10.09** | Source-grounded use of admitted assets in Workspace / AI / generation | **🟩 COMPLETE / PASS through P10.09-D bounded scope** |
-| **P10.10** | Real daily-operations dogfooding + friction closure | **🟦 PARTIALLY OPEN / HUMAN** — asset-side genuine owner sessions may start; full PASS waits P10.07 |
+| **P10.10** | Real daily-operations dogfooding + friction closure | **🟨 IN PROGRESS / HUMAN** — selected-Mac exact-release deployment + genuine owner asset-side sessions; full PASS still waits P10.07 |
 | P10.11 | Lifecycle / platform-reuse / capability disposition | ⬜ waits sufficient Phase 10 evidence |
 | **R35** | Operational Work / Product Boundary / AI Authority Review | **🔒 blocked on real P10.07 action + applicable P10.08 evidence** |
 | R36 | M10 Hardening + Milestone Code Health Gate | ⬜ later gate |
@@ -309,7 +313,7 @@ M10 still requires all applicable evidence, including:
 
 **Human evidence lane:**
 
-> **P10.10 — asset-side dogfooding may proceed only through genuine owner sessions; automation may record and repair observed friction but must not manufacture usability evidence.**
+> **P10.10 — genuine owner dogfooding is active. Deploy the exact canonical selected-Mac release through P7.06, then use Company Assets/search/generation/Copilot in a real owner session; automation may record and repair observed friction but must not manufacture usability evidence.**
 
 **Available conditional parallel work:**
 
