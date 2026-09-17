@@ -209,19 +209,18 @@ describe("P10.04 Company Asset owner journey", () => {
     };
     const fetchMock = renderMaterials(library);
     expect(await screen.findByRole("heading", { name: "Материалы компании" })).toBeTruthy();
-    fireEvent.change(screen.getByLabelText("Правило удаления"), { target: { value: "governed-retention" } });
+    fireEvent.change(screen.getByLabelText("Когда материал можно удалить"), { target: { value: "governed-retention" } });
     const aiReuse = screen.getByLabelText("Разрешить Arvectum AI использовать эту версию как источник");
     expect((aiReuse as HTMLInputElement).checked).toBe(false);
-    const genericReuse = screen.getByLabelText("Разрешённое повторное использование") as HTMLInputElement;
-    expect(genericReuse.value).toBe("company-internal-document-generation");
+    const documentReuse = screen.getByLabelText("Разрешить использовать материал при создании документов") as HTMLInputElement;
+    expect(documentReuse.checked).toBe(true);
     fireEvent.click(aiReuse);
     expect((aiReuse as HTMLInputElement).checked).toBe(true);
-    expect(genericReuse.value).toContain("company-internal-document-generation");
-    expect(genericReuse.value).toContain("company-internal-ai-grounding");
     fireEvent.click(aiReuse);
-    expect(genericReuse.value).toBe("company-internal-document-generation");
+    expect((aiReuse as HTMLInputElement).checked).toBe(false);
+    expect(documentReuse.checked).toBe(true);
     fireEvent.click(aiReuse);
-    fireEvent.click(screen.getByRole("button", { name: "Передать на рассмотрение" }));
+    fireEvent.click(screen.getByRole("button", { name: "Проверить условия" }));
 
     await vi.waitFor(() => {
       const call = fetchMock.mock.calls.find(([input, init]) => String(input).endsWith("/review") && init?.method === "POST");
@@ -234,10 +233,30 @@ describe("P10.04 Company Asset owner journey", () => {
     });
   });
 
+  it("keeps the ordinary draft view human-readable while preserving technical details on demand", async () => {
+    const library: CompanyAssetLibraryProjection = {
+      ...emptyLibrary,
+      views: { ...emptyLibrary.views, drafts: [draftSource] },
+    };
+    renderMaterials(library);
+    expect(await screen.findByRole("heading", { name: "Draft-company-source.md" })).toBeTruthy();
+    expect(screen.getByText("Черновик")).toBeTruthy();
+    expect(screen.getAllByText("Исходный материал").length).toBeGreaterThan(0);
+    expect(screen.getByText("Для использования внутри компании")).toBeTruthy();
+    expect(screen.getAllByText("До замены или явного удаления").length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { name: "Подготовить к использованию" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Проверить условия" })).toBeTruthy();
+    const details = screen.getAllByText("Технические сведения")[0].closest("details") as HTMLDetailsElement;
+    expect(details.open).toBe(false);
+    expect(screen.queryByText("Staged · черновик")).toBeNull();
+    expect(screen.queryByText(/Product Contract/)).toBeNull();
+    expect(screen.queryByText(/server-side revalidation/)).toBeNull();
+  });
+
   it("selects exact current template, brand and source assets without requiring technical IDs", async () => {
     const fetchMock = renderMaterials(libraryWithGenerationAssets);
     expect(await screen.findByRole("heading", { name: "Материалы компании" })).toBeTruthy();
-    fireEvent.change(screen.getByLabelText("Текущий принятый шаблон"), {
+    fireEvent.change(screen.getByLabelText("Шаблон"), {
       target: { value: `${admittedTemplate.material_id}::${admittedTemplate.version_id}` },
     });
     fireEvent.click(screen.getByLabelText(/Arvectum-logo\.png/));
@@ -245,8 +264,8 @@ describe("P10.04 Company Asset owner journey", () => {
     fireEvent.change(screen.getByLabelText("Заголовок"), { target: { value: "Тестовый документ" } });
     fireEvent.change(screen.getByLabelText("Текст"), { target: { value: "Проверка owner journey" } });
     fireEvent.change(screen.getByLabelText("Дата"), { target: { value: "26.08.2026" } });
-    fireEvent.click(screen.getByRole("button", { name: "Создать transient DOCX" }));
-    expect(await screen.findByText("Transient Output")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Создать документ" }));
+    expect(await screen.findByText("Документ готов")).toBeTruthy();
     expect(screen.getByText("Arvectum-logo.png · встроен")).toBeTruthy();
     expect(screen.getByText("Approved-facts.md · текст включён")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Скачать DOCX" })).toBeTruthy();

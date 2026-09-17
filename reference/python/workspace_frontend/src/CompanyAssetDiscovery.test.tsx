@@ -137,7 +137,7 @@ describe("P10.09-A admitted asset discovery", () => {
     fireEvent.click(screen.getByRole("button", { name: "Search text" }));
     await waitFor(() => expect(searchCompanyAssets).toHaveBeenCalledWith("policy"));
     expect(screen.getByText("Company policy text")).toBeTruthy();
-    expect(screen.getByText(/not authority or validated knowledge/i)).toBeTruthy();
+    expect(screen.getByText(/important actions use the source material/i)).toBeTruthy();
   });
 
 });
