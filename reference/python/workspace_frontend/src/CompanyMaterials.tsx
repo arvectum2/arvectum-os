@@ -262,7 +262,7 @@ function MaterialCard({
         <span><strong>{text("Разрешить Arvectum AI использовать эту версию как источник", "Allow Arvectum AI to use this version as a source")}</strong><small>{text("Отдельное разрешение только для этой версии. Само разрешение не даёт ИИ права менять документы или принимать решения.", "A separate permission for this version only. It does not let AI change documents or make decisions.")}</small></span>
       </label>
       <button type="submit" disabled={busy || !admissionAvailable}>{text("Принять материал", "Accept material")}</button>
-      {!admissionAvailable ? <p className="boundary-note">{text("Принятие сейчас временно недоступно. Черновик сохранён; вернитесь к нему, когда серверная проверка восстановится.", "Acceptance is temporarily unavailable. The draft is saved; return when the server-side check is available again.")}</p> : null}
+      {!admissionAvailable ? <p className="boundary-note">{text("Приём материалов ещё не включён для этого рабочего пространства. Черновик сохранён. Это одноразовая настройка владельца; после её включения материал можно будет принять.", "Material acceptance is not enabled for this workspace yet. The draft is saved. This is a one-time owner setup; after it is enabled, the material can be accepted.")}</p> : null}
       <details className="project-technical-details">
         <summary>{text("Служебные разрешения", "Service permissions")}</summary>
         <p>{permittedReuseLabels(reuse, text).join(", ") || text("Дополнительные разрешения не выбраны.", "No additional permissions selected.")}</p>
@@ -271,7 +271,7 @@ function MaterialCard({
 
     {item.review.state === "InReview" && !canonical ? <div className="asset-review-actions">
       <button type="button" disabled={busy || !admissionAvailable} onClick={() => void onAdmit(item)}>{text("Принять материал", "Accept material")}</button>
-      {!admissionAvailable ? <p className="boundary-note">{text("Сейчас материал нельзя безопасно принять: серверная проверка недоступна. Попробуйте позже.", "The material cannot be safely accepted now because the server-side check is unavailable. Try again later.")}</p> : null}
+      {!admissionAvailable ? <p className="boundary-note">{text("Сейчас принять материал нельзя: функция ещё не включена для этого рабочего пространства. Это не проблема файла.", "The material cannot be accepted yet because this workspace has not been enabled for acceptance. This is not a file problem.")}</p> : null}
       <form className="asset-reject-form" onSubmit={(event) => void submitReject(event)}>
         <label>{text("Почему не принимаем", "Why reject it")}<input value={rejectReason} onChange={(event) => setRejectReason(event.target.value)} required maxLength={600} /></label>
         <button type="submit" disabled={busy}>{text("Отклонить", "Reject")}</button>

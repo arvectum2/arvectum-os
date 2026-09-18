@@ -1,20 +1,24 @@
 version: 2
 repository: arvectum2/arvectum-os
-status: idle
-task_id: null
-goal: null
-authority: null
+status: blocked
+task_id: P10.10-ASSET-DOGFOOD
+goal: "Close real owner-reported Company Materials friction without weakening admission governance."
+authority: HUMAN
 definition_of_done: []
 completed:
   - "P10.09-D Complete / PASS; closure and roadmap synchronization are on main."
   - "P10.08-PREPARATION inventory/cross-review merged via PR #14 to main at 20a80c56dcb1e26238b0741aa1271048a05008f3; no concrete consequential product operation was invented."
-current: null
-pending: []
-last_verified_commit: "20a80c56dcb1e26238b0741aa1271048a05008f3"
+current: "Selected-Mac persistent Workspace is healthy but lacks the exact company.asset.admit-staged-version authorization grant."
+pending:
+  - "Explicit owner authorization for one-time admission grant provisioning."
+  - "After setup, genuine owner retry of the real template admission path."
+last_verified_commit: "5dd77a4db8393335be5fba6fa7756eb6880607c9"
 test_results:
-  - "P10.08 preparation relies on existing P10.06 deterministic routing/fail-closed coverage; PR #14 changed evidence/checkpoint only and repository main has no required status checks configured."
-updated_at: "2026-09-16T18:35:00Z"
-resume_instruction: "Reconcile canonical queue. P10.10 is HUMAN, P10.07 OWNER/blocked, INT-B7 HUMAN/blocked, R35 REVIEW/blocked, P10.11 OWNER/blocked. Do not synthesize evidence; work only a later independent admitted AUTO item if one is added canonically."
+  - "Live selected-Mac p9_03_workspace.py check PASS overall and reports company_asset_admission_authorized=false."
+  - "Live company-assets projection reports governed_admission_available=false with two drafts and zero accepted assets."
+  - "UX copy remediation focused tests PASS 8/8; typecheck PASS; production build PASS; isolated R30 rerun PASS 1/1 after unrelated parallel-suite timing failure."
+updated_at: "2026-09-18T14:15:00Z"
+resume_instruction: "P10.10 HUMAN blocker is now concrete: persistent selected-Mac Workspace lacks the exact company.asset.admit-staged-version authorization grant. Do not auto-provision it. Await explicit owner authorization; after provisioning, re-run Workspace check and ask for genuine owner retry. The UX copy fix may proceed as HUMAN friction remediation."
 execution:
   claimed_by: null
   execution_id: null
