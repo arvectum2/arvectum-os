@@ -18,9 +18,16 @@ verified:
   - "A separate-origin review preview was attempted without touching the managed backend; bootstrap failed closed with ORIGIN_REJECTED. The preview was stopped and the Origin gate was not bypassed."
   - "PR #22 final implementation head 6264b1a63edd4aaa827b4f48856fb5981a41e487 has exact-head Productive Workspace CI SUCCESS and Reference Python CI SUCCESS."
   - "This is genuine friction evidence and a review-ready remediation only; it does not prove P10.10 usability PASS."
+  - "2026-09-18 genuine owner reuse exposed a second friction: live selected-Mac Workspace showed admission disabled even for a real document-template draft."
+  - "Live p9_03_workspace.py check on the persistent selected-Mac runtime reported company_asset_admission_authorized=false while Workspace/runtime health remained PASS."
+  - "Live company-assets projection reported governed_admission_available=false with two genuine drafts (document-template and brandbook), accepted=0."
+  - "Persistent P7.04 access state contains active workspace.open and other grants but no company.asset.admit-staged-version grant."
+  - "R34-B1 prior successful admission used an isolated runtime at 127.0.0.1:8780 where workspace.open and the exact admission grant were provisioned separately; that authorization was not evidence that the persistent 8769 runtime had the same grant."
+  - "Canonical P10.04 states the exact admission grant is a one-time administrative security setup action and is never auto-provisioned by Productive Workspace."
+  - "A bounded UX copy fix is prepared so absence of the grant is described as owner setup not yet enabled, rather than a temporary server outage."
 human_gate:
   required: true
-  condition: "P10.10 remains HUMAN. PR #22 must not be auto-merged; genuine owner use after integration is required to evaluate whether the friction is actually closed."
+  condition: "P10.10 remains HUMAN. Enabling company.asset.admit-staged-version on the persistent selected-Mac runtime requires explicit owner authorization for the one-time administrative grant; genuine owner reuse after setup remains required."
 next_human_evidence:
   - "ordinary template use after the friction fix is integrated"
   - "content search"
@@ -31,4 +38,4 @@ automation_scope:
   - "May prepare instrumentation, diagnostics, friction-fix branches and evidence templates from that real evidence."
   - "Must not claim dogfooding PASS or fabricate owner-use evidence."
 lease: null
-resume_instruction: "PR #22 final implementation head CI is green. Do not merge automatically. Wait for HUMAN integration/review and genuine owner reuse; record only observed friction results. If a later independent AUTO item is canonically admitted, it may proceed while this HUMAN gate waits."
+resume_instruction: "PR #22 is merged and deployed. Live owner reuse proves the persistent selected-Mac runtime lacks the exact company.asset.admit-staged-version authorization grant. Do not auto-provision authorization. Await explicit owner approval for the one-time administrative grant; meanwhile the bounded UX copy fix may be reviewed/integrated through the HUMAN P10.10 path."
