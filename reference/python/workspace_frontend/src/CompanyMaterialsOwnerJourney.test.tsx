@@ -244,7 +244,7 @@ describe("P10.04 Company Asset owner journey", () => {
     renderMaterials(library);
     expect(await screen.findByRole("heading", { name: "Draft-company-source.md" })).toBeTruthy();
     expect((screen.getByRole("button", { name: "Принять материал" }) as HTMLButtonElement).disabled).toBe(true);
-    expect(screen.getByText(/Принятие сейчас временно недоступно/)).toBeTruthy();
+    expect(screen.getByText(/Приём материалов ещё не включён/)).toBeTruthy();
   });
 
   it("keeps the ordinary draft view human-readable while preserving technical details on demand", async () => {
