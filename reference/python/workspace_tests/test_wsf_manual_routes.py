@@ -96,4 +96,4 @@ class ManualRouteTests(unittest.TestCase):
         self.assertTrue(all(s["state"]=="unknown" and not s["items"] for s in result.json()["sections"]))
         self.resolver.denied=True
         self.assertEqual(c.get(base+"/mission-control",headers=h).status_code,403)
-        self.assertEqual(c.get(base+"/projects/"+p["id"]+"/timeline",headers=h).status_code,403)
+        self.assertEqual(c.get(base+"/projects/"+p["id"]+"/timeline",headers=h).status_code,401)
