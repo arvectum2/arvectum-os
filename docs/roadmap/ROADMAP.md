@@ -1,9 +1,9 @@
 # Arvectum OS Canonical Roadmap
 
 Status: `Active`
-Version: `3.03.2`
+Version: `3.04.0`
 Created: `2026-08-07`
-Updated: `2026-09-17`
+Updated: `2026-11-17`
 Owner: `ООО «Арвектум»`
 Task classification: `governance`
 
@@ -306,7 +306,7 @@ M10 still requires all applicable evidence, including:
 
 **Current autonomous execution state:**
 
-> **No independent AUTO item is currently admitted in the repository execution queue after bounded P10.08 preparation closure. Do not invent a new priority merely to create activity.**
+> **Existing Phase 10 AUTO items remain closed. Workspace First delivery lane (§15) is newly planned; first read-only WSF-01 diagnostics may proceed, no autonomous merge admission or contract expansion is implied.**
 
 **Waiting evidence action:**
 
@@ -319,3 +319,6 @@ M10 still requires all applicable evidence, including:
 **Available conditional parallel work:**
 
 > reliability/DX work only when separately admitted by an approved canonical task source/queue; INT-B7 only if a real external endpoint/deployment/account and least-privilege credential binding become available; no synthetic P10.07/P10.10 evidence and no inferred reusable platform abstraction.
+## 15. 2026-11-17 — Workspace First / actual owner-use lane
+
+Previous roadmap blob `8272f8df79a5106f3687d0ce37eb2af4ad659910` (3.03.2). Company Owner chose first-party CRM Lite inside existing Productive Workspace and explicitly requested Workspace First. Owner reports no successful convenient use yet; prior technical evidence remains intact. See [Workspace First delivery plan](WORKSPACE-FIRST-DELIVERY.md) for WSF-01–09, boundaries and acceptance. First action: read-only recovery inventory; later deployment and new reliance require applicable gates. P10.07, P10.10, R35, M10 and INT-B7 remain unchanged. Product Contract 0.3.0 remains effective; no automatic authority, capability promotion, release or architecture amendment. The existing Company asset/search/Copilot and UI are the baseline, not replacement targets. Do not invent adoption evidence or new execution authority.
