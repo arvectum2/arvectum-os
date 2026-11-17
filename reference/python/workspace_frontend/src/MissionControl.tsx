@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useWorkspaceLanguage } from "./i18n";
 import "./CompanyWorkspace.css";
+import { ControlReferenceSummary } from "./ControlReferenceSummary";
 
 type Project={id:string;label:string;kind:string};
 type Note={id:string;title:string;text:string;project_id:string|null};
@@ -20,7 +21,7 @@ export function MissionControl(){
  const [selected,setSelected]=useState(""),[error,setError]=useState(false),[busy,setBusy]=useState(true);
  const seq=useRef(0);
  async function load(){
-  const n=++seq.current;setBusy(true);setError(false);setTimeline(null);setSelected("");
+  const n=++seq.current;setBusy(true);setError(false);setData(null);setTimeline(null);setSelected("");
   try{const d=await get(root+"/mission-control");if(!Array.isArray(d.manual_context?.projects)||!Array.isArray(d.manual_context?.notes)||!Array.isArray(d.sections))throw Error();
    if(n===seq.current)setData(d);
   }catch{if(n===seq.current){setData(null);setTimeline(null);setError(true);}}
@@ -42,6 +43,7 @@ export function MissionControl(){
  {data.pilot_review?<p>{text("Пересмотр пилота Workspace","Review Workspace pilot")} · {new Date(data.pilot_review.due_at).toLocaleString()} · {text("Решение о продолжении ещё не принято","Continuation not yet decided")}</p>:<p>{text("Нет подтверждённой контрольной точки в этом источнике.","No verified review trigger from this source.")}</p>}
  <p>{data.manual_context.projects.length} {text("проектов","projects")} · {data.manual_context.notes.length} {text("рабочих заметок","working notes")}</p>
  <a href="/crm">{text("CRM и следующие контакты","CRM and follow-ups")}</a></div>
+ <ControlReferenceSummary onDenied={()=>{seq.current++;setBusy(false);setData(null);setTimeline(null);setSelected("");setError(true);}}/>
  <div className="company-card"><h2>{text("История проекта","Project timeline")}</h2>
  <label>{text("Проект","Project")}<select value={selected} disabled={busy} onChange={e=>void show(e.target.value)}><option value="">{text("Выберите проект","Choose project")}</option>{data.manual_context.projects.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}</select></label>
  {timeline&&<div>{timeline.events.map((e,i)=><article className="company-card" key={e.record_id+":"+i}><h3>{e.title||e.label}</h3><p>{text(...(events[e.kind]||[e.kind,e.kind]))} · {e.at}</p>{e.text&&<p>{e.text}</p>}</article>)}</div>}
