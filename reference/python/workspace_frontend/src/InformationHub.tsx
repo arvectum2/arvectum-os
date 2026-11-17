@@ -5,6 +5,7 @@ import { useWorkspaceLanguage } from "./i18n";
 import "./CompanyWorkspace.css";
 import "./InformationHub.css";
 import { RoadmapInbox } from "./RoadmapInbox";
+import { TenderInbox } from "./TenderInbox";
 
 type State =
   | { kind: "loading" }
@@ -63,12 +64,13 @@ export function InformationHub({csrfToken=""}:{csrfToken?:string}={}) {
       <div>
         <p className="eyebrow">Workspace First · Information Hub</p>
         <h1 id="hub-title">{text("Входящая информация", "Information Hub")}</h1>
-        <p>{text("Последние доступные наблюдения из зарегистрированных дорожных карт GitHub. Это сводка источников, а не журнал новых событий или задач.", "Latest available observations from registered GitHub roadmaps. This is a source snapshot, not an event feed or task list.")}</p>
+        <p>{text("Изменения дорожных карт и отдельно подключённые события закупок. Сводка не заменяет реестр задач.", "Roadmap changes and separately connected tender events. The overview does not replace a work register.")}</p>
       </div>
       <button type="button" disabled={state.kind === "loading" || (state.kind === "ready" && state.refreshing)}
         onClick={() => refresh(true)}>{state.kind === "ready" && state.refreshing ? text("Обновляем…", "Refreshing…") : text("Обновить источники", "Refresh sources")}</button>
     </header>
     <RoadmapInbox csrfToken={csrfToken}/>
+    <TenderInbox csrfToken={csrfToken}/>
     {state.kind === "loading" && <p role="status">{text("Получаем разрешённые источники…", "Reading authorized sources…")}</p>}
     {state.kind === "error" && <p role="alert">{text("Сводка недоступна. Предыдущие сведения скрыты. Повторите запрос.", "Snapshot unavailable. Previous content hidden. Retry the request.")}</p>}
     {state.kind === "ready" && <>
