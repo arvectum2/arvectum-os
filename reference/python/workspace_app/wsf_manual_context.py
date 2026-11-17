@@ -125,13 +125,15 @@ def _replay(events):
 
 
 class ManualContextStore:
-    def __init__(self, directory: Path, access: AccessContext):
+    def __init__(self, directory: Path, access: AccessContext, *, require_initialized: bool = False):
         self.directory = Path(directory)
         self.scope = _identity(access)
+        self.require_initialized = require_initialized
         if not self.directory.is_absolute():
             raise ManualContextError("absolute private directory required")
         # Parent is a trusted caller-selected directory, never browser input.
-        self.directory.mkdir(mode=0o700, exist_ok=True)
+        if not require_initialized:
+            self.directory.mkdir(mode=0o700, exist_ok=True)
         s = self.directory.lstat()
         if not stat.S_ISDIR(s.st_mode) or s.st_uid != os.getuid() or s.st_mode & 0o077:
             raise ManualContextError("unsafe private directory")
@@ -178,6 +180,8 @@ class ManualContextStore:
         try:
             fd = self._open(self.path, os.O_RDONLY)
         except FileNotFoundError:
+            if self.require_initialized:
+                raise ManualContextError("initialized primary snapshot missing") from None
             return []
         with os.fdopen(fd, "rb") as f:
             return self._decode(f.read(MAX_BYTES + 1))
