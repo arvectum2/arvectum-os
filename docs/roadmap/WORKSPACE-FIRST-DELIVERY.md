@@ -1,0 +1,34 @@
+# Workspace First — bounded delivery lane
+
+Status: Proposed delivery plan for Owner-directed internal pilot; implementation and contract gates remain controlling.
+Date: 2026-11-17
+Company authority: [Owner Workspace First decision](https://github.com/arvectum2/arvectum-company/blob/roadmap/workspace-first-20261117/docs/governance/decisions/DECISION-2026-11-17-WORKSPACE-FIRST.md), commit 7df332f49e40932cb64ccf26197f0d4e38acde83 (publication pending merger).
+Owner: Arvectum Company; engineering scope: existing Productive Workspace application in this repo.
+
+## Goal and baseline
+
+One useful daily entry point: collect authorized work signals, link them to projects/contacts/obligations, preserve source provenance, and surface what needs Owner attention. Lightweight native CRM, not Twenty or another standalone app. Reuse workspace_app, workspace_frontend, My Work, Company Projects, Assets, Discovery, Copilot, Actionable Work; retain AC-401–406 semantics. M9/M10-alpha/P10.09 technical PASS does not establish successful daily owner use. Owner reports no successful convenient experience. Local listener 127.0.0.1:8769 was unavailable on 2026-11-17; cause unverified. Remote main was 4795bf0... while local origin/main was d1ad8e5... (46 commits behind at inspection).
+
+## Ordered delivery
+
+| ID | Scope | Acceptance / evidence | Initial state |
+|---|---|---|---|
+| WSF-01 | Read-only recovery inventory: exact current main, actual installed release, listener, runtime, backups, state and deploy procedure; identify cause and safe recovery steps. | Report evidence, data preservation and rollback plan; no secrets in repo, no runtime mutation. | First action / ready for read-only diagnostics |
+| WSF-02 | Restore existing Workspace through approved P7.06 release/update and P9.11 lifecycle; verify existing data and protected access; use existing frontend. | Exact-release health, backup/restore evidence, owner browser access, one real asset/project journey; no simulated owner evidence. Deployment/access gate applies. | Waiting WSF-01 and exact authorization |
+| WSF-03 | Unified context + source inventory: Company project identities, contacts, communications, tasks/obligations and decision links; reuse existing registers; map state authority, scope, retention/export. | Source-of-truth matrix, explicit organization isolation, dedup and lifecycle semantics; contract gap analysis. | Planned |
+| WSF-04 | Information Hub pilot: manual capture plus one permitted read-only corporate source (prefer work email or repo metadata); normalized inbox, source IDs, checkpoints, dedup, replay-safe sync, failure visibility, review queue. | Real allowed sample, source-to-item trace, retries without duplicate, restricted access, no automatic commitments; verify source binding and required contract before reliance. | Planned |
+| WSF-05 | Real project view and Mission Control: reuse Company Projects/My Work, AC-406 six sections, next actions, due dates, waiting_external, delegation, material risk/unknowns, project timeline; hide routine noise. | Owner can reconstruct one live Company project and identify exact next actions without terminal/chats; distinguish source facts and proposals. | Planned |
+| WSF-06 | CRM Lite: company/contact/opportunity, status, next contact, timeline, linked project and evidence; minimal edit/search/export; no broad sales automation. | Create/update/export pilot records, dedup/restore, permissions, documented ownership; no public CRM promise. | Planned |
+| WSF-07 | AI/MCP and further sources: source-grounded extraction suggestions, review and provenance, write through explicit gates; add calendar, other permitted email/repos, Tender Agent events, then messaging/ChatGPT/Codex only if supported and authorized. | No hidden API assumptions, cross-org leak, duplicate effects or unapproved external actions; useful source-linked brief. | Planned / separate gates |
+| WSF-08 | Daily usability pilot and friction closure: responsive browser, rapid capture, search, project review, decision/obligation view; use for five actual workdays proposed. | Owner feedback; baseline and measured time/coverage; target status brief <=5 min; zero missing owner/action on recorded material obligations; recoverability and no unresolved material blockers; no false business PASS. | Human gate |
+| WSF-09 | Review expand/contain/stop, integration/persistence evolution, mobile access only by evidence. | Owner decision based on actual workload, cost and risks. | Later |
+
+First usable increment = WSF-02 plus the smallest permitted real context/inbox/project slice. Deliver iteratively; fix UX friction before broad connectors. No dependency on M10 closure for product-local bounded preparation; preserve genuine P10.07/P10.10/R35/M10 evidence gates.
+
+## Boundaries and definition of done
+
+- Existing Product Contract Provisional 0.3.0 remains exact. New platform access, canonical writes, event types or AI reuse require versioned contract and applicable prior approval; product-local experiments remain isolated. No new universal Task/CRM Kernel primitives, new OS RFC by default, direct private tables or hidden coupling.
+- Company-specific semantics/authority are Company-owned; CRM/Information Hub code is product-owned inside existing application. Source data stays authoritative in its source, reference over copy; derived inbox/projections may not imply truth, approval or knowledge promotion. Never send real CRM data into Git.
+- Read-only diagnostics may proceed. This document does not grant automatic merge, external spend, credentials, deployment, broad ingestion, or new organizational authority. Each substantive slice receives explicit scope and acceptance; maintain existing exact-head CI, review, risk and rollback gates.
+- Protect client/other-organization/personally held data using explicit scope and rights; minimize; exclude secrets; verify applicable legal/contract requirements. No cloud AI for sensitive data without separately approved boundary. Existing model contract permits only configured loopback for current Copilot scope.
+- Track supported operational data/connector freshness, failed sync, unknown/contested evidence, recoverability, time to use and manual interventions. No fabricated progress percentages, user adoption or ROI.
