@@ -50,7 +50,7 @@ def install_manual_context_routes(app: FastAPI, authorize_current, csrf_protecte
     def read(current=Depends(authorize_current)):
         _, access = current
         s = current_store(access, "read")
-        return perform(lambda: s.read(access))
+        return perform(lambda: pilot.read(access) if isinstance(pilot, RuntimeManualPilot) else s.read(access))
 
     @app.get("/api/app/v1/manual-context/notes/{note_id}/history")
     def history(note_id: str, current=Depends(authorize_current)):
