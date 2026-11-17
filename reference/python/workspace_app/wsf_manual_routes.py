@@ -69,7 +69,12 @@ def install_manual_context_routes(app: FastAPI, authorize_current, csrf_protecte
     def mission_control(current=Depends(authorize_current)):
         _, access = current
         s = current_store(access, "read")
-        return perform(lambda: mission_control_baseline(s, access))
+        def projection():
+            result=mission_control_baseline(s,access)
+            if isinstance(pilot,RuntimeManualPilot):
+                result["pilot_review"]=pilot.review_signal(access)
+            return result
+        return perform(projection)
 
     @app.post("/api/app/v1/manual-context/submit")
     async def submit(request: Request, current=Depends(csrf_protected)):
