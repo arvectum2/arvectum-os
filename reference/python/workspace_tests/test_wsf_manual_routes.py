@@ -81,3 +81,19 @@ class ManualRouteTests(unittest.TestCase):
         self.assertEqual(c.post(root+"/submit",headers=h,json={"body":"x"*25000}).status_code,400)
         self.resolver.denied=True
         self.assertEqual(c.get(root,headers=h).status_code,403)
+
+    def test_project_timeline_and_unknown_control_sources(self):
+        c=self.client(self.fixture())
+        h=self.boot(c)
+        base="/api/app/v1/manual-context"
+        p=c.post(base+"/submit",headers=h,json={"key":uuid4().hex,"operation":"project","payload":{"label":"Fixture","kind":"internal"}}).json()
+        self.assertEqual(c.post(base+"/submit",headers=h,json={"key":uuid4().hex,"operation":"capture","payload":{"title":"Unverified approval claim","text":"Observation","project_id":p["id"]}}).status_code,200)
+        timeline=c.get(base+"/projects/"+p["id"]+"/timeline",headers=h)
+        self.assertEqual(timeline.status_code,200)
+        self.assertEqual([v["kind"] for v in timeline.json()["events"]],["project-created","note-captured"])
+        result=c.get(base+"/mission-control",headers=h)
+        self.assertEqual(result.status_code,200)
+        self.assertTrue(all(s["state"]=="unknown" and not s["items"] for s in result.json()["sections"]))
+        self.resolver.denied=True
+        self.assertEqual(c.get(base+"/mission-control",headers=h).status_code,403)
+        self.assertEqual(c.get(base+"/projects/"+p["id"]+"/timeline",headers=h).status_code,401)
