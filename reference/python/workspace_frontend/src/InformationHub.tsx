@@ -85,7 +85,7 @@ export function InformationHub() {
           <header className="company-card-head">
             <div><p className="eyebrow">{project.id} · GitHub</p><h2>{project.label}</h2></div>
             <span className={`company-state company-state-${source ? project.state : "unavailable"}`}>
-              {source ? labels[project.state] : project.source ? text("Не проверена точная версия", "Exact revision unverified") : labels[project.state] === labels["reconciliation-required"] ? labels["reconciliation-required"] : labels.unavailable}
+              {source ? labels[project.state] : project.source ? text("Не проверена точная версия", "Exact revision unverified") : project.state === "reconciliation-required" ? labels["reconciliation-required"] : labels.unavailable}
             </span>
           </header>
           {source ? <>
