@@ -44,7 +44,7 @@ class RestrictedCRMRuntimeTests(unittest.TestCase):
         return SimpleNamespace(allowed=True,principal_kind="human",grant_id=self.policy["grants"][kw["operation"]])
 
     def test_default_no_admitted_contract(self):
-        with self.assertRaises(ManualContextError):RuntimeCRMPilot(self.root).authorize(self.a,"read")
+        with self.assertRaises(ManualContextError):RuntimeCRMPilot(self.root,approved_draft=None).authorize(self.a,"read")
 
     def test_exact_grant_and_no_contact(self):
         with patch("workspace_app.wsf_crm_runtime.p704.authorize_from_credential_file",side_effect=self.decision) as auth:
