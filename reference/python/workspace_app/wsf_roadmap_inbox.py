@@ -84,11 +84,11 @@ def metadata_snapshot(projection, bindings, checked_at):
 
 class _InboxFile(ManualContextStore):
     """Share only private file/lock/atomic replacement with the manual store."""
-    def __init__(self, directory, access, bindings):
+    def __init__(self, directory, access, bindings, *, require_initialized=False):
         directory=Path(directory)
         if directory.resolve()!=directory:
             raise ManualContextError("unsafe inbox directory")
-        super().__init__(directory,access,require_initialized=False)
+        super().__init__(directory,access,require_initialized=require_initialized)
         self.require_initialized=True
         self.path=directory/"inbox.json"
         self.bindings=json.loads(_json(bindings))
@@ -165,8 +165,8 @@ class _InboxFile(ManualContextStore):
 
 
 class RoadmapInbox:
-    def __init__(self,directory,access,*,bindings):
-        self.file=_InboxFile(directory,access,bindings)
+    def __init__(self,directory,access,*,bindings,require_initialized=False):
+        self.file=_InboxFile(directory,access,bindings,require_initialized=require_initialized)
 
     def initialize(self,access):
         self.file.restore_empty(access,self.file._encode([]))
