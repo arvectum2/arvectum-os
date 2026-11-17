@@ -48,14 +48,16 @@ def _time(value):
 
 
 class CRMStore:
-    def __init__(self,directory,access,*,project_ids,evidence_refs):
+    def __init__(self,directory,access,*,project_ids,evidence_refs,require_initialized=False,allowed_entities=None):
         self.directory=Path(directory)
         self.scope=_identity(access)
+        self.allowed_entities=frozenset(FIELDS if allowed_entities is None else allowed_entities)
+        if not self.allowed_entities or not self.allowed_entities<=FIELDS.keys():raise ManualContextError("unsupported CRM scope")
         self.projects=frozenset(_id(x,"PRJ-") for x in project_ids)
         self.refs=frozenset(_text(x,500) for x in evidence_refs)
         if not self.directory.is_absolute() or self.directory.resolve()!=self.directory:
             raise ManualContextError("unsafe CRM directory")
-        self.directory.mkdir(mode=0o700,exist_ok=True)
+        if not require_initialized:self.directory.mkdir(mode=0o700,exist_ok=True)
         s=self.directory.lstat()
         if not stat.S_ISDIR(s.st_mode) or s.st_uid!=os.getuid() or s.st_mode&0o077:
             raise ManualContextError("unsafe CRM directory")
@@ -153,7 +155,7 @@ class CRMStore:
             key=_id(event["key"])
             if key in requests:raise ManualContextError("duplicate request")
             kind=event["entity"]
-            if kind not in FIELDS:raise ManualContextError("unknown CRM entity")
+            if kind not in self.allowed_entities:raise ManualContextError("CRM entity not admitted")
             rid=_id(event["id"],PREFIX[kind]);rev=event["expected_revision"]
             _time(event["at"])
             old=current[kind].get(rid)
@@ -219,7 +221,7 @@ class CRMStore:
 
     def submit(self,access,key,entity,data,*,record_id=None,expected_revision=0):
         self._auth(access);_id(key)
-        if not isinstance(entity,str) or entity not in FIELDS:raise ManualContextError("unknown CRM entity")
+        if not isinstance(entity,str) or entity not in self.allowed_entities:raise ManualContextError("unknown CRM entity")
         if record_id is not None:_id(record_id,PREFIX[entity])
         if type(expected_revision) is not int or (record_id is None and expected_revision!=0) or (record_id is not None and expected_revision<1):
             raise ManualContextError("invalid revision")
