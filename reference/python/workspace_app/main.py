@@ -23,6 +23,7 @@ from .organization import OrganizationCompositionError, OrganizationCompositionP
 from .products import ProductCompositionError, ProductCompositionProvider, RuntimeProductCompositionProvider
 from .release import WorkspaceRelease, load_release
 from .security import SessionStore, WorkspaceSession
+from .wsf_manual_routes import FixtureManualPilot, install_manual_context_routes
 
 logger = logging.getLogger("arvectum.workspace.security")
 SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
@@ -116,6 +117,7 @@ def create_app(
     dogfooding_store: DogfoodingStore | None = None,
     session_store: SessionStore | None = None,
     static_dir: Path | None = None,
+    manual_context_fixture: FixtureManualPilot | None = None,
 ) -> FastAPI:
     settings = settings or WorkspaceSettings.from_env()
     release = load_release()
@@ -471,6 +473,8 @@ def create_app(
             samesite="strict",
         )
         return {"status": "logged_out"}
+
+    install_manual_context_routes(app, _authorize_current, _csrf_protected, manual_context_fixture)
 
     if static_root.is_dir():
         assets = static_root / "assets"
