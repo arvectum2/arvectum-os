@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from test_wsf_manual_context import access
 from workspace_app.wsf_manual_context import ManualContextError
-from workspace_app.wsf_roadmap_inbox import RoadmapInbox,metadata_snapshot,registry_bindings
+from workspace_app.wsf_roadmap_inbox import RoadmapInbox,metadata_snapshot,registry_bindings,collect_once,inbox_review_brief
 from workspace_app.wsf_manual_backup import PilotBackup
 
 
@@ -125,3 +125,48 @@ class RoadmapInboxTests(unittest.TestCase):
         b=registry_bindings()
         self.assertEqual(len(b),10)
         self.assertEqual(sum(p["path"] is not None for p in b.values()),7)
+
+
+    def test_review_brief_does_not_infer_business_impact(self):
+        self.scan();self.scan(1,digest="b",commit="2")
+        d=inbox_review_brief(self.inbox,self.a,(self.start+timedelta(minutes=2)).isoformat())
+        self.assertEqual(len(d["suggestions"]),1)
+        r=d["suggestions"][0]
+        self.assertEqual(r["business_impact"],"unknown")
+        self.assertEqual(r["source"]["commit_sha"],"2"*40)
+        self.assertTrue(r["requires_human_review"])
+        self.assertFalse(d["canonical_authority"])
+        self.assertEqual(d["sources_needing_check"],["PORT-005"])
+        d=inbox_review_brief(self.inbox,self.a,(self.start+timedelta(hours=5)).isoformat())
+        self.assertEqual(set(d["sources_needing_check"]),set(self.bindings))
+
+    def test_poll_rechecks_access_and_registry(self):
+        from unittest.mock import patch
+        from types import SimpleNamespace
+        from workspace_app.company_portfolio_verified import VerifiedRuntimeCompanyPortfolioProvider
+        provider=VerifiedRuntimeCompanyPortfolioProvider()
+        provider._descriptors=tuple(SimpleNamespace(project_id=k,repository=v["repository"],
+                     roadmap_path=v["path"],adapter=v["adapter"]) for k,v in self.bindings.items())
+        p=self.projection()
+        p["projects"][0]["source"]["fetched_at"]=datetime.now(timezone.utc).isoformat()
+        scope=self.inbox.file.scope
+        calls=[]
+        def authorize():
+            calls.append(1);return self.a
+        with patch.object(provider,"project",return_value=p) as pull:
+            d=collect_once(self.inbox,provider=provider,authorize=authorize,expected_scope=scope)
+            self.assertEqual(len(calls),2)
+            pull.assert_called_once_with(self.a,force_refresh=True)
+            self.assertEqual(d["pending_count"],0)
+            raw=self.inbox.export(self.a)
+            calls.clear()
+            def revoked():
+                calls.append(1)
+                if len(calls)>1:raise ManualContextError("revoked")
+                return self.a
+            with self.assertRaises(ManualContextError):
+                collect_once(self.inbox,provider=provider,authorize=revoked,expected_scope=scope)
+            self.assertEqual(self.inbox.export(self.a),raw)
+            provider._descriptors=provider._descriptors[:1]
+            with self.assertRaises(ManualContextError):
+                collect_once(self.inbox,provider=provider,authorize=authorize,expected_scope=scope)
