@@ -1,0 +1,7 @@
+# WSF-05 — Company control reference Provisional 0.5.1
+
+Effective on canonical publication of this exact Owner-approved package. Date: 2026-11-17.
+
+The Owner explicitly confirmed the two proposed packages, deployment of p10.09.12 and activation of exactly three registered records: «Утверждаю. Доделывай». Approved draft: WSF-05-COMPANY-CONTROL-REFERENCE-DRAFT-v0.5.1.md, blob 6c0ddc4a75f6d9c9dedd3bb9145f7193b167ee9f at reviewed PR #48 head 1325046f0ddb6896ff6bbaab1034637028ac55ef. Incorporated without change. Approval reference OWNER-2026-11-17-WSF05-COMPANY-CONTROL-051. Company PR #17 exact approved head afdba7501add60465f4a00d11bcab223d7cbaae5 merged bf8de77396ff8124e376b9c27ec754cbadd1f54c. No authority delegation, renewal, source expansion or external action.
+
+Selected Mac mini only. Exact reviewed source snapshot and record bindings WORK-001 / POS-001, OBL-001 / POS-002, OBL-002 / POS-002; separate local human read grant and receipt, existing pilot deadline unchanged. The approved owner action also authorizes controlled P7.06 update and the separate three-record read activation after all acceptance gates. No approval for later snapshots or different releases; source mutation or expired/revoked access fails closed. Actual private source pin, binding and operational evidence stay outside Git. No source mutation, finance admission, automated collection, EIS submission or Tender Agent change. Source authenticity limits and unknown coverage from the draft remain explicit. No new authority is derived from the projection.
