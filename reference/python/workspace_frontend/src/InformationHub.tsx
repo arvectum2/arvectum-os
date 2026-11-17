@@ -4,6 +4,7 @@ import type { CompanyPortfolioProjection, CompanyProjectCard } from "./f11Types"
 import { useWorkspaceLanguage } from "./i18n";
 import "./CompanyWorkspace.css";
 import "./InformationHub.css";
+import { RoadmapInbox } from "./RoadmapInbox";
 
 type State =
   | { kind: "loading" }
@@ -23,7 +24,7 @@ function exactSource(project: CompanyProjectCard) {
   return source;
 }
 
-export function InformationHub() {
+export function InformationHub({csrfToken=""}:{csrfToken?:string}={}) {
   const { language, text } = useWorkspaceLanguage();
   const [state, setState] = useState<State>({ kind: "loading" });
   const [filter, setFilter] = useState<"all" | "attention">("all");
@@ -67,6 +68,7 @@ export function InformationHub() {
       <button type="button" disabled={state.kind === "loading" || (state.kind === "ready" && state.refreshing)}
         onClick={() => refresh(true)}>{state.kind === "ready" && state.refreshing ? text("Обновляем…", "Refreshing…") : text("Обновить источники", "Refresh sources")}</button>
     </header>
+    <RoadmapInbox csrfToken={csrfToken}/>
     {state.kind === "loading" && <p role="status">{text("Получаем разрешённые источники…", "Reading authorized sources…")}</p>}
     {state.kind === "error" && <p role="alert">{text("Сводка недоступна. Предыдущие сведения скрыты. Повторите запрос.", "Snapshot unavailable. Previous content hidden. Retry the request.")}</p>}
     {state.kind === "ready" && <>
@@ -104,6 +106,6 @@ export function InformationHub() {
         </article>)}
       </div>
     </>}
-    <p className="hub-boundary">{text("Только чтение. Почта, ручной ввод, история изменений и сохранение обработки ещё не подключены.", "Read only. Email, manual capture, change history and persistent review are not connected yet.")}</p>
+    <p className="hub-boundary">{text("Сводка источников только для чтения. Очередь изменений требует отдельной активации; почта не подключена.", "Source snapshot is read-only. Change inbox requires independent activation; email is not connected.")}</p>
   </section>;
 }
