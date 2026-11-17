@@ -24,6 +24,7 @@ from .products import ProductCompositionError, ProductCompositionProvider, Runti
 from .release import WorkspaceRelease, load_release
 from .security import SessionStore, WorkspaceSession
 from .wsf_manual_routes import FixtureManualPilot, install_manual_context_routes
+from .wsf_manual_runtime import RuntimeManualPilot
 
 logger = logging.getLogger("arvectum.workspace.security")
 SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
@@ -118,6 +119,7 @@ def create_app(
     session_store: SessionStore | None = None,
     static_dir: Path | None = None,
     manual_context_fixture: FixtureManualPilot | None = None,
+    manual_context_runtime: RuntimeManualPilot | None = None,
 ) -> FastAPI:
     settings = settings or WorkspaceSettings.from_env()
     release = load_release()
@@ -474,7 +476,9 @@ def create_app(
         )
         return {"status": "logged_out"}
 
-    install_manual_context_routes(app, _authorize_current, _csrf_protected, manual_context_fixture)
+    if manual_context_fixture is not None and manual_context_runtime is not None:
+        raise ValueError("ambiguous manual context composition")
+    install_manual_context_routes(app, _authorize_current, _csrf_protected, manual_context_runtime or manual_context_fixture)
 
     if static_root.is_dir():
         assets = static_root / "assets"

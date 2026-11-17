@@ -1,9 +1,4 @@
-"""Draft WSF-04C HTTP adapter. Default disabled; no live activation path.
-
-The injected fixture policy is for synthetic tests only. An effective Product
-Contract, real operation grants and retention/purge approval are prerequisites
-to replacing this test-only provider with a production activation path.
-"""
+"""WSF-04C HTTP adapter. No live operations without explicit pinned activation."""
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import json
@@ -11,6 +6,7 @@ import json
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from .access import AccessContext
 from .wsf_manual_context import ManualContextError, ManualContextStore
+from .wsf_manual_runtime import RuntimeManualPilot
 
 
 @dataclass(frozen=True)
@@ -33,12 +29,12 @@ class FixtureManualPilot:
         return self.store
 
 
-def install_manual_context_routes(app: FastAPI, authorize_current, csrf_protected, pilot: FixtureManualPilot | None):
-    def current_store(access):
+def install_manual_context_routes(app: FastAPI, authorize_current, csrf_protected, pilot: FixtureManualPilot | RuntimeManualPilot | None):
+    def current_store(access, operation):
         if pilot is None:
             raise HTTPException(status_code=503, detail="MANUAL_CONTEXT_NOT_ACTIVATED")
         try:
-            return pilot.authorize(access)
+            return pilot.authorize_operation(access, operation) if isinstance(pilot, RuntimeManualPilot) else pilot.authorize(access)
         except ManualContextError:
             raise HTTPException(status_code=403, detail="MANUAL_CONTEXT_UNAVAILABLE") from None
 
@@ -53,19 +49,23 @@ def install_manual_context_routes(app: FastAPI, authorize_current, csrf_protecte
     @app.get("/api/app/v1/manual-context")
     def read(current=Depends(authorize_current)):
         _, access = current
-        s = current_store(access)
-        return perform(lambda: s.read(access))
+        s = current_store(access, "read")
+        return perform(lambda: pilot.read(access) if isinstance(pilot, RuntimeManualPilot) else s.read(access))
 
     @app.get("/api/app/v1/manual-context/notes/{note_id}/history")
     def history(note_id: str, current=Depends(authorize_current)):
         _, access = current
-        s = current_store(access)
+        s = current_store(access, "read")
         return perform(lambda: s.history(access, note_id))
 
     @app.post("/api/app/v1/manual-context/submit")
     async def submit(request: Request, current=Depends(csrf_protected)):
         _, access = current
-        s = current_store(access)
+        # Do not open a store before validating the requested operation.
+        if pilot is None:
+            raise HTTPException(status_code=503, detail="MANUAL_CONTEXT_NOT_ACTIVATED")
+        if isinstance(pilot, FixtureManualPilot):
+            current_store(access, "read")
         try:
             length = int(request.headers.get("content-length", "0"))
             if request.headers.get("transfer-encoding") or not 0 < length <= 24576:
@@ -78,14 +78,18 @@ def install_manual_context_routes(app: FastAPI, authorize_current, csrf_protecte
                 raise ValueError()
         except (ValueError, UnicodeError, RecursionError):
             raise HTTPException(status_code=400, detail="MANUAL_CONTEXT_INVALID_INPUT") from None
-        # Re-check the fixture time/access binding immediately before the write.
-        s = current_store(access)
+        # Re-check the exact time/access binding immediately before the write.
+        if not isinstance(data["operation"], str) or data["operation"] not in {"project","capture","revise"}:
+            raise HTTPException(status_code=400, detail="MANUAL_CONTEXT_INVALID_INPUT")
+        s = current_store(access, data["operation"])
+        if isinstance(pilot, RuntimeManualPilot):
+            return perform(lambda: pilot.submit(access, data["key"], data["operation"], data["payload"]))
         return perform(lambda: s.submit(access, data["key"], data["operation"], data["payload"]))
 
     @app.get("/api/app/v1/manual-context/export")
     def export(current=Depends(authorize_current)):
         _, access = current
-        s = current_store(access)
+        s = current_store(access, "export")
         raw = perform(lambda: s.export(access))
         return Response(raw, media_type="application/json", headers={
             "Content-Disposition": 'attachment; filename="arvectum-manual-context-private.json"',

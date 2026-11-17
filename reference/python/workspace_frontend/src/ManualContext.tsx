@@ -6,7 +6,7 @@ import "./ManualContext.css";
 
 type Project = { id: string; label: string; kind: "customer" | "internal" };
 type Note = { id: string; revision: number; title: string; text: string; project_id: string | null; at: string };
-type Snapshot = { projects: Project[]; notes: Note[] };
+type Snapshot = { projects: Project[]; notes: Note[]; backup_status?: "verified" | "stale" | "unavailable" };
 type Pending = { key: string; operation: string; payload: Record<string, unknown> };
 const root = "/api/app/v1/manual-context";
 
@@ -72,7 +72,7 @@ export function ManualContext({ csrfToken }: { csrfToken: string }) {
       await load();
     } catch (err) {
       if (seq !== generation.current) return;
-      if (err instanceof Error && ["401","403","503"].includes(err.message)) {
+      if (err instanceof Error && ["401","403"].includes(err.message)) {
         pending.current = null; clearPrivate(); setError("unavailable");
       } else { setError("request"); }
     } finally { if (seq === generation.current) setBusy(false); }
@@ -114,9 +114,10 @@ export function ManualContext({ csrfToken }: { csrfToken: string }) {
       <p>{text("Ручные рабочие наблюдения. Не договоры, обязательства или решения.", "Manual work observations. Not contracts, obligations or decisions.")}</p>
     </div><button disabled={busy} type="button" onClick={() => void load()}>{text("Обновить", "Refresh")}</button></header>
     {error === "unavailable" && <p role="alert">{text("Ручной контекст недоступен или пилот не активирован. Данные скрыты.", "Manual context unavailable or pilot not activated. Data hidden.")}</p>}
-    {error === "request" && <p role="alert">{text("Запись не подтверждена. Повторите ту же операцию либо обновите сводку.", "Save not confirmed. Retry the same operation or refresh.")}</p>}
+    {error === "request" && <p role="alert">{text("Запись не подтверждена. Проверьте доступность резервной копии, повторите ту же операцию либо обновите сводку.", "Save not confirmed. Check backup availability, retry the same operation or refresh.")}</p>}
     {!data && busy && <p role="status">{text("Проверяем доступ…", "Checking access…")}</p>}
     {data && <>
+      {data.backup_status && <p role="status" className={data.backup_status === "verified" ? "hub-meta" : "hub-warning"}>{data.backup_status === "verified" ? text("Резервная копия проверена", "Backup verified") : text("Резервная копия устарела или недоступна. Перед новой записью потребуется восстановить резервирование.", "Backup stale or unavailable. Backup must be restored before new writes.")}</p>}
       <p className="hub-warning">{text("Закрытый пилот: не вводите персональные данные, секреты и конфиденциальные сведения заказчиков.", "Restricted pilot: do not enter personal data, secrets or confidential customer information.")}</p>
       <div className="manual-forms">
         <form className="company-card" onSubmit={e => { e.preventDefault(); void submit("project", { label, kind }); }}>
