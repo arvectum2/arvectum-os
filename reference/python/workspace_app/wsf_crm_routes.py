@@ -45,6 +45,13 @@ def install_crm_routes(app,authorize_current,csrf_protected,pilot):
         _,access=current;s=store(access,"read")
         return perform(lambda:s.read(access,query,project_id))
 
+    @app.get("/api/app/v1/crm/catalog")
+    def catalog(current=Depends(authorize_current)):
+        _,access=current;s=store(access,"read")
+        # Fixture-only identifiers; real binding must resolve safe labels and rights.
+        return {"projects":[{"id":p,"label":p} for p in sorted(s.projects)],
+                "evidence_refs":sorted(s.refs)}
+
     @app.get("/api/app/v1/crm/records/{record_id}/history")
     def history(record_id:str,current=Depends(authorize_current)):
         _,access=current;s=store(access,"read")
