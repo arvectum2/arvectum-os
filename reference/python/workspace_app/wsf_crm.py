@@ -258,6 +258,27 @@ class CRMStore:
             return {k:[v for v in rows.values() if not q or any(q in _norm(v.get(f) or "") for f in ("name","title","role","summary","next_action","description"))]
                     for k,rows in current.items()}
 
+    def followups(self,access,now,project_id=None):
+        """CRM coordination signals, never AC-401 tasks or inferred Owner action."""
+        self._auth(access);self._project(project_id);at=_time(now)
+        with self._lock():
+            current,_,_=self._replay(self._load())
+            rows=[]
+            for r in current["opportunity"].values():
+                if r["stage"] in TERMINAL or (project_id is not None and r["project_id"]!=project_id):
+                    continue
+                due=r["next_contact_at"]
+                status=("paused" if r["stage"]=="paused" else "unscheduled" if due is None
+                        else "past_due" if _time(due)<at else "due_now" if _time(due)==at else "scheduled")
+                rows.append({"opportunity_id":r["id"],"party_id":r["party_id"],
+                             "party_name":current["party"][r["party_id"]]["name"],"title":r["title"],
+                             "project_id":r["project_id"],"next_action":r["next_action"],
+                             "next_contact_at":due,"status":status,"authority_provided":False})
+            rows.sort(key=lambda r: ({"past_due":0,"due_now":1,"scheduled":2,"unscheduled":3,"paused":4}[r["status"]],
+                                     _time(r["next_contact_at"]) if r["next_contact_at"] else at,r["opportunity_id"]))
+            return {"derived":True,"canonical_authority":False,"organizational_authority_provided":False,
+                    "company_control_coverage":"unknown","as_of":now,"items":rows}
+
     def history(self,access,rid):
         self._auth(access)
         with self._lock():
