@@ -6,6 +6,7 @@ import json
 from fastapi import Depends, HTTPException, Request, Response
 from .wsf_manual_context import ManualContextError
 from .wsf_crm import CRMStore
+from .wsf_crm_runtime import RuntimeCRMPilot
 
 
 @dataclass(frozen=True)
@@ -53,9 +54,10 @@ def install_crm_routes(app,authorize_current,csrf_protected,pilot):
     @app.get("/api/app/v1/crm/catalog")
     def catalog(current=Depends(authorize_current)):
         _,access=current;s=store(access,"read")
+        if isinstance(pilot,RuntimeCRMPilot):return perform(lambda:pilot.catalog(access))
         # Fixture-only identifiers; real binding must resolve safe labels and rights.
         return {"projects":[{"id":p,"label":p} for p in sorted(s.projects)],
-                "evidence_refs":sorted(s.refs)}
+                "evidence_refs":sorted(s.refs),"allowed_entities":["party","contact","opportunity","interaction"]}
 
     @app.get("/api/app/v1/crm/records/{record_id}/history")
     def history(record_id:str,current=Depends(authorize_current)):
@@ -70,7 +72,7 @@ def install_crm_routes(app,authorize_current,csrf_protected,pilot):
     @app.post("/api/app/v1/crm/submit")
     async def submit(request:Request,current=Depends(csrf_protected)):
         _,access=current
-        s=store(access,"write")
+        if pilot is None or isinstance(pilot,FixtureCRMPilot):store(access,"write")
         try:
             length=int(request.headers.get("content-length","0"))
             if request.headers.get("transfer-encoding") or not 0<length<=24576:raise ValueError()
@@ -80,6 +82,12 @@ def install_crm_routes(app,authorize_current,csrf_protected,pilot):
             if not isinstance(data,dict) or set(data)!={"key","entity","data","record_id","expected_revision"}:raise ValueError()
         except (ValueError,UnicodeError,RecursionError):
             raise HTTPException(status_code=400,detail="CRM_INVALID_INPUT") from None
+        if isinstance(pilot,RuntimeCRMPilot):
+            if data["entity"] not in ("party","opportunity"):
+                raise HTTPException(status_code=403,detail="CRM_ENTITY_NOT_ADMITTED")
+            store(access,data["entity"])
+            return perform(lambda:pilot.submit(access,data["key"],data["entity"],data["data"],
+                                           record_id=data["record_id"],expected_revision=data["expected_revision"]))
         s=store(access,"write")
         return perform(lambda:s.submit(access,data["key"],data["entity"],data["data"],
                                         record_id=data["record_id"],expected_revision=data["expected_revision"]))
