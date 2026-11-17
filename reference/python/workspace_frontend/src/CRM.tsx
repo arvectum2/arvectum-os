@@ -13,7 +13,7 @@ const kinds:Kind[]=["party","contact","opportunity","interaction"];
 const initial:Record<Kind,Record<string,string>>={
  party:{name:"",description:"",registry_ref:""},
  contact:{party_id:"",name:"",role:"",channel_ref:""},
- opportunity:{party_id:"",contact_id:"",title:"",stage:"discovery",next_action:"",next_contact_at:"",project_id:"",evidence_refs:"",outcome_ref:""},
+ opportunity:{party_id:"",contact_id:"",title:"",stage:"discovery",next_action:"",next_contact_at:"",project_id:"",evidence_refs:"[]",outcome_ref:""},
  interaction:{party_id:"",contact_id:"",opportunity_id:"",project_id:"",kind:"meeting",occurred_at:"",summary:"",evidence_ref:""}
 };
 const stages=[["discovery","Первичный интерес","Discovery"],["qualified","Квалификация","Qualified"],["proposal","Предложение","Proposal"],["negotiation","Переговоры","Negotiation"],["paused","Приостановлена","Paused"],["won","Выиграна","Won"],["lost","Проиграна","Lost"]];
@@ -65,7 +65,7 @@ export function CRM({csrfToken}:{csrfToken:string}){
  async function submit(){
   if(!snapshot||!catalog||busy)return;
   const data:Record<string,unknown>={};
-  for(const [f,v] of Object.entries(draft))data[f]=f==="evidence_refs"?(v?[v]:[]):nullable.includes(f)?v||null:v;
+  for(const [f,v] of Object.entries(draft))data[f]=f==="evidence_refs"?JSON.parse(v):nullable.includes(f)?v||null:v;
   const value={entity:kind,data,record_id:edit?.id??null,expected_revision:edit?.revision??0};
   let cmd=pending.current;
   if(!cmd||JSON.stringify({...cmd,key:""})!==JSON.stringify({key:"",...value}))cmd={key:key(),...value};
@@ -73,7 +73,7 @@ export function CRM({csrfToken}:{csrfToken:string}){
   const seq=++gen.current;setBusy(true);setError("");
   try{await request("/submit",{method:"POST",headers:{"X-Arvectum-CSRF":csrfToken},body:JSON.stringify(cmd)});
    if(seq===gen.current){pending.current=null;setEdit(null);setDraft({...initial[kind]});await load();}
-  }catch(e){if(seq===gen.current){if(e instanceof Error&&["401","403","503"].includes(e.message)){clear();setError("unavailable");}else setError("rejected");}}
+  }catch(e){if(seq===gen.current){if(e instanceof Error&&["401","403"].includes(e.message)){clear();setError("unavailable");}else setError("rejected");}}
   finally{if(seq===gen.current)setBusy(false);}
  }
  async function showDetail(path:string,title:string){
@@ -91,9 +91,7 @@ export function CRM({csrfToken}:{csrfToken:string}){
  }
  function editRow(row:RecordRow){
   const next:Record<string,string>={};
-  for(const f of Object.keys(initial[kind]))next[f]=f==="evidence_refs"?(Array.isArray(row[f])?String(row[f][0]??""):""):String(row[f]??"");
-  // Avoid dropping multiple already admitted refs on a simple edit.
-  if(Array.isArray(row.evidence_refs)&&row.evidence_refs.length>1){setError("multiple");return;}
+  for(const f of Object.keys(initial[kind]))next[f]=f==="evidence_refs"?JSON.stringify(Array.isArray(row[f])?row[f]:[]):String(row[f]??"");
   setDraft(next);setEdit(row);pending.current=null;setDetail(null);
  }
  const labels={party:text("Контрагенты","Counterparties"),contact:text("Контакты","Contacts"),opportunity:text("Сделки","Opportunities"),interaction:text("Взаимодействия","Interactions")};
@@ -124,7 +122,6 @@ export function CRM({csrfToken}:{csrfToken:string}){
  return <section className="company-page manual-context"><header className="company-page-head"><div><h1>CRM Lite</h1><p>{text("Контрагенты, сделки и история взаимодействий","Counterparties, opportunities and interactions")}</p></div><button disabled={busy} onClick={()=>void load()}>{text("Обновить","Refresh")}</button></header>
   {error==="unavailable"&&<p role="alert">{text("CRM недоступна или не активирована. Данные скрыты.","CRM unavailable or not activated. Data hidden.")}</p>}
   {error==="rejected"&&<p role="alert">{text("Запись не подтверждена. Проверьте данные и повторите ту же операцию.","Save not confirmed. Review input and retry the same operation.")}</p>}
-  {error==="multiple"&&<p role="alert">{text("Для нескольких источников требуется расширенное редактирование. Запись не изменена.","Multiple sources require advanced editing. Record unchanged.")}</p>}
   {!snapshot&&busy&&<p role="status">{text("Проверяем доступ…","Checking access…")}</p>}
   {snapshot&&catalog&&<>
    <p className="hub-warning">{text("Тестовый контур. Не вводите реальные персональные или конфиденциальные данные.","Test contour. Do not enter real personal or confidential data.")}</p>
@@ -138,7 +135,7 @@ export function CRM({csrfToken}:{csrfToken:string}){
        {select("project_id","Связанный проект","Linked project",projects)}
        {kind==="opportunity"?<>{field("title","Название сделки","Opportunity title")}{select("stage","Стадия","Stage",stages.map(s=>[s[0],text(s[1],s[2])]),true)}
         {finished?select("outcome_ref","Подтверждение результата","Outcome evidence",refs,true):<>{field("next_action","Следующее действие","Next action",true,500)}{field("next_contact_at","Следующий контакт (UTC, ISO)","Next contact (UTC, ISO)",false,50)}</>}
-        {select("evidence_refs","Источник сделки","Opportunity evidence",refs)}</>:<>
+        {<label>{text("Источники сделки","Opportunity evidence")}<select multiple disabled={busy} value={JSON.parse(draft.evidence_refs||"[]") as string[]} onChange={e=>change("evidence_refs",JSON.stringify(Array.from(e.target.selectedOptions,x=>x.value)))}>{refs.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>}</>:<>
         {select("opportunity_id","Сделка","Opportunity",rowOpts(snapshot.opportunity.filter(r=>r.party_id===draft.party_id)))}
         {select("kind","Тип взаимодействия","Interaction type",channels.map(s=>[s[0],text(s[1],s[2])]),true)}
         {field("occurred_at","Время события (UTC, ISO)","Occurrence (UTC, ISO)",true,50)}
