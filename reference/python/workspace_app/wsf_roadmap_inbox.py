@@ -5,6 +5,7 @@ mail, repository diffs, model output, or authoritative business records.
 No live provider, scheduling, grants, or data admission in this module.
 """
 from datetime import datetime, timezone
+from uuid import uuid4
 import json
 from pathlib import Path
 import re
@@ -191,13 +192,62 @@ class RoadmapInbox:
     def review(self,access,key,item_id,expected_revision,state,at):
         self._append(access,key,"review",{"item_id":item_id,"expected_revision":expected_revision,"state":state},at)
 
-    def read(self,access):
+    def read(self,access,now=None):
+        checked=stamp(now or datetime.now(timezone.utc).isoformat())
         f=self.file;f._authorize(access)
         with f._locked():
             sources,items,_=f.replay(f._load())
-            return {"derived":True,"coverage":"partial","canonical_authority":False,
+            for row in sources.values():
+                row["freshness"]="current-observation" if row["state"]=="current-source-backed" and 0<=(checked-stamp(row["checked_at"])).total_seconds()<=4*3600 else "requires-refresh"
+            return {"derived":True,"coverage":"partial" if sources else "unknown","canonical_authority":False,
                     "organizational_authority_provided":False,"sources":list(sources.values()),
                     "items":list(items.values()),"pending_count":sum(x["state"]=="pending" for x in items.values())}
 
     def export(self,access):return self.file.export(access)
     def restore_empty(self,access,raw):return self.file.restore_empty(access,raw)
+
+
+
+def collect_once(inbox, *, provider, authorize, expected_scope, request_key=None):
+    """A bounded poll entrypoint for a future explicitly admitted local job.
+
+    The supplied provider must be the existing verified portfolio provider,
+    with its registered fixed-locator reader (never browser-selected URLs).
+    The authorization callable must revalidate machine/principal/source grants
+    in the future productive binding. A revoked grant stops the commit.
+    """
+    from .company_portfolio_verified import VerifiedRuntimeCompanyPortfolioProvider
+    if not isinstance(provider, VerifiedRuntimeCompanyPortfolioProvider):
+        raise ManualContextError("verified portfolio provider required")
+    access=authorize()
+    if _identity(access)!=expected_scope or inbox.file.scope!=expected_scope:
+        raise ManualContextError("poll scope mismatch")
+    provider_bindings={d.project_id:{"repository":d.repository,"path":d.roadmap_path,"adapter":d.adapter}
+                       for d in provider._descriptors}
+    if provider_bindings!=inbox.file.bindings:
+        raise ManualContextError("poll registry mismatch")
+    snapshot=provider.project(access,force_refresh=True)
+    checked=datetime.now(timezone.utc).isoformat()
+    current=authorize()
+    if _identity(current)!=expected_scope or current.credential_id!=access.credential_id or current.grant_id!=access.grant_id:
+        raise ManualContextError("poll authorization changed")
+    inbox.scan(current,request_key or uuid4().hex,snapshot,checked)
+    return inbox.read(current,checked)
+
+
+def inbox_review_brief(inbox, access, now=None):
+    """Deterministic source-linked suggestions, not AI-extracted facts or tasks."""
+    view=inbox.read(access,now)
+    suggestions=[]
+    for row in view["items"]:
+        if row["state"]!="pending":
+            continue
+        suggestions.append({"item_id":row["id"],"source_id":row["source_id"],
+            "suggested_action":"review-source-change","requires_human_review":True,
+            "source":{"repository":row["repository"],"path":row["path"],
+                      "commit_sha":row["observed"]["commit_sha"],"content_sha256":row["observed"]["content_sha256"]},
+            "previous_commit_sha":row["previous"]["commit_sha"],"detected_at":row["detected_at"],
+            "business_impact":"unknown","canonical_authority":False})
+    return {"coverage":view["coverage"],"suggestions":suggestions,
+            "sources_needing_check":[r["source_id"] for r in view["sources"] if r["freshness"]!="current-observation"],
+            "canonical_authority":False,"organizational_authority_provided":False}
