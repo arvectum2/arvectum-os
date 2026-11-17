@@ -41,3 +41,17 @@ it("clears protected rows after access denial",async()=>{
  fireEvent.click(screen.getByRole("button",{name:"Обновить"}));await screen.findByRole("alert");
  expect(screen.queryByRole("heading",{name:"Private fixture"})).toBeNull();
 });
+
+it("shows follow-up coordination without interpreting it as an obligation",async()=>{
+ const row={opportunity_id:"fixture",party_name:"Synthetic",title:"Synthetic opportunity",next_action:"Respond",next_contact_at:"2026-11-17T10:00:00Z",status:"past_due"};
+ vi.stubGlobal("fetch",vi.fn(async(input:RequestInfo|URL)=>{
+  const path=String(input);
+  if(path.endsWith("/catalog"))return response(cat);
+  if(path.endsWith("/followups"))return response({items:[row]});
+  return response(empty);
+ }));show();
+ fireEvent.click(await screen.findByRole("button",{name:"Следующие контакты"}));
+ await screen.findByRole("heading",{name:"Synthetic opportunity · Synthetic"});
+ expect(screen.getByText("Просрочен контакт")).toBeTruthy();
+ expect(screen.getByText("Координация сделок, не подтверждённые обязательства.")).toBeTruthy();
+});
