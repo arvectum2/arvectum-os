@@ -2,7 +2,8 @@
   "schema": "arvectum.company.workspace-project-registry/1",
   "authority": {
     "portfolio_identity": "arvectum2/arvectum-company:docs/portfolio/AC-301-PORTFOLIO-IDENTITY-BOUNDARY-OWNERSHIP-RECONCILIATION-v1.0.0.md",
-    "git_primary": "arvectum2/arvectum-company:docs/governance/decisions/DECISION-2026-08-25-GIT-INFRASTRUCTURE-MIGRATION-CLOSURE.md"
+    "git_primary": "arvectum2/arvectum-company:docs/governance/decisions/DECISION-2026-08-25-GIT-INFRASTRUCTURE-MIGRATION-CLOSURE.md",
+    "portfolio_current": "arvectum2/arvectum-company:docs/portfolio/PORTFOLIO.md@36c5dec27bfdece3cc02594e0400db118118f064"
   },
   "projects": [
     {
@@ -93,6 +94,16 @@
       "repository": "arvectum2/data-platform",
       "roadmap_path": null,
       "adapter": "reconciliation-required",
+      "execution_targets": []
+    },
+    {
+      "id": "PORT-008",
+      "label": "Arvectum Work",
+      "kind": "initiative",
+      "disposition": "discover",
+      "repository": "arvectum2/arvectum-work",
+      "roadmap_path": "docs/roadmap/ROADMAP.md",
+      "adapter": "generic-roadmap-v1",
       "execution_targets": []
     }
   ]

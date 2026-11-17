@@ -2,6 +2,7 @@ import { Activity } from "./Activity";
 import { CompanyGeneratedOutputs } from "./CompanyGeneratedOutputs";
 import { CompanyMaterials } from "./CompanyMaterials";
 import { CompanyProjects } from "./CompanyProjects";
+import { InformationHub } from "./InformationHub";
 import { Copilot } from "./Copilot";
 import { Discovery } from "./Discovery";
 import { Dogfooding } from "./Dogfooding";
@@ -25,6 +26,7 @@ function groupForPath(path: string): string {
     || path === "/products"
     || path.startsWith("/products/")
     || path === "/projects"
+    || path === "/information-hub"
     || path === "/company-materials"
     || path === "/company-generated-outputs"
   ) return "work";
@@ -51,6 +53,7 @@ function Today() {
     </section>
     <section className="home-actions" aria-label={text("Основные действия", "Primary actions")}>
       <a href="/work" onClick={(event) => { event.preventDefault(); navigateTo("/work"); }}>{text("Открыть задачи", "Open tasks")}</a>
+      <a href="/information-hub" onClick={(event) => { event.preventDefault(); navigateTo("/information-hub"); }}>{text("Входящая информация", "Information Hub")}</a>
       <a href="/projects" onClick={(event) => { event.preventDefault(); navigateTo("/projects"); }}>{text("Проекты компании", "Company projects")}</a>
       <a href="/company-materials" onClick={(event) => { event.preventDefault(); navigateTo("/company-materials"); }}>{text("Материалы компании", "Company materials")}</a>
       <a href="/company-generated-outputs" onClick={(event) => { event.preventDefault(); navigateTo("/company-generated-outputs"); }}>{text("Созданные документы", "Generated documents")}</a>
@@ -71,13 +74,14 @@ export function Shell({ context, onLogout }: { context: WorkspaceContext; onLogo
   const productId = currentPath.startsWith("/products/") ? decodeURIComponent(currentPath.slice("/products/".length)) : null;
   const navLabel = (item: NavigationItem) => navigationLabels[item.id]?.[language] ?? item.label;
   const navigate = (item: NavigationItem) => (event: React.MouseEvent<HTMLAnchorElement>) => { event.preventDefault(); navigateTo(item.href); };
-  const specialWorkPath = currentPath === "/projects" || currentPath === "/company-materials" || currentPath === "/company-generated-outputs";
+  const specialWorkPath = currentPath === "/information-hub" || currentPath === "/projects" || currentPath === "/company-materials" || currentPath === "/company-generated-outputs";
   const primaryNavigation = context.navigation.flatMap((item) => {
     const items = [
       <li key={item.id}><a href={item.href} onClick={navigate(item)} aria-current={item.id === active.id && !specialWorkPath ? "page" : undefined}><span>{navLabel(item)}</span></a></li>,
     ];
     if (item.id === "work") {
       items.push(
+        <li key="information-hub"><a href="/information-hub" aria-current={currentPath === "/information-hub" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("/information-hub"); }}><span>{text("Входящая информация", "Information Hub")}</span></a></li>,
         <li key="company-projects"><a href="/projects" aria-current={currentPath === "/projects" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("/projects"); }}><span>{text("Проекты", "Projects")}</span></a></li>,
         <li key="company-materials"><a href="/company-materials" aria-current={currentPath === "/company-materials" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("/company-materials"); }}><span>{text("Материалы компании", "Company materials")}</span></a></li>,
         <li key="company-generated-outputs"><a href="/company-generated-outputs" aria-current={currentPath === "/company-generated-outputs" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("/company-generated-outputs"); }}><span>{text("Созданные документы", "Generated documents")}</span></a></li>,
@@ -89,6 +93,7 @@ export function Shell({ context, onLogout }: { context: WorkspaceContext; onLogo
   let content: React.ReactNode;
   if (objectId) content = <ObjectDetail objectId={objectId} />;
   else if (currentPath === "/products" || productId) content = <Products productId={productId} />;
+  else if (currentPath === "/information-hub") content = <InformationHub />;
   else if (currentPath === "/projects") content = <CompanyProjects />;
   else if (currentPath === "/company-materials") content = <CompanyMaterials csrfToken={context.session.csrf_token} />;
   else if (currentPath === "/company-generated-outputs") content = <CompanyGeneratedOutputs csrfToken={context.session.csrf_token} />;
