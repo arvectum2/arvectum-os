@@ -44,6 +44,17 @@ class RuntimeManualPilot:
         store = self.authorize_operation(access, "export")
         return PilotBackup(store).copy_latest(access)
 
+    def read(self, access):
+        store = self.authorize_operation(access, "read")
+        data = store.read(access)
+        try:
+            backup_store = self.authorize_operation(access, "export")
+            raw = PilotBackup(backup_store).verified_snapshot(access)
+            status = "verified" if raw == store.export(access) else "stale"
+        except (ManualContextError, OSError):
+            status = "unavailable"
+        return {**data, "backup_status": status}
+
     def submit(self, access, key, operation, payload):
         # Internal primary is authoritative; the two physical devices do not
         # provide a shared transaction. Require a verified pre-write copy,
