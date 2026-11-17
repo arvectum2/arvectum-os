@@ -67,6 +67,12 @@ class CRMRoutesTests(unittest.TestCase):
         self.assertEqual([len(v) for v in d.values()],[1,1,1,1])
         self.assertEqual(c.get(self.base+"/parties/"+pid+"/timeline",headers=h).json(),[i.json()])
         self.assertEqual(c.get(self.base+"/records/"+pid+"/history",headers=h).json(),[p.json()])
+        catalog=c.get(self.base+"/catalog",headers=h).json()
+        self.assertEqual(catalog["projects"],[{"id":self.p,"label":self.p}])
+        follow=c.get(self.base+"/followups",params={"project_id":self.p},headers=h).json()
+        self.assertEqual(follow["items"][0]["opportunity_id"],o.json()["id"])
+        self.assertEqual(follow["items"][0]["status"],"unscheduled")
+        self.assertFalse(follow["organizational_authority_provided"])
         ex=c.get(self.base+"/export",headers=h);self.assertEqual(ex.status_code,200)
         self.assertEqual(ex.content,self.store.export(self.a));self.assertEqual(ex.headers["cache-control"],"no-store")
 
