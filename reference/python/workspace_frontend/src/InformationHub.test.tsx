@@ -38,7 +38,9 @@ describe("Information Hub read-only observations", () => {
     expect(screen.getAllByRole("link", {name:"Точный источник"})).toHaveLength(2);
     expect(screen.getAllByRole("link", {name:"Точный источник"})[0].getAttribute("href")).toBe("https://github.com/arvectum2/arvectum-company/blob/"+"a".repeat(40)+"/docs/roadmap/ROADMAP.md");
     expect(screen.getAllByText("Verified fixture")).toHaveLength(2);
-    expect(screen.getByText(/не журнал новых событий/)).toBeTruthy();
+    expect(screen.getByText(/Сводка не заменяет реестр задач/)).toBeTruthy();
+    expect(screen.getByRole("button",{name:"Открыть очередь изменений"})).toBeTruthy();
+    expect(screen.getByRole("button",{name:"Открыть события закупок"})).toBeTruthy();
     fireEvent.click(screen.getByRole("button", {name:"Устаревшие и недоступные"}));
     expect(screen.queryByRole("heading",{name:"Company fixture"})).toBeNull();
     expect(screen.getByRole("heading",{name:"Stale fixture"})).toBeTruthy();

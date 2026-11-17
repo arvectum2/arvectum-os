@@ -29,6 +29,7 @@ from .wsf_crm_routes import FixtureCRMPilot, install_crm_routes
 from .wsf_crm_runtime import RuntimeCRMPilot
 from .wsf_inbox_routes import FixtureInboxPilot, install_inbox_routes
 from .wsf_inbox_runtime import RuntimeInboxPilot
+from .wsf_tender_inbox_routes import FixtureTenderInbox, install_tender_inbox_routes
 
 logger = logging.getLogger("arvectum.workspace.security")
 SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
@@ -128,6 +129,7 @@ def create_app(
     crm_runtime: RuntimeCRMPilot | None = None,
     inbox_fixture: FixtureInboxPilot | None = None,
     inbox_runtime: RuntimeInboxPilot | None = None,
+    tender_inbox_fixture: FixtureTenderInbox | None = None,
 ) -> FastAPI:
     settings = settings or WorkspaceSettings.from_env()
     release = load_release()
@@ -491,6 +493,7 @@ def create_app(
     install_crm_routes(app, _authorize_current, _csrf_protected, crm_runtime or crm_fixture)
     if inbox_fixture is not None and inbox_runtime is not None:raise ValueError("ambiguous inbox composition")
     install_inbox_routes(app, _authorize_current, _csrf_protected, inbox_runtime or inbox_fixture)
+    install_tender_inbox_routes(app, _authorize_current, _csrf_protected, tender_inbox_fixture)
 
     if static_root.is_dir():
         assets = static_root / "assets"
