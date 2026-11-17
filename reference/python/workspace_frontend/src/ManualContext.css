@@ -1,0 +1,4 @@
+.manual-forms{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px;margin:16px 0}
+.manual-forms form,.manual-forms label,.manual-context .hub-filters>label{display:flex;flex-direction:column;gap:8px}
+.manual-forms form{gap:14px}.manual-forms input,.manual-forms textarea,.manual-forms select,.manual-context .hub-filters select{width:100%;min-width:0;padding:9px;font:inherit}
+.manual-note{white-space:pre-wrap;overflow-wrap:anywhere}.manual-context article{margin-block:12px}
