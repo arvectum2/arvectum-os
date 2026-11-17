@@ -79,6 +79,8 @@ class CRMStore:
         if kind=="party":
             _text(data["name"],160);_text(data["description"],1000)
             self._ref(data["registry_ref"])
+            if previous and previous["registry_ref"] is not None and previous["registry_ref"]!=data["registry_ref"]:
+                raise ManualContextError("registered party reference cannot silently change")
             for other in current[kind].values():
                 if previous and other["id"]==previous["id"]:continue
                 if _norm(other["name"])==_norm(data["name"]) or (data["registry_ref"] and other["registry_ref"]==data["registry_ref"]):
@@ -136,6 +138,8 @@ class CRMStore:
         if _time(data["occurred_at"])>_time(at):raise ManualContextError("future interaction")
         _text(data["summary"],1500)
         self._ref(data["evidence_ref"],True)
+        if previous and previous["evidence_ref"]!=data["evidence_ref"]:
+            raise ManualContextError("interaction evidence identity cannot change")
         for other in current[kind].values():
             if previous and other["id"]==previous["id"]:continue
             if other["evidence_ref"]==data["evidence_ref"]:
@@ -231,7 +235,9 @@ class CRMStore:
             event={"key":key,"entity":entity,"id":record_id or PREFIX[entity]+uuid4().hex,
                    "expected_revision":expected_revision,"data":data,"at":datetime.now(timezone.utc).isoformat()}
             updated=events+[event]
-            _,_,requests=self._replay(updated)
+            try:_,_,requests=self._replay(updated)
+            except (TypeError,KeyError,AttributeError,UnicodeError,RecursionError,ValueError) as exc:
+                raise ManualContextError("invalid CRM record or revision") from exc
             self._write(self._encode(updated))
             return requests[key][1]
 
@@ -246,7 +252,8 @@ class CRMStore:
                     current[kind]={k:v for k,v in current[kind].items() if v["project_id"]==project_id}
                 pids={v["party_id"] for kind in ("opportunity","interaction") for v in current[kind].values()}
                 current["party"]={k:v for k,v in current["party"].items() if k in pids}
-                current["contact"]={k:v for k,v in current["contact"].items() if v["party_id"] in pids}
+                cids={v["contact_id"] for kind in ("opportunity","interaction") for v in current[kind].values() if v["contact_id"] is not None}
+                current["contact"]={k:v for k,v in current["contact"].items() if k in cids}
             q=_norm(query)
             return {k:[v for v in rows.values() if not q or any(q in _norm(v.get(f) or "") for f in ("name","title","role","summary","next_action","description"))]
                     for k,rows in current.items()}
