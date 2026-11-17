@@ -32,6 +32,7 @@ from workspace_app.p10_05_routes import install_p10_05_routes
 from workspace_app.release import load_release
 from workspace_app.wsf_manual_runtime import RuntimeManualPilot
 from workspace_app.wsf_crm_runtime import RuntimeCRMPilot
+from workspace_app.wsf_inbox_runtime import RuntimeInboxPilot
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -86,7 +87,8 @@ def build_workspace_app(settings: WorkspaceSettings):
     )
     app = create_app(settings, supplemental_copilot_sources=(company_copilot_source,),
                      manual_context_runtime=RuntimeManualPilot(settings.runtime_root),
-                     crm_runtime=RuntimeCRMPilot(settings.runtime_root))
+                     crm_runtime=RuntimeCRMPilot(settings.runtime_root),
+                     inbox_runtime=RuntimeInboxPilot(settings.runtime_root))
     app = install_f11_routes(
         app,
         asset_admission=admission,
