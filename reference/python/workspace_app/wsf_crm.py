@@ -100,6 +100,8 @@ class CRMStore:
                     raise ManualContextError("possible duplicate contact; review existing record")
             return
         cid=data["contact_id"]
+        if "contact" not in self.allowed_entities and cid is not None:
+            raise ManualContextError("contact not admitted")
         if cid is not None:
             _id(cid,PREFIX["contact"])
             if cid not in current["contact"] or current["contact"][cid]["party_id"]!=pid:
