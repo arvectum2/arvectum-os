@@ -127,3 +127,17 @@ class CRMTests(unittest.TestCase):
         for kw in ({"occurred_at":"2099-01-01T00:00:00+00:00"},{"kind":[]},{"summary":""}):
             with self.assertRaises(ManualContextError):self.interaction(p,c,o,**kw)
         self.assertEqual(self.crm.export(self.a),raw)
+
+    def test_followups_exclude_closed_and_preserve_paused_unknown(self):
+        p=self.party()
+        o=self.opportunity(p)
+        self.opportunity(p,title="Unscheduled",next_contact_at=None)
+        self.opportunity(p,title="Paused",stage="paused",next_contact_at="2026-01-01T10:00:00+00:00")
+        self.opportunity(p,title="Closed",stage="won",outcome_ref="fixture:contract",next_action=None,next_contact_at=None)
+        self.opportunity(p,title="Other project",project_id=self.q)
+        d=self.crm.followups(self.a,"2026-12-02T00:00:00+00:00",self.p)
+        self.assertEqual([r["status"] for r in d["items"]],["past_due","unscheduled","paused"])
+        self.assertEqual(d["items"][0]["opportunity_id"],o["id"])
+        self.assertFalse(d["organizational_authority_provided"])
+        self.assertEqual(d["company_control_coverage"],"unknown")
+        self.assertEqual(self.crm.followups(self.a,"2026-12-01T10:00:00+00:00",self.p)["items"][0]["status"],"due_now")
