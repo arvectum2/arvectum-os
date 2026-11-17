@@ -83,7 +83,7 @@ class ManualPolicyGate:
             if directory.resolve() != directory or not directory.is_dir() or not (directory/"context.json").is_file():
                 raise ManualContextError("initialized primary store unavailable")
             # Do not initialize/recreate missing primary snapshots on a read.
-            store = ManualContextStore(directory, access)
+            store = ManualContextStore(directory, access, require_initialized=True)
             with store._locked():
                 if not store.path.is_file() or store.path.is_symlink():
                     raise ManualContextError("initialized primary snapshot missing")
