@@ -23,6 +23,36 @@ BACKUP_LABEL = "com.arvectum.os.wsf-manual-backup"
 SELECTED_ROOT = Path.home() / "Library/Application Support/ArvectumOS/persistent-internal"
 
 
+# P7.06 ships executable reference assets, not the repository's docs tree.
+# Verify immutable documents against the exact canonical checkout commit instead.
+CANONICAL_CHECKOUT = Path("/Volumes/ArvectumSSD/Arvectum/repos/arvectum-os")
+DRAFT_PATH = "docs/contracts/WSF-07A-REGISTRY-LOCATOR-SUCCESSOR-DRAFT-v0.6.1.md"
+PUBLICATION_PATH = "docs/contracts/WSF-07A-REGISTRY-LOCATOR-SUCCESSOR-PROVISIONAL-v0.6.1.md"
+APPROVAL_PATH = "docs/governance/decisions/" + DECISION + ".md"
+
+
+def verify_publication(release, checkout=CANONICAL_CHECKOUT):
+    if not re.fullmatch(r"[0-9a-f]{40}", release):
+        raise ManualContextError("invalid release identity")
+    if checkout.resolve() != checkout or not checkout.is_dir():
+        raise ManualContextError("canonical checkout unavailable")
+    def git(*args):
+        return subprocess.check_output(
+            ["/usr/bin/git", "-C", str(checkout), *args],
+            timeout=10, stderr=subprocess.DEVNULL)
+    if (git("rev-parse", "HEAD").decode().strip() != release
+        or git("branch", "--show-current").decode().strip() != "main"
+        or git("status", "--porcelain")):
+        raise ManualContextError("canonical checkout not exact and clean")
+    if git("rev-parse", release + ":" + DRAFT_PATH).decode().strip() != SUCCESSOR_DRAFT:
+        raise ManualContextError("approved draft blob mismatch")
+    for path in (PUBLICATION_PATH, APPROVAL_PATH):
+        raw = git("cat-file", "blob", release + ":" + path)
+        if len(raw) > 65536 or SUCCESSOR_DRAFT.encode("ascii") not in raw:
+            raise ManualContextError("exact canonical approval missing")
+    return True
+
+
 def assert_offline(root, release):
     state = status(root)
     if state.get("state") != NOT_RUNNING or state.get("current_release") != release:
@@ -40,10 +70,8 @@ def execute(root, release, decision, draft, confirm):
     source = root / "releases" / release / "source"
     if (root / "current").resolve() != source.parent or Path(__file__).resolve() != source / "reference/python/wsf_inbox_registry_operator.py":
         raise ManualContextError("operator is not executed from selected installed release")
-    publication = source / "docs/contracts/WSF-07A-REGISTRY-LOCATOR-SUCCESSOR-PROVISIONAL-v0.6.1.md"
-    approval = source / "docs/governance/decisions" / (DECISION + ".md")
-    if not all(p.is_file() and SUCCESSOR_DRAFT in p.read_text(encoding="utf-8") for p in (publication, approval)):
-        raise ManualContextError("exact published successor required")
+    verify_volume(VOLUME, VOLUME_UUID)
+    verify_publication(release)
     # Share P7.06 deployment lock; never remove an existing or foreign lock.
     lock = root / "run/p7-06-deploy.lock"
     lock.mkdir(mode=0o700, exist_ok=False)
@@ -57,6 +85,7 @@ def execute(root, release, decision, draft, confirm):
         check = lambda: assert_offline(root, release)
         check()
         verify_volume(VOLUME, VOLUME_UUID)
+        verify_publication(release)
         archive = VOLUME.joinpath(*INBOX_PARTS) / ("before-061-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid4().hex[:12])
         access = P704AccessResolver(root).authorize()
         result = cutover(root, access, archive, assert_quiescent=check, confirm=True)
