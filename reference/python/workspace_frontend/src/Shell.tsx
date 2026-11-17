@@ -105,7 +105,7 @@ export function Shell({ context, onLogout }: { context: WorkspaceContext; onLogo
   else if (currentPath === "/mission-control") content = <MissionControl />;
   else if (currentPath === "/crm") content = <CRM csrfToken={context.session.csrf_token} />;
   else if (currentPath === "/manual-context") content = <ManualContext csrfToken={context.session.csrf_token} />;
-  else if (currentPath === "/information-hub") content = <InformationHub />;
+  else if (currentPath === "/information-hub") content = <InformationHub csrfToken={context.session.csrf_token} />;
   else if (currentPath === "/projects") content = <CompanyProjects />;
   else if (currentPath === "/company-materials") content = <CompanyMaterials csrfToken={context.session.csrf_token} />;
   else if (currentPath === "/company-generated-outputs") content = <CompanyGeneratedOutputs csrfToken={context.session.csrf_token} />;
