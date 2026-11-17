@@ -4,7 +4,7 @@ The trusted future adapter supplies reduced metadata only. No Gmail/Calendar
 credentials, network calls, message bodies, titles, attendees or sender data.
 No durable source is admitted by constructing a binding object in this module.
 """
-from datetime import date, datetime, timezone
+from datetime import date
 import re
 import json
 from pathlib import Path
@@ -22,6 +22,11 @@ def opaque(v):
         raise ManualContextError("invalid opaque source identifier")
     return v
 
+def digest_ref(v):
+    if not isinstance(v,str) or not re.fullmatch("[0-9a-f]{64}",v):
+        raise ManualContextError("opaque non-secret reference required")
+    return v
+
 def interval(v):
     if not isinstance(v,str):raise ManualContextError("invalid calendar boundary")
     if re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}",v):
@@ -31,7 +36,7 @@ def interval(v):
 
 def normalize(kind,row,checked_at):
     _keys(row,REF_FIELDS)
-    opaque(row["native_id"]);opaque(row["revision"])
+    digest_ref(row["native_id"]);digest_ref(row["revision"])
     if row["state"] not in STATES[kind]:raise ManualContextError("source state unavailable")
     if row["occurred_at"] is not None and stamp(row["occurred_at"])>stamp(checked_at):
         raise ManualContextError("future observation")
@@ -59,7 +64,7 @@ class _ReferenceFile(ManualContextStore):
         for k,b in bindings.items():
             opaque(k);_keys(b,{"kind","account_ref","container_ref"})
             if b["kind"] not in KINDS:raise ManualContextError("unsupported source")
-            opaque(b["account_ref"]);opaque(b["container_ref"])
+            digest_ref(b["account_ref"]);digest_ref(b["container_ref"])
         if len({(b["kind"],b["account_ref"],b["container_ref"]) for b in bindings.values()})!=len(bindings):
             raise ManualContextError("duplicate source binding")
         self.bindings=json.loads(_json(bindings))
@@ -92,22 +97,18 @@ class _ReferenceFile(ManualContextStore):
                 binding=self.bindings.get(d["binding"])
                 if binding is None:raise ManualContextError("binding unavailable")
                 for c in ("expected_cursor","next_cursor"):
-                    if d[c] is not None:opaque(d[c])
+                    if d[c] is not None:digest_ref(d[c])
                 if type(d["complete"]) is not bool or not isinstance(d["rows"],list) or len(d["rows"])>MAX_PAGE:
                     raise ManualContextError("invalid bounded page")
                 prior=checkpoints.get(d["binding"],{}).get("cursor")
                 if d["expected_cursor"]!=prior:raise ManualContextError("checkpoint conflict")
                 if d["next_cursor"]==prior or d["next_cursor"] is None:raise ManualContextError("nonadvancing checkpoint")
-                revisions=set()
                 natives=set()
                 for raw in d["rows"]:
                     row=normalize(binding["kind"],raw,event["at"])
                     iid="COMM-"+_digest(_json([d["binding"],row["native_id"]]))[:32]
                     if iid in natives:raise ManualContextError("ambiguous page: multiple revisions")
                     natives.add(iid)
-                    rk=(iid,row["revision"])
-                    if rk in revisions:raise ManualContextError("duplicate page reference")
-                    revisions.add(rk)
                     old=current.get(iid)
                     earlier=[r for r in history.get(iid,[]) if r["revision"]==row["revision"]]
                     if earlier:
@@ -150,9 +151,15 @@ class CommunicationReferences:
                 return
             try:f._write(f._encode(events+[{"key":key,"operation":operation,"data":data,"at":at}]))
             except (TypeError,KeyError,ValueError) as exc:raise ManualContextError("reference request rejected") from exc
-    def admit_page(self,a,key,*,binding,expected_cursor,next_cursor,complete,rows,checked_at):
+    def admit_page(self,a,key,*,binding,expected_cursor,next_cursor,complete,rows,checked_at,authorized_bindings):
+        if binding not in authorized_bindings:raise ManualContextError("source rights unavailable")
         self._append(a,key,"page",{"binding":binding,"expected_cursor":expected_cursor,"next_cursor":next_cursor,"complete":complete,"rows":rows},checked_at)
-    def review(self,a,key,*,item_id,expected_revision,state,project_id,at):
+    def review(self,a,key,*,item_id,expected_revision,state,project_id,at,authorized_bindings):
+        self.file._authorize(a)
+        with self.file._locked():
+            rows,_,_,_=self.file.replay(self.file._load())
+            if item_id not in rows or rows[item_id]["binding"] not in authorized_bindings:
+                raise ManualContextError("source rights unavailable")
         self._append(a,key,"review",{"id":item_id,"expected_revision":expected_revision,"state":state,"project_id":project_id},at)
     def read(self,a,*,authorized_bindings,now):
         self.file._authorize(a);t=stamp(now)
