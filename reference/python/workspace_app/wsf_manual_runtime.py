@@ -5,6 +5,7 @@ re-read for every operation; removal disables use without deleting data.
 """
 from pathlib import Path
 import json
+import hashlib
 from .wsf_manual_context import ManualContextError
 from .wsf_manual_policy import ManualPolicyGate, _private_file
 from .wsf_manual_backup import PilotBackup
@@ -39,6 +40,19 @@ class RuntimeManualPilot:
             return ManualPolicyGate(self.root, receipt["policy_sha256"], APPROVED_DRAFT).authorize(access, exact)
         except (OSError, ValueError, TypeError, KeyError, RecursionError) as exc:
             raise ManualContextError("manual pilot unavailable") from exc
+
+    def review_signal(self, access):
+        """Existing pilot policy review trigger, not a new Company WORK/OBL."""
+        self.authorize_operation(access,"read")
+        receipt=json.loads(_private_file(self.root/"config"/ACTIVATION_FILE))
+        raw=_private_file(self.root/"config"/"manual-context-policy.json")
+        if (receipt.get("draft_blob")!=APPROVED_DRAFT or receipt.get("decision")!=APPROVAL_DECISION
+                or hashlib.sha256(raw).hexdigest()!=receipt.get("policy_sha256")):
+            raise ManualContextError("pilot review evidence unavailable")
+        policy=json.loads(raw)
+        return {"kind":"pilot-review","due_at":policy["expires_at"],
+                "source":"current owner-approved pilot policy","decision_ready":False,
+                "canonical_authority":False,"organizational_authority_provided":False}
 
     def backup(self, access):
         store = self.authorize_operation(access, "export")
