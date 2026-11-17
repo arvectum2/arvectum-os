@@ -63,7 +63,7 @@ export function Shell({ context, onLogout }: { context: WorkspaceContext; onLogo
   let content: React.ReactNode;
   if (objectId) content = <ObjectDetail objectId={objectId} />;
   else if (currentPath === "/products" || productId) content = <Products productId={productId} />;
-  else if (currentPath === "/manual-context") content = <ManualContext csrfToken={context.session.csrf_token} />;
+  else if (currentPath === "/manual-context") content = <ManualContext key={window.location.search} csrfToken={context.session.csrf_token} />;
   else if (currentPath === "/information-hub") content = <InformationHub />;
   else if (currentPath === "/projects") content = <CompanyProjects />;
   else if (currentPath === "/company-materials") content = <CompanyMaterials csrfToken={context.session.csrf_token} />;
