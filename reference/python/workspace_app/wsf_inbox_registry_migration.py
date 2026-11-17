@@ -4,11 +4,9 @@ Use only after Workspace is stopped and the daily backup job is quiescent.
 The receipt is removed first and installed last; interruption fails closed.
 The caller retains the independent encrypted rollback archive, never in Git.
 """
-import hashlib
 import json
 import os
 from pathlib import Path
-import stat
 import tempfile
 
 from .wsf_manual_context import ManualContextError, _digest, _json
@@ -142,12 +140,15 @@ def cutover(root, access, archive, *, assert_quiescent, confirm, backup_factory=
             write_archive(archive, old)
             # Hold the store lock while replacing all files, including receipt.
             try:
+                b.verifier(b.volume, b.uuid)
                 replace_set(paths, new, write=write)
                 assert_quiescent()
                 if (paths["inbox.json"].read_bytes() != new["inbox.json"] or b._read(fd) != new["backup.json"]
                     or any(_private_file(paths[k]) != new[k] for k in ("policy.json","receipt.json"))):
                     raise ManualContextError("successor bytes mismatch")
             except Exception:
+                assert_quiescent()
+                b.verifier(b.volume, b.uuid)
                 replace_set(paths, old)
                 raise
     try:
@@ -161,6 +162,7 @@ def cutover(root, access, archive, *, assert_quiescent, confirm, backup_factory=
         assert_quiescent()
         if paths["inbox.json"].read_bytes() != new["inbox.json"] or paths["backup.json"].read_bytes()!=new["backup.json"]:
             raise ManualContextError("successor changed; manual recovery required") from None
+        b.verifier(b.volume, b.uuid)
         replace_set(paths, old)
         raise
     return {**evidence,"status":"migrated","grants_unchanged":True,"expiry_unchanged":True}
