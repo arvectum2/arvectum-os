@@ -35,7 +35,7 @@ class InboxRuntimeTests(unittest.TestCase):
     def decision(self,*a,**kw):
         return SimpleNamespace(allowed=True,principal_kind="human",grant_id=self.p["grants"][kw["operation"]])
     def test_exact_independent_grants_and_inactive_default(self):
-        with self.assertRaises(ManualContextError):RuntimeInboxPilot(self.root).authorize(self.a,"read")
+        with self.assertRaises(ManualContextError):RuntimeInboxPilot(self.root,approved_draft=None).authorize(self.a,"read")
         with patch("workspace_app.wsf_inbox_runtime.p704.authorize_from_credential_file",side_effect=self.decision) as auth:
             for op,exact in OPERATIONS.items():
                 self.assertEqual(self.pilot.authorize(self.a,op).file.path,self.inbox.file.path)
