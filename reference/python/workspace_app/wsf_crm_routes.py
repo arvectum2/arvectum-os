@@ -45,6 +45,11 @@ def install_crm_routes(app,authorize_current,csrf_protected,pilot):
         _,access=current;s=store(access,"read")
         return perform(lambda:s.read(access,query,project_id))
 
+    @app.get("/api/app/v1/crm/followups")
+    def followups(project_id:str|None=None,current=Depends(authorize_current)):
+        _,access=current;s=store(access,"read")
+        return perform(lambda:s.followups(access,datetime.now(timezone.utc).isoformat(),project_id))
+
     @app.get("/api/app/v1/crm/catalog")
     def catalog(current=Depends(authorize_current)):
         _,access=current;s=store(access,"read")
