@@ -85,3 +85,11 @@ class ManualPolicyTests(unittest.TestCase):
         self.policy.unlink()
         with self.assertRaises(ManualContextError):
             self.gate.authorize(self.a,"workspace.context.read")
+
+    def test_previously_authorized_store_does_not_recreate_lost_primary(self):
+        with patch("workspace_app.wsf_manual_policy.p704.authorize_from_credential_file",side_effect=self.decision):
+            s = self.gate.authorize(self.a,"workspace.context.capture")
+            s.path.unlink()
+            with self.assertRaises(ManualContextError):
+                s.submit(self.a,uuid4().hex,"capture",{"title":"Fixture","text":"Observation","project_id":None})
+            self.assertFalse(s.path.exists())
