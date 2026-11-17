@@ -5,8 +5,8 @@ import "./ManualContext.css";
 
 type Kind = "party"|"contact"|"opportunity"|"interaction";
 type RecordRow = {id:string;revision:number;recorded_at:string;authority_provided:boolean;[key:string]:unknown};
-type Snapshot = Record<Kind,RecordRow[]>;
-type Catalog = {projects:{id:string;label:string}[];evidence_refs:string[]};
+type Snapshot = Record<Kind,RecordRow[]> & {backup_status?:string};
+type Catalog = {projects:{id:string;label:string}[];evidence_refs:string[];allowed_entities?:Kind[];handling?:string};
 type Followup = {opportunity_id:string;party_name:string;title:string;next_action:string;next_contact_at:string|null;status:string};
 type Command = {key:string;entity:Kind;data:Record<string,unknown>;record_id:string|null;expected_revision:number};
 const root="/api/app/v1/crm";
@@ -41,9 +41,10 @@ export function CRM({csrfToken}:{csrfToken:string}){
  const [followups,setFollowups]=useState<Followup[]|null>(null);
  const [detail,setDetail]=useState<{title:string;rows:RecordRow[]}|null>(null);
  const [error,setError]=useState("");
+ const [backupWarning,setBackupWarning]=useState(false);
  const [busy,setBusy]=useState(true);
  const gen=useRef(0),pending=useRef<Command|null>(null);
- function clear(){setSnapshot(null);setCatalog(null);setDraft({...initial[kind]});setEdit(null);setDetail(null);setFollowups(null);setQuery("");setProject("");pending.current=null;}
+ function clear(){setBackupWarning(false);setSnapshot(null);setCatalog(null);setDraft({...initial[kind]});setEdit(null);setDetail(null);setFollowups(null);setQuery("");setProject("");pending.current=null;}
  async function load(){
   const seq=++gen.current;setBusy(true);setError("");setDetail(null);setFollowups(null);
   try{
@@ -73,8 +74,8 @@ export function CRM({csrfToken}:{csrfToken:string}){
   if(!cmd||JSON.stringify({...cmd,key:""})!==JSON.stringify({key:"",...value}))cmd={key:key(),...value};
   pending.current=cmd;
   const seq=++gen.current;setBusy(true);setError("");
-  try{await request("/submit",{method:"POST",headers:{"X-Arvectum-CSRF":csrfToken},body:JSON.stringify(cmd)});
-   if(seq===gen.current){pending.current=null;setEdit(null);setDraft({...initial[kind]});await load();}
+  try{const r=await request("/submit",{method:"POST",headers:{"X-Arvectum-CSRF":csrfToken},body:JSON.stringify(cmd)});const result=await r.json();
+   if(seq===gen.current){pending.current=null;setEdit(null);setDraft({...initial[kind]});setBackupWarning(result.backup_status==="saved-primary-backup-unavailable");await load();}
   }catch(e){if(seq===gen.current){if(e instanceof Error&&["401","403"].includes(e.message)){clear();setError("unavailable");}else setError("rejected");}}
   finally{if(seq===gen.current)setBusy(false);}
  }
@@ -134,14 +135,15 @@ export function CRM({csrfToken}:{csrfToken:string}){
   {error==="rejected"&&<p role="alert">{text("Запись не подтверждена. Проверьте данные и повторите ту же операцию.","Save not confirmed. Review input and retry the same operation.")}</p>}
   {!snapshot&&busy&&<p role="status">{text("Проверяем доступ…","Checking access…")}</p>}
   {snapshot&&catalog&&<>
-   <p className="hub-warning">{text("Тестовый контур. Не вводите реальные персональные или конфиденциальные данные.","Test contour. Do not enter real personal or confidential data.")}</p>
-   <div className="hub-filters">{kinds.map(k=><button key={k} disabled={busy} aria-pressed={kind===k} onClick={()=>selectKind(k)}>{labels[k]}</button>)}<button disabled={busy} onClick={()=>void download()}>{text("Экспорт","Export")}</button><button disabled={busy} onClick={()=>void showFollowups()}>{text("Следующие контакты","Follow-ups")}</button></div>
+   <p className="hub-warning">{catalog.handling?text("Ограниченный пилот: только организации и сделки без персональных и конфиденциальных данных.","Restricted pilot: organizations and opportunities only, no personal or confidential data."):text("Тестовый контур. Не вводите реальные персональные или конфиденциальные данные.","Test contour. Do not enter real personal or confidential data.")}</p>
+   {(backupWarning||snapshot.backup_status&&snapshot.backup_status!=="verified")&&<p role="alert">{text("Резервная копия требует проверки. Сохранённые записи остаются в основном хранилище.","Backup needs review. Saved records remain in the primary store.")}</p>}
+   <div className="hub-filters">{kinds.filter(k=>!catalog.allowed_entities||catalog.allowed_entities.includes(k)).map(k=><button key={k} disabled={busy} aria-pressed={kind===k} onClick={()=>selectKind(k)}>{labels[k]}</button>)}<button disabled={busy} onClick={()=>void download()}>{text("Экспорт","Export")}</button><button disabled={busy} onClick={()=>void showFollowups()}>{text("Следующие контакты","Follow-ups")}</button></div>
    <div className="manual-forms"><form className="company-card" onSubmit={e=>{e.preventDefault();void submit();}}>
     <h2>{edit?text("Редактировать запись","Edit record"):text("Новая запись","New record")}</h2>
     {kind==="party"?<>{field("name","Название компании","Company name")}{field("description","Описание","Description",true,1000)}{select("registry_ref","Источник реквизитов","Registry source",refs,false,!!edit?.registry_ref)}</>:<>
       {select("party_id","Контрагент","Counterparty",rowOpts(snapshot.party),true,!!edit)}
       {kind==="contact"?<>{field("name","Имя контакта","Contact name")}{field("role","Роль","Role")}{select("channel_ref","Источник контакта","Contact source",refs)}</>:<>
-       {select("contact_id","Контакт","Contact",rowOpts(snapshot.contact.filter(r=>r.party_id===draft.party_id)))}
+       {(!catalog.allowed_entities||catalog.allowed_entities.includes("contact"))&&select("contact_id","Контакт","Contact",rowOpts(snapshot.contact.filter(r=>r.party_id===draft.party_id)))}
        {select("project_id","Связанный проект","Linked project",projects)}
        {kind==="opportunity"?<>{field("title","Название сделки","Opportunity title")}{select("stage","Стадия","Stage",stages.map(s=>[s[0],text(s[1],s[2])]),true)}
         {finished?select("outcome_ref","Подтверждение результата","Outcome evidence",refs,true):<>{field("next_action","Следующее действие","Next action",true,500)}{field("next_contact_at","Следующий контакт (UTC, ISO)","Next contact (UTC, ISO)",false,50)}</>}
