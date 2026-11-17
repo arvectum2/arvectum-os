@@ -7,6 +7,7 @@ type Kind = "party"|"contact"|"opportunity"|"interaction";
 type RecordRow = {id:string;revision:number;recorded_at:string;authority_provided:boolean;[key:string]:unknown};
 type Snapshot = Record<Kind,RecordRow[]>;
 type Catalog = {projects:{id:string;label:string}[];evidence_refs:string[]};
+type Followup = {opportunity_id:string;party_name:string;title:string;next_action:string;next_contact_at:string|null;status:string};
 type Command = {key:string;entity:Kind;data:Record<string,unknown>;record_id:string|null;expected_revision:number};
 const root="/api/app/v1/crm";
 const kinds:Kind[]=["party","contact","opportunity","interaction"];
@@ -37,13 +38,14 @@ export function CRM({csrfToken}:{csrfToken:string}){
  const [edit,setEdit]=useState<RecordRow|null>(null);
  const [query,setQuery]=useState("");
  const [project,setProject]=useState("");
+ const [followups,setFollowups]=useState<Followup[]|null>(null);
  const [detail,setDetail]=useState<{title:string;rows:RecordRow[]}|null>(null);
  const [error,setError]=useState("");
  const [busy,setBusy]=useState(true);
  const gen=useRef(0),pending=useRef<Command|null>(null);
- function clear(){setSnapshot(null);setCatalog(null);setDraft({...initial[kind]});setEdit(null);setDetail(null);setQuery("");setProject("");pending.current=null;}
+ function clear(){setSnapshot(null);setCatalog(null);setDraft({...initial[kind]});setEdit(null);setDetail(null);setFollowups(null);setQuery("");setProject("");pending.current=null;}
  async function load(){
-  const seq=++gen.current;setBusy(true);setError("");setDetail(null);
+  const seq=++gen.current;setBusy(true);setError("");setDetail(null);setFollowups(null);
   try{
    const [s,c]=await Promise.all([request(),request("/catalog")]);
    const data=await s.json(), cat=await c.json();
@@ -80,6 +82,14 @@ export function CRM({csrfToken}:{csrfToken:string}){
   const seq=++gen.current;setBusy(true);setError("");setDetail(null);
   try{const r=await request(path);const rows=await r.json();if(!Array.isArray(rows))throw Error();if(seq===gen.current)setDetail({title,rows});}
   catch{if(seq===gen.current){clear();setError("unavailable");}}
+  finally{if(seq===gen.current)setBusy(false);}
+ }
+ async function showFollowups(){
+  const seq=++gen.current;setBusy(true);setError("");setFollowups(null);
+  try{const response=await request("/followups"+(project?"?project_id="+encodeURIComponent(project):""));
+   const data=await response.json();if(!Array.isArray(data.items))throw Error();
+   if(seq===gen.current)setFollowups(data.items);
+  }catch{if(seq===gen.current){clear();setError("unavailable");}}
   finally{if(seq===gen.current)setBusy(false);}
  }
  async function download(){
@@ -125,7 +135,7 @@ export function CRM({csrfToken}:{csrfToken:string}){
   {!snapshot&&busy&&<p role="status">{text("Проверяем доступ…","Checking access…")}</p>}
   {snapshot&&catalog&&<>
    <p className="hub-warning">{text("Тестовый контур. Не вводите реальные персональные или конфиденциальные данные.","Test contour. Do not enter real personal or confidential data.")}</p>
-   <div className="hub-filters">{kinds.map(k=><button key={k} disabled={busy} aria-pressed={kind===k} onClick={()=>selectKind(k)}>{labels[k]}</button>)}<button disabled={busy} onClick={()=>void download()}>{text("Экспорт","Export")}</button></div>
+   <div className="hub-filters">{kinds.map(k=><button key={k} disabled={busy} aria-pressed={kind===k} onClick={()=>selectKind(k)}>{labels[k]}</button>)}<button disabled={busy} onClick={()=>void download()}>{text("Экспорт","Export")}</button><button disabled={busy} onClick={()=>void showFollowups()}>{text("Следующие контакты","Follow-ups")}</button></div>
    <div className="manual-forms"><form className="company-card" onSubmit={e=>{e.preventDefault();void submit();}}>
     <h2>{edit?text("Редактировать запись","Edit record"):text("Новая запись","New record")}</h2>
     {kind==="party"?<>{field("name","Название компании","Company name")}{field("description","Описание","Description",true,1000)}{select("registry_ref","Источник реквизитов","Registry source",refs,false,!!edit?.registry_ref)}</>:<>
@@ -148,13 +158,19 @@ export function CRM({csrfToken}:{csrfToken:string}){
     {edit&&<button type="button" disabled={busy} onClick={()=>selectKind(kind)}>{text("Отмена","Cancel")}</button>}
    </form><div className="company-card"><h2>{labels[kind]}</h2>
     <label>{text("Поиск","Search")}<input type="search" value={query} onChange={e=>setQuery(e.target.value)} maxLength={160}/></label>
-    <label>{text("Проект","Project")}<select value={project} onChange={e=>setProject(e.target.value)}><option value="">{text("Все проекты","All projects")}</option>{projects.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>
+    <label>{text("Проект","Project")}<select value={project} onChange={e=>{setProject(e.target.value);setFollowups(null);}} disabled={busy}><option value="">{text("Все проекты","All projects")}</option>{projects.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>
     {snapshot[kind].filter(r=>matches(r)&&matchesProject(r)).map(r=><article key={r.id} className="company-card">{rowBody(r)}
      <button disabled={busy} onClick={()=>editRow(r)}>{text("Редактировать","Edit")}</button>
      <button disabled={busy} onClick={()=>void showDetail("/records/"+encodeURIComponent(r.id)+"/history",text("История версий","Revision history"))}>{text("Версии","Versions")}</button>
      {kind==="party"&&<button disabled={busy} onClick={()=>void showDetail("/parties/"+encodeURIComponent(r.id)+"/timeline",text("История взаимодействия","Interaction timeline"))}>{text("История","Timeline")}</button>}
     </article>)}
    </div></div>
+   {followups&&<section className="company-card"><h2>{text("Следующие контакты","Follow-ups")}</h2>
+   <p>{text("Координация сделок, не подтверждённые обязательства.","Deal coordination, not verified obligations.")}</p>
+   {followups.length===0&&<p>{text("Нет открытых сделок в выбранном контексте.","No open opportunities in selected context.")}</p>}
+   {followups.map(r=><article key={r.opportunity_id}><h3>{r.title} · {r.party_name}</h3>
+   <p>{r.status==="past_due"?text("Просрочен контакт","Past due"):r.status==="due_now"?text("Контакт сейчас","Due now"):r.status==="paused"?text("Приостановлено","Paused"):r.status==="unscheduled"?text("Дата не задана","Unscheduled"):text("Запланировано","Scheduled")}</p>
+   <p>{r.next_action} {r.next_contact_at??""}</p></article>)}</section>}
    {detail&&<section className="company-card"><h2>{detail.title}</h2>{detail.rows.map(r=><article key={r.id+":"+r.revision}>{rowBody(r)}</article>)}</section>}
   </>}
  </section>;
