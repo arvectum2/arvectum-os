@@ -1,0 +1,100 @@
+"""Owner-triggered productive inbox candidate, denied until exact publication.
+
+No scheduler, credential export, new network connector or implicit AI authority.
+The existing verified portfolio provider is reused without a new token.
+"""
+from datetime import datetime,timedelta,timezone
+import hashlib,json,re
+from pathlib import Path
+
+import p7_04_persistent_access as p704
+from .wsf_manual_context import ManualContextError,_identity,_json,_digest
+from .wsf_manual_policy import _private_file
+from .wsf_manual_runtime import RuntimeManualPilot
+from .wsf_inbox_routes import FixtureInboxPilot,INBOX_PARTS
+from .wsf_roadmap_inbox import RoadmapInbox,registry_bindings
+from .wsf_manual_backup import PilotBackup
+from .company_portfolio_verified import VerifiedRuntimeCompanyPortfolioProvider
+
+APPROVED_DRAFT=None
+RESOURCE="roadmap-inbox"
+OPERATIONS={x:"workspace.inbox."+x for x in ("read","poll","review","export")}
+SCHEMA="arvectum.workspace.roadmap-inbox-policy/1"
+RECEIPT_SCHEMA="arvectum.workspace.roadmap-inbox-activation/1"
+
+
+class RuntimeInboxPilot:
+    def __init__(self,root,*,approved_draft=APPROVED_DRAFT):
+        self.root=Path(root)
+        self.approved_draft=approved_draft
+        self.manual=RuntimeManualPilot(self.root)
+
+    def _gate(self,access,operation):
+        if operation not in OPERATIONS or not self.approved_draft:
+            raise ManualContextError("inbox not admitted")
+        try:
+            if self.root.resolve()!=self.root:raise ManualContextError("unsafe runtime")
+            receipt=json.loads(_private_file(self.root/"config"/"roadmap-inbox-activation.json"))
+            if (set(receipt)!={"schema","draft_blob","policy_sha256"} or receipt["schema"]!=RECEIPT_SCHEMA
+                    or receipt["draft_blob"]!=self.approved_draft):
+                raise ManualContextError("approval mismatch")
+            raw=_private_file(self.root/"config"/"roadmap-inbox-policy.json")
+            if hashlib.sha256(raw).hexdigest()!=receipt["policy_sha256"]:raise ManualContextError("policy mismatch")
+            p=json.loads(raw);bindings=registry_bindings()
+            if (set(p)!={"schema","draft_blob","registry_sha256","scope","credential_id","starts_at","expires_at","grants","purpose"}
+                    or p["schema"]!=SCHEMA or p["draft_blob"]!=self.approved_draft
+                    or p["registry_sha256"]!=_digest(_json(bindings))
+                    or p["scope"]!=_identity(access) or p["credential_id"]!=access.credential_id
+                    or p["purpose"]!="owner-triggered-roadmap-metadata"
+                    or set(p["grants"])!=set(OPERATIONS.values())
+                    or any(not re.fullmatch("[0-9a-f]{32}",v) for v in p["grants"].values())
+                    or len(set(p["grants"].values()))!=len(OPERATIONS)):
+                raise ManualContextError("policy binding mismatch")
+            start,end=(datetime.fromisoformat(p[k]) for k in ("starts_at","expires_at"))
+            if (start.utcoffset()!=timedelta(0) or end.utcoffset()!=timedelta(0)
+                    or not start<=datetime.now(timezone.utc)<end or end-start>timedelta(days=30)):
+                raise ManualContextError("policy expired")
+            review=self.manual.review_signal(access)
+            if end>datetime.fromisoformat(review["due_at"]):raise ManualContextError("predecessor expiry exceeded")
+            if not re.fullmatch("[0-9a-f]{32}",access.credential_id):raise ManualContextError("credential invalid")
+            exact=OPERATIONS[operation]
+            d=p704.authorize_from_credential_file(self.root,organization=access.organization,principal=access.actor,
+                credential_id=access.credential_id,credential_file=self.root/"secrets"/"p7-04"/(access.credential_id+".secret"),
+                operation=exact,resource=RESOURCE,access_path="local")
+            if not d.allowed or d.principal_kind!="human" or d.grant_id!=p["grants"][exact]:
+                raise ManualContextError("exact grant unavailable")
+            inbox=RoadmapInbox(self.root/"workspace-company-roadmap-inbox",access,bindings=bindings,require_initialized=True)
+            inbox.read(access)
+            return inbox,start,end
+        except (OSError,ValueError,TypeError,KeyError,AttributeError,RecursionError,p704.P704Error) as exc:
+            raise ManualContextError("inbox unavailable") from exc
+
+    def authorize(self,access,operation):
+        return self._gate(access,operation)[0]
+
+    def backup(self,access):
+        s=self.authorize(access,"export")
+        return PilotBackup(s.file,parts=INBOX_PARTS).copy_latest(access)
+
+    def read(self,access):
+        s=self.authorize(access,"read")
+        d=s.read(access)
+        try:
+            b=PilotBackup(self.authorize(access,"export").file,parts=INBOX_PARTS)
+            d["backup_status"]="verified" if b.verified_snapshot(access)==s.export(access) else "stale"
+        except (OSError,ManualContextError):d["backup_status"]="unavailable"
+        return d
+
+    def mutate(self,authorize,operation,data):
+        access=authorize()
+        inbox,start,end=self._gate(access,operation)
+        self.authorize(access,"export")
+        worker=FixtureInboxPilot(inbox,VerifiedRuntimeCompanyPortfolioProvider(),
+            PilotBackup(inbox.file,parts=INBOX_PARTS),access.credential_id,
+            access.grant_id,start,end,frozenset({operation}))
+        def guard():
+            a=authorize()
+            self.authorize(a,operation)
+            self.authorize(a,"export")
+            return a
+        return worker.mutate(guard,operation,data)
