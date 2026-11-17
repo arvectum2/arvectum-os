@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Shell } from "./Shell";
-import type { MyWorkProjection, WorkspaceContext } from "./types";
+import type { WorkspaceContext } from "./types";
 
 const context: WorkspaceContext = {
   schema: "arvectum.workspace.shell-context/1",
@@ -16,46 +16,6 @@ const context: WorkspaceContext = {
   data_governance: { protected_read_revalidated: true, response_minimized: "shell-context-only", canonical_state_in_browser: false }
 };
 
-const projection: MyWorkProjection = {
-  schema: "arvectum.workspace.my-work/1",
-  generated_at: "2026-08-21T10:00:00Z",
-  projection: {
-    derived: true,
-    canonical_authority: false,
-    organizational_authority_provided: false,
-    consequential_action_available: false,
-    visibility_implies_permission: false,
-  },
-  scope: {
-    organization_resolved_server_side: true,
-    actor_resolved_server_side: true,
-    denied_item_counts_exposed: false,
-  },
-  health: {
-    state: "fresh",
-    code: "OK",
-    message: "Attention sources are current.",
-    observed_at: "2026-08-21T10:00:00Z",
-    heartbeat_age_seconds: 1,
-  },
-  items: [{
-    id: "11111111111111111111",
-    kind: "waiting-input",
-    group: "decision-required",
-    urgency: "high",
-    title: "Governed preflight is waiting",
-    reason: "Decision evidence is missing.",
-    source: "ЕИС / zakupki.gov.ru",
-    next_step: "Inspect blockers through the governed flow.",
-    evidence_mode: "live",
-    observed_at: "2026-08-21T10:00:00Z",
-    open_href: "/my-work?focus=11111111111111111111",
-    interaction: "inspect-only",
-    technical_evidence_available: true,
-    authority_provided: false,
-  }],
-};
-
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
@@ -63,8 +23,8 @@ afterEach(() => {
 });
 
 describe("P9.04 shell", () => {
-  it("presents explicit context and a useful Needs Attention projection on Home", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(projection), {
+  it("presents explicit context and a business overview on Home", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({projects:[],notes:[],backup_status:"verified"}), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     })));
@@ -73,9 +33,9 @@ describe("P9.04 shell", () => {
     expect(screen.getByLabelText("Organization: ООО «Арвектум»")).toBeTruthy();
     expect(screen.getByLabelText("User: Owner operator")).toBeTruthy();
     expect(screen.getByRole("navigation", { name: "Workspace navigation" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Tasks" })).toBeTruthy();
-    expect(await screen.findByRole("heading", { name: "Needs attention" })).toBeTruthy();
-    expect(screen.getByText("Execution is stopped")).toBeTruthy();
-    expect(screen.getAllByRole("link", { name: "Open tasks" })).not.toHaveLength(0);
+    expect(screen.getByRole("link", { name: "Projects" }).getAttribute("href")).toBe("/manual-context");
+    expect(await screen.findByRole("heading", { name: "Company today" })).toBeTruthy();
+    expect(await screen.findByText("No matching projects.")).toBeTruthy();
+    expect(screen.queryByText("Execution is stopped")).toBeNull();
   });
 });
