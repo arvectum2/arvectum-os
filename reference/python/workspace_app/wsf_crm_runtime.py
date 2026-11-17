@@ -13,7 +13,7 @@ import re
 import p7_04_persistent_access as p704
 from .wsf_manual_context import ManualContextError, _identity
 from .wsf_manual_policy import _private_file
-from .wsf_manual_runtime import RuntimeManualPilot, APPROVED_DRAFT as MANUAL_DRAFT
+from .wsf_manual_runtime import RuntimeManualPilot
 from .wsf_crm import CRMStore
 from .wsf_crm_backup import crm_backup
 
@@ -56,8 +56,8 @@ class RuntimeCRMPilot:
                 raise ManualContextError("CRM policy expired")
             # The first CRM slice cannot outlive or bypass the existing pilot.
             notes=self.manual.authorize_operation(access,"read")
-            manual=json.loads(_private_file(self.root/"config"/"manual-context-policy.json"))
-            if manual["contract_draft_blob"]!=MANUAL_DRAFT or end>datetime.fromisoformat(manual["expires_at"]):
+            manual=self.manual.review_signal(access)
+            if end>datetime.fromisoformat(manual["due_at"]):
                 raise ManualContextError("predecessor window exceeded")
             if not re.fullmatch("[0-9a-f]{32}",access.credential_id):
                 raise ManualContextError("credential invalid")
@@ -89,6 +89,17 @@ class RuntimeCRMPilot:
         return {"projects":[{"id":k,"label":v} for k,v in sorted(projects.items(),key=lambda kv:kv[1])],
                 "evidence_refs":sorted(store.refs),"allowed_entities":["party","opportunity"],
                 "handling":"non-sensitive-organization-coordination"}
+
+    def read(self,access,query="",project_id=None):
+        s=self.authorize(access,"read")
+        data=s.read(access,query,project_id)
+        try:
+            backup_store=self.authorize(access,"export")
+            raw=crm_backup(backup_store).verified_snapshot(access)
+            status="verified" if raw==s.export(access) else "stale"
+        except (ManualContextError,OSError):
+            status="unavailable"
+        return {**data,"backup_status":status}
 
     def backup(self,access):
         return crm_backup(self.authorize(access,"export")).copy_latest(access)
