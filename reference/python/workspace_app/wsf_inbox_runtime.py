@@ -17,6 +17,10 @@ from .wsf_manual_backup import PilotBackup
 from .company_portfolio_verified import VerifiedRuntimeCompanyPortfolioProvider
 
 APPROVED_DRAFT="82c77613551a35ad1d2d1baa7c962673e427c8b0"
+SUCCESSOR_DRAFT="0d9fda489f956f6ae8320b87978b443e4aef499b"
+PREDECESSOR_REGISTRY="7f1dc7846decf648836f870324ae7baa4fd532dfcc4b96adc67f362fd273546a"
+SUCCESSOR_REGISTRY="aa21ce050441c50f4b68c9dc7b16ebe43b1a5a29d4a98059a8616b35c2849016"
+SUCCESSOR_PATH=Path(__file__).with_name("company_project_registry_061.json")
 RESOURCE="roadmap-inbox"
 OPERATIONS={x:"workspace.inbox."+x for x in ("read","poll","review","export")}
 SCHEMA="arvectum.workspace.roadmap-inbox-policy/1"
@@ -24,9 +28,10 @@ RECEIPT_SCHEMA="arvectum.workspace.roadmap-inbox-activation/1"
 
 
 class RuntimeInboxPilot:
-    def __init__(self,root,*,approved_draft=APPROVED_DRAFT):
+    def __init__(self,root,*,approved_draft=APPROVED_DRAFT, successor_draft=SUCCESSOR_DRAFT):
         self.root=Path(root)
         self.approved_draft=approved_draft
+        self.successor_draft=successor_draft
         self.manual=RuntimeManualPilot(self.root)
 
     def _gate(self,access,operation):
@@ -36,13 +41,18 @@ class RuntimeInboxPilot:
             if self.root.resolve()!=self.root:raise ManualContextError("unsafe runtime")
             receipt=json.loads(_private_file(self.root/"config"/"roadmap-inbox-activation.json"))
             if (set(receipt)!={"schema","draft_blob","policy_sha256"} or receipt["schema"]!=RECEIPT_SCHEMA
-                    or receipt["draft_blob"]!=self.approved_draft):
+                    or receipt["draft_blob"] not in (self.approved_draft,self.successor_draft) or not receipt["draft_blob"]):
                 raise ManualContextError("approval mismatch")
             raw=_private_file(self.root/"config"/"roadmap-inbox-policy.json")
             if hashlib.sha256(raw).hexdigest()!=receipt["policy_sha256"]:raise ManualContextError("policy mismatch")
-            p=json.loads(raw);bindings=registry_bindings()
+            p=json.loads(raw)
+            draft=receipt["draft_blob"]
+            registry=SUCCESSOR_PATH if draft==self.successor_draft else None
+            bindings=registry_bindings(registry)
+            if draft==self.successor_draft and _digest(_json(bindings))!=SUCCESSOR_REGISTRY:
+                raise ManualContextError("successor registry pin mismatch")
             if (set(p)!={"schema","draft_blob","registry_sha256","scope","credential_id","starts_at","expires_at","grants","purpose"}
-                    or p["schema"]!=SCHEMA or p["draft_blob"]!=self.approved_draft
+                    or p["schema"]!=SCHEMA or p["draft_blob"]!=draft
                     or p["registry_sha256"]!=_digest(_json(bindings))
                     or p["scope"]!=_identity(access) or p["credential_id"]!=access.credential_id
                     or p["purpose"]!="owner-triggered-roadmap-metadata"
@@ -65,7 +75,7 @@ class RuntimeInboxPilot:
                 raise ManualContextError("exact grant unavailable")
             inbox=RoadmapInbox(self.root/"workspace-company-roadmap-inbox",access,bindings=bindings,require_initialized=True)
             inbox.read(access)
-            return inbox,start,end
+            return inbox,start,end,registry
         except (OSError,ValueError,TypeError,KeyError,AttributeError,RecursionError,p704.P704Error) as exc:
             raise ManualContextError("inbox unavailable") from exc
 
@@ -87,9 +97,9 @@ class RuntimeInboxPilot:
 
     def mutate(self,authorize,operation,data):
         access=authorize()
-        inbox,start,end=self._gate(access,operation)
+        inbox,start,end,registry=self._gate(access,operation)
         self.authorize(access,"export")
-        worker=FixtureInboxPilot(inbox,VerifiedRuntimeCompanyPortfolioProvider(),
+        worker=FixtureInboxPilot(inbox,VerifiedRuntimeCompanyPortfolioProvider(registry_path=registry),
             PilotBackup(inbox.file,parts=INBOX_PARTS),access.credential_id,
             access.grant_id,start,end,frozenset({operation}))
         def guard():
