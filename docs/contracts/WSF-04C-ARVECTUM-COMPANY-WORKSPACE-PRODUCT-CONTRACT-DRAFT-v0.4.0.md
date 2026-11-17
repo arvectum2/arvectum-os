@@ -3,7 +3,7 @@ Status: Draft — NOT effective; approval and exact implementation review requir
 Version: 0.4.0 (proposed)
 Date: 2026-11-17
 Owner: ООО «Арвектум»
-Predecessor: [Provisional 0.3.0](P10-09-C-ARVECTUM-COMPANY-WORKSPACE-PRODUCT-CONTRACT-PROVISIONAL-v0.3.0.md), approved normative blob 0b21eb3f05a0cdae5a10dfdd27f9d8c4292.
+Predecessor: [Provisional 0.3.0](P10-09-C-ARVECTUM-COMPANY-WORKSPACE-PRODUCT-CONTRACT-PROVISIONAL-v0.3.0.md), approved normative blob 0b21eb3f05a0cdae5c3765a10dfdd27f9d8c4292.
 Baseline: Constitution 1.2.0, RFC-0001…0008 Accepted, ADR-0001/0002 Accepted; Company Workspace First, AC-401…406.
 This draft preserves the complete predecessor contract. No new platform capability, authority or lifecycle promotion. Company-specific semantics stay product-local.
 
@@ -30,3 +30,7 @@ Draft code may be tested only with synthetic data in isolated temporary director
 
 ## 6. Evidence
 PR #26 merged at 77a5ce0343bf1e677726788c649045e3596fa20b; release p10.09.4 deployed via P7.06 transaction 2bd2501f1ad775f636853c7318a76c6c0384e7e31e8402a3f5cd10b25247b9a7, pre-update backup SHA-256 4054f7ba278b118d08f52450c60e6a101bf89fb4270a745234f4e8ad6ec28c89 verified. P7.02/P7.05/UI3 PASS, Workspace CURRENT_EXACT, Information Hub HTTP 200. Technical authenticated portfolio GET returned 10 sources: seven exact source-backed, PORT-005/006/007 reconciliation-required; test session revoked. No real owner session evidence, reboot test or full backup restore.
+
+## 7. Candidate implementation evidence
+
+Exact code/test head 1abdf3d3cd0eb40d9d494e0b5992aa394796a7e5: workspace_app/wsf_manual_context.py and workspace_tests/test_wsf_manual_context.py. Nine focused tests PASS on Mac mini in temporary synthetic directories: restart, persistent idempotency, optimistic revision, foreign Organization/Actor/nonhuman rejection, unknown project/metadata, export/restore without overwrite, corrupt snapshot fail-closed, file permissions and concurrent duplicate serialization. This is an append-only logical event ledger inside an atomically replaced private snapshot, not immutable physical storage or canonical organizational records. Prototype limits 500 events / 2 MiB snapshot / 4,000 characters per note body; proposed engineering bounds, not production quotas. No live directory, route, access grant, expiry enforcement, deletion policy, backup schedule, or browser integration created. Real owner use and full runtime restore remain separate gates. No third-party package dependency.
