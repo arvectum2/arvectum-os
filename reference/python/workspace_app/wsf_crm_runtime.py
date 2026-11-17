@@ -17,8 +17,8 @@ from .wsf_manual_runtime import RuntimeManualPilot
 from .wsf_crm import CRMStore
 from .wsf_crm_backup import crm_backup
 
-# Deliberately unset until exact approved publication and implementation review.
-APPROVED_DRAFT = None
+# Exact incorporated draft, published in canonical main at 894cc15fb1677be7b4d7708d4f0aa678d5e9b8b1.
+APPROVED_DRAFT = "654051dc9f6c2a3a2fd40a039b6510277db7e758"
 RESOURCE = "crm-lite"
 OPERATIONS = {op:"workspace.crm."+op for op in ("read","party","opportunity","export")}
 SCHEMA = "arvectum.workspace.crm-restricted-policy/1"
