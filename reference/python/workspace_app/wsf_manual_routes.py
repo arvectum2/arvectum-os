@@ -1,9 +1,4 @@
-"""Draft WSF-04C HTTP adapter. Default disabled; no live activation path.
-
-The injected fixture policy is for synthetic tests only. An effective Product
-Contract, real operation grants and retention/purge approval are prerequisites
-to replacing this test-only provider with a production activation path.
-"""
+"""WSF-04C HTTP adapter. No live operations without explicit pinned activation."""
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import json
@@ -69,6 +64,8 @@ def install_manual_context_routes(app: FastAPI, authorize_current, csrf_protecte
         # Do not open a store before validating the requested operation.
         if pilot is None:
             raise HTTPException(status_code=503, detail="MANUAL_CONTEXT_NOT_ACTIVATED")
+        if isinstance(pilot, FixtureManualPilot):
+            current_store(access, "read")
         try:
             length = int(request.headers.get("content-length", "0"))
             if request.headers.get("transfer-encoding") or not 0 < length <= 24576:
@@ -81,7 +78,7 @@ def install_manual_context_routes(app: FastAPI, authorize_current, csrf_protecte
                 raise ValueError()
         except (ValueError, UnicodeError, RecursionError):
             raise HTTPException(status_code=400, detail="MANUAL_CONTEXT_INVALID_INPUT") from None
-        # Re-check the fixture time/access binding immediately before the write.
+        # Re-check the exact time/access binding immediately before the write.
         if not isinstance(data["operation"], str) or data["operation"] not in {"project","capture","revise"}:
             raise HTTPException(status_code=400, detail="MANUAL_CONTEXT_INVALID_INPUT")
         s = current_store(access, data["operation"])
