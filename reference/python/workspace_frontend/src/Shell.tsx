@@ -4,6 +4,7 @@ import { CompanyMaterials } from "./CompanyMaterials";
 import { CompanyProjects } from "./CompanyProjects";
 import { InformationHub } from "./InformationHub";
 import { ManualContext } from "./ManualContext";
+import { CRM } from "./CRM";
 import { Copilot } from "./Copilot";
 import { Discovery } from "./Discovery";
 import { Dogfooding } from "./Dogfooding";
@@ -29,6 +30,7 @@ function groupForPath(path: string): string {
     || path === "/projects"
     || path === "/information-hub"
     || path === "/manual-context"
+    || path === "/crm"
     || path === "/company-materials"
     || path === "/company-generated-outputs"
   ) return "work";
@@ -76,7 +78,7 @@ export function Shell({ context, onLogout }: { context: WorkspaceContext; onLogo
   const productId = currentPath.startsWith("/products/") ? decodeURIComponent(currentPath.slice("/products/".length)) : null;
   const navLabel = (item: NavigationItem) => navigationLabels[item.id]?.[language] ?? item.label;
   const navigate = (item: NavigationItem) => (event: React.MouseEvent<HTMLAnchorElement>) => { event.preventDefault(); navigateTo(item.href); };
-  const specialWorkPath = currentPath === "/manual-context" || currentPath === "/information-hub" || currentPath === "/projects" || currentPath === "/company-materials" || currentPath === "/company-generated-outputs";
+  const specialWorkPath = currentPath === "/crm" || currentPath === "/manual-context" || currentPath === "/information-hub" || currentPath === "/projects" || currentPath === "/company-materials" || currentPath === "/company-generated-outputs";
   const primaryNavigation = context.navigation.flatMap((item) => {
     const items = [
       <li key={item.id}><a href={item.href} onClick={navigate(item)} aria-current={item.id === active.id && !specialWorkPath ? "page" : undefined}><span>{navLabel(item)}</span></a></li>,
@@ -85,6 +87,7 @@ export function Shell({ context, onLogout }: { context: WorkspaceContext; onLogo
       items.push(
         <li key="information-hub"><a href="/information-hub" aria-current={currentPath === "/information-hub" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("/information-hub"); }}><span>{text("Входящая информация", "Information Hub")}</span></a></li>,
         <li key="manual-context"><a href="/manual-context" aria-current={currentPath === "/manual-context" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("/manual-context"); }}><span>{text("Рабочие проекты и заметки", "Work projects and notes")}</span></a></li>,
+        <li key="crm"><a href="/crm" aria-current={currentPath === "/crm" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("/crm"); }}><span>CRM</span></a></li>,
         <li key="company-projects"><a href="/projects" aria-current={currentPath === "/projects" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("/projects"); }}><span>{text("Проекты", "Projects")}</span></a></li>,
         <li key="company-materials"><a href="/company-materials" aria-current={currentPath === "/company-materials" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("/company-materials"); }}><span>{text("Материалы компании", "Company materials")}</span></a></li>,
         <li key="company-generated-outputs"><a href="/company-generated-outputs" aria-current={currentPath === "/company-generated-outputs" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("/company-generated-outputs"); }}><span>{text("Созданные документы", "Generated documents")}</span></a></li>,
@@ -96,6 +99,7 @@ export function Shell({ context, onLogout }: { context: WorkspaceContext; onLogo
   let content: React.ReactNode;
   if (objectId) content = <ObjectDetail objectId={objectId} />;
   else if (currentPath === "/products" || productId) content = <Products productId={productId} />;
+  else if (currentPath === "/crm") content = <CRM csrfToken={context.session.csrf_token} />;
   else if (currentPath === "/manual-context") content = <ManualContext csrfToken={context.session.csrf_token} />;
   else if (currentPath === "/information-hub") content = <InformationHub />;
   else if (currentPath === "/projects") content = <CompanyProjects />;
