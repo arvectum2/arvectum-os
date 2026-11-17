@@ -44,7 +44,7 @@ def install_crm_routes(app,authorize_current,csrf_protected,pilot):
     @app.get("/api/app/v1/crm")
     def read(query:str="",project_id:str|None=None,current=Depends(authorize_current)):
         _,access=current;s=store(access,"read")
-        return perform(lambda:s.read(access,query,project_id))
+        return perform(lambda:pilot.read(access,query,project_id) if isinstance(pilot,RuntimeCRMPilot) else s.read(access,query,project_id))
 
     @app.get("/api/app/v1/crm/followups")
     def followups(project_id:str|None=None,current=Depends(authorize_current)):
