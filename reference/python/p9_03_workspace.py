@@ -34,6 +34,7 @@ from workspace_app.wsf_manual_runtime import RuntimeManualPilot
 from workspace_app.wsf_crm_runtime import RuntimeCRMPilot
 from workspace_app.wsf_inbox_runtime import RuntimeInboxPilot
 from workspace_app.wsf_procurement_reference import RuntimeProcurementReference
+from workspace_app.wsf_company_control_reference import CompanyControlReference
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -90,7 +91,8 @@ def build_workspace_app(settings: WorkspaceSettings):
                      manual_context_runtime=RuntimeManualPilot(settings.runtime_root),
                      crm_runtime=RuntimeCRMPilot(settings.runtime_root),
                      inbox_runtime=RuntimeInboxPilot(settings.runtime_root),
-                     procurement_reference=RuntimeProcurementReference(settings.runtime_root))
+                     procurement_reference=RuntimeProcurementReference(settings.runtime_root),
+                     company_control_reference=CompanyControlReference(settings.runtime_root))
     app = install_f11_routes(
         app,
         asset_admission=admission,

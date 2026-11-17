@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useWorkspaceLanguage } from "./i18n";
 import "./CompanyWorkspace.css";
+import { CompanyControlReference } from "./CompanyControlReference";
 import { ControlReferenceSummary } from "./ControlReferenceSummary";
 
 type Project={id:string;label:string;kind:string};
@@ -15,7 +16,7 @@ async function get(path:string){
 const sectionNames:Record<string,[string,string]>={"protect-now":["Критические риски","Protect now"],"owner-action":["Решения собственника","Owner action required"],"delegated-work":["Делегированная работа","Delegated work"],"cash-commitments":["Деньги и обязательства","Cash and commitments"],"portfolio-review":["Портфель и контрольные точки","Portfolio and review triggers"],"reference-evidence":["Результаты и подтверждения","Evidence and results"]};
 const events:Record<string,[string,string]>={"project-created":["Проект создан","Project created"],"note-captured":["Добавлена заметка","Note captured"],"note-revised":["Заметка изменена","Note revised"],"note-linked":["Заметка привязана","Note linked"],"note-unlinked":["Заметка отвязана","Note unlinked"]};
 
-export function MissionControl(){
+export function MissionControl({csrfToken=""}:{csrfToken?:string}){
  const {text}=useWorkspaceLanguage();
  const [data,setData]=useState<Baseline|null>(null),[timeline,setTimeline]=useState<Timeline|null>(null);
  const [selected,setSelected]=useState(""),[error,setError]=useState(false),[busy,setBusy]=useState(true);
@@ -43,6 +44,7 @@ export function MissionControl(){
  {data.pilot_review?<p>{text("Пересмотр пилота Workspace","Review Workspace pilot")} · {new Date(data.pilot_review.due_at).toLocaleString()} · {text("Решение о продолжении ещё не принято","Continuation not yet decided")}</p>:<p>{text("Нет подтверждённой контрольной точки в этом источнике.","No verified review trigger from this source.")}</p>}
  <p>{data.manual_context.projects.length} {text("проектов","projects")} · {data.manual_context.notes.length} {text("рабочих заметок","working notes")}</p>
  <a href="/crm">{text("CRM и следующие контакты","CRM and follow-ups")}</a></div>
+ {csrfToken&&<CompanyControlReference key={csrfToken} csrfToken={csrfToken}/>}
  <ControlReferenceSummary onDenied={()=>{seq.current++;setBusy(false);setData(null);setTimeline(null);setSelected("");setError(true);}}/>
  <div className="company-card"><h2>{text("История проекта","Project timeline")}</h2>
  <label>{text("Проект","Project")}<select value={selected} disabled={busy} onChange={e=>void show(e.target.value)}><option value="">{text("Выберите проект","Choose project")}</option>{data.manual_context.projects.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}</select></label>
