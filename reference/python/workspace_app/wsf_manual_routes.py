@@ -7,6 +7,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from .access import AccessContext
 from .wsf_manual_context import ManualContextError, ManualContextStore
 from .wsf_manual_runtime import RuntimeManualPilot
+from .wsf_mission_control import project_timeline, mission_control_baseline
 
 
 @dataclass(frozen=True)
@@ -57,6 +58,23 @@ def install_manual_context_routes(app: FastAPI, authorize_current, csrf_protecte
         _, access = current
         s = current_store(access, "read")
         return perform(lambda: s.history(access, note_id))
+
+    @app.get("/api/app/v1/manual-context/projects/{project_id}/timeline")
+    def timeline(project_id: str, current=Depends(authorize_current)):
+        _, access = current
+        s = current_store(access, "read")
+        return perform(lambda: project_timeline(s, access, project_id))
+
+    @app.get("/api/app/v1/manual-context/mission-control")
+    def mission_control(current=Depends(authorize_current)):
+        _, access = current
+        s = current_store(access, "read")
+        def projection():
+            result=mission_control_baseline(s,access)
+            if isinstance(pilot,RuntimeManualPilot):
+                result["pilot_review"]=pilot.review_signal(access)
+            return result
+        return perform(projection)
 
     @app.post("/api/app/v1/manual-context/submit")
     async def submit(request: Request, current=Depends(csrf_protected)):

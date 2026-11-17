@@ -12,4 +12,9 @@ SCRIPT="$ROOT/releases/$SHA/source/reference/python/wsf_manual_operator.py"
 [ -x "$PY" ] && [ -f "$SCRIPT" ]
 export ARVECTUM_P7_02_ROOT="$ROOT"
 export PYTHONDONTWRITEBYTECODE=1
-exec "$PY" -B "$SCRIPT" backup
+"$PY" -B "$SCRIPT" backup
+if [ -e "$ROOT/config/crm-activation.json" ] || [ -L "$ROOT/config/crm-activation.json" ]; then
+  CRM_SCRIPT="$ROOT/releases/$SHA/source/reference/python/wsf_crm_operator.py"
+  [ -f "$CRM_SCRIPT" ]
+  "$PY" -B "$CRM_SCRIPT" backup
+fi

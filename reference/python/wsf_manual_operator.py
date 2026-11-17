@@ -29,7 +29,7 @@ def write_new(path, raw):
         os.close(fd)
 
 
-def prepare_destination():
+def prepare_destination(parts=BACKUP_PARTS):
     verify_volume(VOLUME, VOLUME_UUID)
     flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
     fd = os.open(VOLUME, flags)
@@ -38,7 +38,7 @@ def prepare_destination():
         verify_volume(VOLUME, VOLUME_UUID)
         if VOLUME.stat().st_dev != dev:
             raise ManualContextError("mount changed")
-        for i, part in enumerate(BACKUP_PARTS):
+        for i, part in enumerate(parts):
             if i >= 2:
                 try:
                     os.mkdir(part, mode=0o700, dir_fd=fd)
