@@ -33,6 +33,8 @@ from .wsf_procurement_reference import RuntimeProcurementReference
 from .wsf_procurement_reference_routes import install_procurement_reference_routes
 from .wsf_company_control_reference import CompanyControlReference
 from .wsf_company_control_reference_routes import install_company_control_reference_routes
+from .wsf_decision_reference import DecisionReference
+from .wsf_decision_reference_routes import install_decision_reference_routes
 
 logger = logging.getLogger("arvectum.workspace.security")
 SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
@@ -134,6 +136,7 @@ def create_app(
     inbox_runtime: RuntimeInboxPilot | None = None,
     procurement_reference: RuntimeProcurementReference | None = None,
     company_control_reference: CompanyControlReference | None = None,
+    decision_reference: DecisionReference | None = None,
 ) -> FastAPI:
     settings = settings or WorkspaceSettings.from_env()
     release = load_release()
@@ -499,6 +502,7 @@ def create_app(
     install_inbox_routes(app, _authorize_current, _csrf_protected, inbox_runtime or inbox_fixture)
     install_procurement_reference_routes(app, _authorize_current, _csrf_protected, procurement_reference)
     install_company_control_reference_routes(app, _authorize_current, _csrf_protected, company_control_reference)
+    install_decision_reference_routes(app, _authorize_current, _csrf_protected, decision_reference)
 
     if static_root.is_dir():
         assets = static_root / "assets"
