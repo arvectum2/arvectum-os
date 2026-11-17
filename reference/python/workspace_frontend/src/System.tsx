@@ -1,6 +1,11 @@
 import { useWorkspaceLanguage } from "./i18n";
 
 const destinations = [
+  { href: "/work", ru: "Технические задачи", en: "Technical tasks", ruDetail: "Очередь исполнения, продуктовые операции и технические сигналы.", enDetail: "Execution queue, product operations and technical signals." },
+  { href: "/projects", ru: "Технические дорожные карты", en: "Technical roadmaps", ruDetail: "Сводки из репозиториев и этапы разработки.", enDetail: "Repository summaries and implementation milestones." },
+  { href: "/information-hub", ru: "Источники и синхронизация", en: "Sources and synchronization", ruDetail: "Актуальность и происхождение данных из GitHub.", enDetail: "Freshness and provenance of GitHub data." },
+  { href: "/company-generated-outputs", ru: "Созданные документы", en: "Generated documents", ruDetail: "Ранее подготовленные результаты.", enDetail: "Previously generated outputs." },
+  { href: "/information", ru: "Расширенный поиск", en: "Advanced search", ruDetail: "Документы, записи и знания.", enDetail: "Documents, records and knowledge." },
   { href: "/organization", ru: "Организация", en: "Organization", ruDetail: "Общий контекст организации и структура.", enDetail: "Organization context and structure." },
   { href: "/activity", ru: "Активность", en: "Activity", ruDetail: "Наблюдаемые события и сигналы.", enDetail: "Observed events and signals." },
   { href: "/governed", ru: "Технические проверки", en: "Technical checks", ruDetail: "Проверка готовности управляемого выполнения без конкретного действия.", enDetail: "Inspect governed-execution readiness without a concrete action." },

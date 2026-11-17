@@ -81,6 +81,7 @@ describe("P9.07 J5 product composition", () => {
       const path = String(input);
       paths.push(path);
       if (path === "/api/app/v1/context") return json(context);
+      if (path === "/api/app/v1/manual-context") return json({projects:[],notes:[],backup_status:"verified"});
       if (path === "/api/app/v1/my-work") return json(myWork);
       if (path === "/api/app/v1/actionable-work") return json(actionableWork);
       if (path === "/api/app/v1/products") return json(products);
@@ -91,7 +92,8 @@ describe("P9.07 J5 product composition", () => {
     render(<App />);
     expect(await screen.findByText("ООО «Арвектум»")).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("link", { name: "Tasks" }));
+    fireEvent.click(screen.getByRole("link", { name: "Settings" }));
+    fireEvent.click(screen.getByText("Technical tasks").closest("article")!.querySelector("a")!);
     await waitFor(() => expect(document.activeElement?.id).toBe("workspace-main"));
     window.history.replaceState({}, "", "/products");
     window.dispatchEvent(new PopStateEvent("popstate"));
@@ -124,6 +126,6 @@ describe("P9.07 J5 product composition", () => {
     expect(screen.getByText("CAP-004")).toBeTruthy();
     expect(screen.getByText(/never replays an external effect/)).toBeTruthy();
 
-    expect(paths.every((path) => ["/api/app/v1/context", "/api/app/v1/my-work", "/api/app/v1/actionable-work", "/api/app/v1/products"].includes(path))).toBe(true);
+    expect(paths.every((path) => ["/api/app/v1/context", "/api/app/v1/manual-context", "/api/app/v1/my-work", "/api/app/v1/actionable-work", "/api/app/v1/products"].includes(path))).toBe(true);
   });
 });
