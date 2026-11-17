@@ -16,7 +16,7 @@ from .wsf_roadmap_inbox import RoadmapInbox,registry_bindings
 from .wsf_manual_backup import PilotBackup
 from .company_portfolio_verified import VerifiedRuntimeCompanyPortfolioProvider
 
-APPROVED_DRAFT=None
+APPROVED_DRAFT="82c77613551a35ad1d2d1baa7c962673e427c8b0"
 RESOURCE="roadmap-inbox"
 OPERATIONS={x:"workspace.inbox."+x for x in ("read","poll","review","export")}
 SCHEMA="arvectum.workspace.roadmap-inbox-policy/1"
