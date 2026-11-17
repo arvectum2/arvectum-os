@@ -5,6 +5,7 @@ import { useWorkspaceLanguage } from "./i18n";
 import "./CompanyWorkspace.css";
 import "./InformationHub.css";
 import { RoadmapInbox } from "./RoadmapInbox";
+import { ProcurementReference } from "./ProcurementReference";
 
 type State =
   | { kind: "loading" }
@@ -69,6 +70,7 @@ export function InformationHub({csrfToken=""}:{csrfToken?:string}={}) {
         onClick={() => refresh(true)}>{state.kind === "ready" && state.refreshing ? text("Обновляем…", "Refreshing…") : text("Обновить источники", "Refresh sources")}</button>
     </header>
     <RoadmapInbox csrfToken={csrfToken}/>
+    <ProcurementReference csrfToken={csrfToken}/>
     {state.kind === "loading" && <p role="status">{text("Получаем разрешённые источники…", "Reading authorized sources…")}</p>}
     {state.kind === "error" && <p role="alert">{text("Сводка недоступна. Предыдущие сведения скрыты. Повторите запрос.", "Snapshot unavailable. Previous content hidden. Retry the request.")}</p>}
     {state.kind === "ready" && <>
