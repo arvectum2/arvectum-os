@@ -21,6 +21,8 @@ HEALTH_TIMEOUT_SECONDS=30
 HEALTH_POLL_INTERVAL=2
 
 LOCK_DIR="$RUNTIME_ROOT/run/desktop-launcher.lock"
+DEPLOY_LOCK="$RUNTIME_ROOT/run/p7-06-deploy.lock"
+DEPLOY_LOCK_OWNED=false
 LAUNCHER_LOG="$RUNTIME_ROOT/logs/desktop-launcher.log"
 
 mkdir -p "$RUNTIME_ROOT/logs" 2>/dev/null || true
@@ -101,7 +103,15 @@ acquire_lock() {
   chmod 600 "$LOCK_DIR/pid" "$LOCK_DIR/created"
 }
 
+release_deploy_lock() {
+  if [ "$DEPLOY_LOCK_OWNED" = true ] && [ "$(cat "$DEPLOY_LOCK/pid" 2>/dev/null || true)" = "$$" ]; then
+    rm -f "$DEPLOY_LOCK/pid"
+    rmdir "$DEPLOY_LOCK"
+    DEPLOY_LOCK_OWNED=false
+  fi
+}
 release_lock() {
+  release_deploy_lock
   rm -rf "$LOCK_DIR" 2>/dev/null || true
 }
 
@@ -133,6 +143,9 @@ wait_for_readiness() {
 
 start_workspace() {
   log "Workspace not running; starting exact current release"
+  (umask 077; mkdir "$DEPLOY_LOCK") || fail_with_dialog "Workspace update or another lifecycle operation is active."
+  DEPLOY_LOCK_OWNED=true
+  (umask 077; printf '%s\n' "$$" > "$DEPLOY_LOCK/pid")
 
   local target="gui/$(id -u)/$LABEL"
   local plist="$HOME/Library/LaunchAgents/$LABEL.plist"
@@ -164,6 +177,7 @@ start_workspace() {
   if ! wait_for_readiness; then
     fail_with_dialog "Workspace did not become ready within $HEALTH_TIMEOUT_SECONDS seconds. Check logs for details."
   fi
+  release_deploy_lock
   log "Workspace is ready"
 }
 

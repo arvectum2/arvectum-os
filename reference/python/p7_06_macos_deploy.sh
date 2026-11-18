@@ -372,6 +372,11 @@ update_runtime() {
 
   acquire_lock
   trap 'release_lock' EXIT HUP INT TERM
+  # Revalidate after taking the shared lock: login/desktop start may
+  # have completed during preflight.
+  [ "$(current_release)" = "$source" ] || fail "source changed during preflight"
+  locked_workspace=$(workspace_status) || fail "Workspace listener classification failed under lock"
+  [ "$locked_workspace" = "$workspace" ] || fail "Workspace listener changed during preflight; retry exact update"
   stamp=$(date -u '+%Y%m%dT%H%M%SZ')
   txdir="$RUNTIME_ROOT/evidence/p7-06/work-$stamp-$$"
   mkdir -p "$txdir"; chmod 700 "$txdir"
