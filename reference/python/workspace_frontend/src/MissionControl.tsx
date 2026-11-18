@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useWorkspaceLanguage } from "./i18n";
 import "./CompanyWorkspace.css";
+import { RiskReference } from "./RiskReference";
 import { DecisionReference } from "./DecisionReference";
 import { CompanyControlReference } from "./CompanyControlReference";
 import { ControlReferenceSummary } from "./ControlReferenceSummary";
@@ -47,6 +48,7 @@ export function MissionControl({csrfToken=""}:{csrfToken?:string}){
  <a href="/crm">{text("CRM и следующие контакты","CRM and follow-ups")}</a></div>
  {csrfToken&&<CompanyControlReference key={csrfToken} csrfToken={csrfToken}/>}
  {csrfToken&&<DecisionReference key={"decision-"+csrfToken} csrfToken={csrfToken}/>}
+ {csrfToken&&<RiskReference key={"risk-"+csrfToken} csrfToken={csrfToken}/>}
  <ControlReferenceSummary onDenied={()=>{seq.current++;setBusy(false);setData(null);setTimeline(null);setSelected("");setError(true);}}/>
  <div className="company-card"><h2>{text("История проекта","Project timeline")}</h2>
  <label>{text("Проект","Project")}<select value={selected} disabled={busy} onChange={e=>void show(e.target.value)}><option value="">{text("Выберите проект","Choose project")}</option>{data.manual_context.projects.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}</select></label>
