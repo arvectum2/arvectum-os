@@ -1,0 +1,7 @@
+# WSF-05 — AC-403 risk-control reference Provisional 0.5.3
+
+Effective upon canonical publication. Owner approval 2026-11-18: «утверждаю» in response to the explicit combined proposal to merge OS #52/#53 and Company #21, deploy combined p10.09.14, admit three risk records for reading, and install the one-shot owner-login startup. Approval reference OWNER-2026-11-18-WSF05-RISK-053-LOGIN.
+
+Approved draft blob 46e76250a2fcbbde3cfab5098326d1886fc16f5c at reviewed OS #52 head 357e16dd15160083e40afc150259143eba03cb87, incorporated unchanged. Approved independent lifecycle candidate OS #53 head 0d85483758d842b9e16a744c84b20fbbe02e7381. Company #21 head ebb3a3c1921292e994157597b4b2c3a2216ce105 merged de31612deb2dd6bf1acff6b3e47848f09ca116d8; financial report remains private, not admitted in Workspace. All previous admissions unchanged.
+
+Exactly reviewed RSK-001/002/003 private snapshot (four events), same selected Mac, separate restricted local human read grant and receipt. Existing expiry unchanged. No risk acceptance, new decision outcome, financial access, automatic source repin, new credentials, payment, expansion or renewal. Controlled deployment and exact activation only after CI, reviewed tree, source/backup integrity, and existing regression gates. One-shot startup creates no watchdog, new privileges or external listener; no forced host reboot, no Tender Agent change. Unattended natural login evidence remains a distinct acceptance gate.
