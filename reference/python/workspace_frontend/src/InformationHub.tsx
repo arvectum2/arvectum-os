@@ -62,9 +62,9 @@ export function InformationHub({csrfToken=""}:{csrfToken?:string}={}) {
   return <section className="company-page hub-page" aria-labelledby="hub-title">
     <header className="company-page-head">
       <div>
-        <p className="eyebrow">Workspace First · Information Hub</p>
+
         <h1 id="hub-title">{text("Входящая информация", "Information Hub")}</h1>
-        <p>{text("Последние доступные наблюдения из зарегистрированных дорожных карт GitHub. Это сводка источников, а не журнал новых событий или задач.", "Latest available observations from registered GitHub roadmaps. This is a source snapshot, not an event feed or task list.")}</p>
+        <p>{text("Изменения проектов и закупки. Состояние источников — в деталях.", "Project changes and procurement. Source status in details.")}</p>
       </div>
       <button type="button" disabled={state.kind === "loading" || (state.kind === "ready" && state.refreshing)}
         onClick={() => refresh(true)}>{state.kind === "ready" && state.refreshing ? text("Обновляем…", "Refreshing…") : text("Обновить источники", "Refresh sources")}</button>
@@ -73,7 +73,7 @@ export function InformationHub({csrfToken=""}:{csrfToken?:string}={}) {
     <ProcurementReference csrfToken={csrfToken}/>
     {state.kind === "loading" && <p role="status">{text("Получаем разрешённые источники…", "Reading authorized sources…")}</p>}
     {state.kind === "error" && <p role="alert">{text("Сводка недоступна. Предыдущие сведения скрыты. Повторите запрос.", "Snapshot unavailable. Previous content hidden. Retry the request.")}</p>}
-    {state.kind === "ready" && <>
+    {state.kind === "ready" && <details className="exec-secondary"><summary>{text("Состояние источников и последние сводки","Source status and latest snapshots")}</summary>
       <div className="hub-summary" aria-label={text("Состояние источников", "Source status")}>
         <div><strong>{rows.length}</strong><span>{text("Зарегистрировано", "Registered")}</span></div>
         <div><strong>{healthy}</strong><span>{text("Доступные сводки", "Available snapshots")}</span></div>
@@ -107,7 +107,7 @@ export function InformationHub({csrfToken=""}:{csrfToken?:string}={}) {
           </> : <p>{text("Подтверждённые данные источника отсутствуют.", "No verified source data available.")}</p>}
         </article>)}
       </div>
-    </>}
-    <p className="hub-boundary">{text("Сводка источников только для чтения. Очередь изменений требует отдельной активации; почта не подключена.", "Source snapshot is read-only. Change inbox requires independent activation; email is not connected.")}</p>
+    </details>}
+    <p className="hub-boundary">{text("Сводка и очередь изменений — разные представления. Почта не подключена.", "Source snapshots and change inbox are distinct views. Email is not connected.")}</p>
   </section>;
 }

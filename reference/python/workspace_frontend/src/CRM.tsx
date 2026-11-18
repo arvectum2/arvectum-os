@@ -130,7 +130,7 @@ export function CRM({csrfToken}:{csrfToken:string}){
    {typeof r.party_id==="string"&&<p>{snapshot?.party.find(p=>p.id===r.party_id)?.name as string??""}</p>}
    <p className="hub-meta">{text("Версия","Revision")} {r.revision}</p></>;
  }
- return <section className="company-page manual-context"><header className="company-page-head"><div><h1>CRM Lite</h1><p>{text("Контрагенты, сделки и история взаимодействий","Counterparties, opportunities and interactions")}</p></div><button disabled={busy} onClick={()=>void load()}>{text("Обновить","Refresh")}</button></header>
+ return <section className="company-page manual-context"><header className="company-page-head"><div><h1>{text("Клиенты и сделки","Clients and deals")}</h1><p>{text("Контрагенты, сделки и история взаимодействий","Counterparties, opportunities and interactions")}</p></div><button disabled={busy} onClick={()=>void load()}>{text("Обновить","Refresh")}</button></header>
   {error==="unavailable"&&<p role="alert">{text("CRM недоступна или не активирована. Данные скрыты.","CRM unavailable or not activated. Data hidden.")}</p>}
   {error==="rejected"&&<p role="alert">{text("Запись не подтверждена. Проверьте данные и повторите ту же операцию.","Save not confirmed. Review input and retry the same operation.")}</p>}
   {!snapshot&&busy&&<p role="status">{text("Проверяем доступ…","Checking access…")}</p>}
@@ -138,7 +138,7 @@ export function CRM({csrfToken}:{csrfToken:string}){
    <p className="hub-warning">{catalog.handling?text("Ограниченный пилот: только организации и сделки без персональных и конфиденциальных данных.","Restricted pilot: organizations and opportunities only, no personal or confidential data."):text("Тестовый контур. Не вводите реальные персональные или конфиденциальные данные.","Test contour. Do not enter real personal or confidential data.")}</p>
    {(backupWarning||snapshot.backup_status&&snapshot.backup_status!=="verified")&&<p role="alert">{text("Резервная копия требует проверки. Сохранённые записи остаются в основном хранилище.","Backup needs review. Saved records remain in the primary store.")}</p>}
    <div className="hub-filters">{kinds.filter(k=>!catalog.allowed_entities||catalog.allowed_entities.includes(k)).map(k=><button key={k} disabled={busy} aria-pressed={kind===k} onClick={()=>selectKind(k)}>{labels[k]}</button>)}<button disabled={busy} onClick={()=>void download()}>{text("Экспорт","Export")}</button><button disabled={busy} onClick={()=>void showFollowups()}>{text("Следующие контакты","Follow-ups")}</button></div>
-   <div className="manual-forms"><form className="company-card" onSubmit={e=>{e.preventDefault();void submit();}}>
+   <details className="exec-secondary" open={edit?true:undefined}><summary>{edit?text("Изменить запись","Edit record"):text("Добавить запись","Add record")}</summary><form className="company-card" onSubmit={e=>{e.preventDefault();void submit();}}>
     <h2>{edit?text("Редактировать запись","Edit record"):text("Новая запись","New record")}</h2>
     {kind==="party"?<>{field("name","Название компании","Company name")}{field("description","Описание","Description",true,1000)}{select("registry_ref","Источник реквизитов","Registry source",refs,false,!!edit?.registry_ref)}</>:<>
       {select("party_id","Контрагент","Counterparty",rowOpts(snapshot.party),true,!!edit)}
@@ -158,7 +158,7 @@ export function CRM({csrfToken}:{csrfToken:string}){
     </>}
     <button type="submit" disabled={busy}>{text("Сохранить","Save")}</button>
     {edit&&<button type="button" disabled={busy} onClick={()=>selectKind(kind)}>{text("Отмена","Cancel")}</button>}
-   </form><div className="company-card"><h2>{labels[kind]}</h2>
+   </form></details><div className="company-card"><h2>{labels[kind]}</h2>
     <label>{text("Поиск","Search")}<input type="search" value={query} onChange={e=>setQuery(e.target.value)} maxLength={160}/></label>
     <label>{text("Проект","Project")}<select value={project} onChange={e=>{setProject(e.target.value);setFollowups(null);}} disabled={busy}><option value="">{text("Все проекты","All projects")}</option>{projects.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>
     {snapshot[kind].filter(r=>matches(r)&&matchesProject(r)).map(r=><article key={r.id} className="company-card">{rowBody(r)}
@@ -166,10 +166,10 @@ export function CRM({csrfToken}:{csrfToken:string}){
      <button disabled={busy} onClick={()=>void showDetail("/records/"+encodeURIComponent(r.id)+"/history",text("История версий","Revision history"))}>{text("Версии","Versions")}</button>
      {kind==="party"&&<button disabled={busy} onClick={()=>void showDetail("/parties/"+encodeURIComponent(r.id)+"/timeline",text("История взаимодействия","Interaction timeline"))}>{text("История","Timeline")}</button>}
     </article>)}
-   </div></div>
+   </div>
    {followups&&<section className="company-card"><h2>{text("Следующие контакты","Follow-ups")}</h2>
    <p>{text("Координация сделок, не подтверждённые обязательства.","Deal coordination, not verified obligations.")}</p>
-   {followups.length===0&&<p>{text("Нет открытых сделок в выбранном контексте.","No open opportunities in selected context.")}</p>}
+   {followups.length===0&&<p>{text("Нет открытых сделок в допущенном контексте. Полнота данных неизвестна.","No open opportunities in the admitted context. Coverage unknown.")}</p>}
    {followups.map(r=><article key={r.opportunity_id}><h3>{r.title} · {r.party_name}</h3>
    <p>{r.status==="past_due"?text("Просрочен контакт","Past due"):r.status==="due_now"?text("Контакт сейчас","Due now"):r.status==="paused"?text("Приостановлено","Paused"):r.status==="unscheduled"?text("Дата не задана","Unscheduled"):text("Запланировано","Scheduled")}</p>
    <p>{r.next_action} {r.next_contact_at??""}</p></article>)}</section>}

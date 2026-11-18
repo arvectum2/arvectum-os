@@ -91,7 +91,7 @@ describe("P9.07 J5 product composition", () => {
     render(<App />);
     expect(await screen.findByText("ООО «Арвектум»")).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("link", { name: "Tasks" }));
+    fireEvent.click(screen.getByRole("link", { name: "Work" }));
     await waitFor(() => expect(document.activeElement?.id).toBe("workspace-main"));
     window.history.replaceState({}, "", "/products");
     window.dispatchEvent(new PopStateEvent("popstate"));
@@ -107,7 +107,7 @@ describe("P9.07 J5 product composition", () => {
     expect(screen.getByText("CAP-001")).toBeTruthy();
     expect(screen.getByText(/ЕИС \/ zakupki\.gov\.ru/)).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("link", { name: "Home" }));
+    fireEvent.click(screen.getByRole("link", { name: "Overview" }));
     await waitFor(() => expect(document.activeElement?.id).toBe("workspace-main"));
     expect(screen.getByText("ООО «Арвектум»")).toBeTruthy();
     expect(screen.getByText("Owner operator")).toBeTruthy();

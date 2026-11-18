@@ -15,7 +15,7 @@ function record(v:unknown):Record<string,unknown>{
 function str(v:unknown):v is string{return typeof v==="string"&&v.length>0&&v.length<=1000;}
 function stamp(v:unknown):v is string{return str(v)&&Number.isFinite(Date.parse(v));}
 function base(v:unknown){const d=record(v);if(d.derived!==true||d.canonical_authority!==false||d.organizational_authority_provided!==false)throw Error("scope");return d;}
-function crm(v:unknown):CRM{
+export function parseCRM(v:unknown):CRM{
  const d=base(v);
  if(d.company_control_coverage!=="unknown"||!stamp(d.as_of)||!Array.isArray(d.items)||d.items.length>500)throw Error("shape");
  const seen=new Set<string>();
@@ -28,7 +28,7 @@ function crm(v:unknown):CRM{
  });
  return {as_of:d.as_of,items};
 }
-function inbox(v:unknown):Inbox{
+export function parseInbox(v:unknown):Inbox{
  const d=base(v);
  if(!str(d.coverage)||!["partial","unknown"].includes(d.coverage)||!Array.isArray(d.items)||d.items.length>500||
   !Array.isArray(d.sources)||d.sources.length>10||!Number.isInteger(d.pending_count)||!str(d.backup_status))throw Error("shape");
@@ -69,7 +69,7 @@ export function ControlReferenceSummary({onDenied}:{onDenied:()=>void}){
  useEffect(()=>()=>{gen.current++;},[]);
  async function load(){
   const n=++gen.current;setBusy(true);setCRM({state:"unknown"});setInbox({state:"unknown"});
-  const [a,b]=await Promise.all([read("/api/app/v1/crm/followups",crm),read("/api/app/v1/roadmap-inbox",inbox)]);
+  const [a,b]=await Promise.all([read("/api/app/v1/crm/followups",parseCRM),read("/api/app/v1/roadmap-inbox",parseInbox)]);
   if(n!==gen.current)return;
   setBusy(false);
   if(a.state==="denied"||b.state==="denied"){onDenied();return;}

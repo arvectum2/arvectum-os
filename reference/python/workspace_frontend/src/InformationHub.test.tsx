@@ -32,13 +32,15 @@ describe("Information Hub read-only observations", () => {
   it("shows verified exact source links and marks stale/unverified observations", async () => {
     const fetchMock=vi.fn(async () => response(projection));
     vi.stubGlobal("fetch", fetchMock); show();
+    await screen.findByText("Состояние источников и последние сводки");
+    fireEvent.click(screen.getByText("Состояние источников и последние сводки"));
     await screen.findByRole("heading", {name:"Company fixture"});
     expect(screen.getByText("Устаревшая сводка")).toBeTruthy();
     expect(screen.getByText("Не проверена точная версия")).toBeTruthy();
     expect(screen.getAllByRole("link", {name:"Точный источник"})).toHaveLength(2);
     expect(screen.getAllByRole("link", {name:"Точный источник"})[0].getAttribute("href")).toBe("https://github.com/arvectum2/arvectum-company/blob/"+"a".repeat(40)+"/docs/roadmap/ROADMAP.md");
     expect(screen.getAllByText("Verified fixture")).toHaveLength(2);
-    expect(screen.getByText(/не журнал новых событий/)).toBeTruthy();
+    expect(screen.getByText(/Сводка и очередь изменений — разные представления/)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", {name:"Устаревшие и недоступные"}));
     expect(screen.queryByRole("heading",{name:"Company fixture"})).toBeNull();
     expect(screen.getByRole("heading",{name:"Stale fixture"})).toBeTruthy();

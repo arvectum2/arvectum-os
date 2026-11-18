@@ -6,6 +6,7 @@ import { InformationHub } from "./InformationHub";
 import { ManualContext } from "./ManualContext";
 import { CRM } from "./CRM";
 import { MissionControl } from "./MissionControl";
+import { ExecutiveOverview } from "./ExecutiveOverview";
 import { Copilot } from "./Copilot";
 import { Discovery } from "./Discovery";
 import { Dogfooding } from "./Dogfooding";
@@ -18,26 +19,17 @@ import { Products } from "./Products";
 import { System } from "./System";
 import { Work } from "./Work";
 import arvectumLogo from "./assets/arvectum-logo.svg";
-import { navigationLabels, useWorkspaceLanguage } from "./i18n";
-import type { NavigationItem, WorkspaceContext } from "./types";
+import { useWorkspaceLanguage } from "./i18n";
+import type { WorkspaceContext } from "./types";
 
 function groupForPath(path: string): string {
-  if (path === "/" || path === "/today" || path === "/guide") return "today";
-  if (
-    path === "/work"
-    || path === "/my-work"
-    || path === "/products"
-    || path.startsWith("/products/")
-    || path === "/projects"
-    || path === "/information-hub"
-    || path === "/manual-context"
-    || path === "/crm"
-    || path === "/mission-control"
-    || path === "/company-materials"
-    || path === "/company-generated-outputs"
-  ) return "work";
-  if (path === "/information" || path === "/search" || path === "/records" || path === "/documents" || path === "/knowledge" || path.startsWith("/objects/")) return "information";
-  if (path === "/copilot") return "copilot";
+  if (["/","/today","/mission-control","/control-details"].includes(path)) return "today";
+  if (["/projects","/manual-context"].includes(path)) return "projects";
+  if (path==="/crm") return "clients";
+  if (path==="/finance") return "finance";
+  if (["/library","/company-materials","/company-generated-outputs","/information","/search","/records","/documents","/knowledge"].includes(path)||path.startsWith("/objects/")) return "information";
+  if (["/work","/my-work","/products","/operations","/information-hub"].includes(path)||path.startsWith("/products/")) return "work";
+  if(path==="/copilot") return "copilot";
   return "system";
 }
 
@@ -46,68 +38,33 @@ function navigateTo(href: string) {
   window.dispatchEvent(new PopStateEvent("popstate"));
 }
 
-function Today() {
-  const { text } = useWorkspaceLanguage();
-  return <>
-    <section className="home-intro" aria-labelledby="today-title">
-      <p className="eyebrow">{text("Arvectum OS · Рабочее пространство", "Arvectum OS · Workspace")}</p>
-      <h1 id="today-title">{text("Что делать сейчас", "What to do now")}</h1>
-      <p>{text(
-        "Если текущих задач нет, откройте проекты компании, материалы и шаблоны, найдите документ, задайте вопрос Arvectum AI или откройте руководство по возможностям Workspace.",
-        "If there are no current tasks, open Company projects, materials and templates, find a document, ask Arvectum AI, or open the Workspace capability guide.",
-      )}</p>
-    </section>
-    <section className="home-actions" aria-label={text("Основные действия", "Primary actions")}>
-      <a href="/work" onClick={(event) => { event.preventDefault(); navigateTo("/work"); }}>{text("Открыть задачи", "Open tasks")}</a>
-      <a href="/information-hub" onClick={(event) => { event.preventDefault(); navigateTo("/information-hub"); }}>{text("Входящая информация", "Information Hub")}</a>
-      <a href="/projects" onClick={(event) => { event.preventDefault(); navigateTo("/projects"); }}>{text("Проекты компании", "Company projects")}</a>
-      <a href="/company-materials" onClick={(event) => { event.preventDefault(); navigateTo("/company-materials"); }}>{text("Материалы компании", "Company materials")}</a>
-      <a href="/company-generated-outputs" onClick={(event) => { event.preventDefault(); navigateTo("/company-generated-outputs"); }}>{text("Созданные документы", "Generated documents")}</a>
-      <a href="/information" onClick={(event) => { event.preventDefault(); navigateTo("/information"); }}>{text("Найти документ", "Find a document")}</a>
-      <a href="/copilot" onClick={(event) => { event.preventDefault(); navigateTo("/copilot"); }}>{text("Спросить Arvectum", "Ask Arvectum")}</a>
-      <a href="/guide" onClick={(event) => { event.preventDefault(); navigateTo("/guide"); }}>{text("Открыть руководство", "Open guide")}</a>
-    </section>
-    <MyWork embedded />
-  </>;
-}
-
 export function Shell({ context, onLogout }: { context: WorkspaceContext; onLogout: () => void }) {
   const { language, setLanguage, text } = useWorkspaceLanguage();
   const currentPath = window.location.pathname;
   const activeId = groupForPath(currentPath);
-  const active = context.navigation.find((item) => item.id === activeId) ?? context.navigation[0];
   const objectId = currentPath.startsWith("/objects/") ? decodeURIComponent(currentPath.slice("/objects/".length)) : null;
   const productId = currentPath.startsWith("/products/") ? decodeURIComponent(currentPath.slice("/products/".length)) : null;
-  const navLabel = (item: NavigationItem) => navigationLabels[item.id]?.[language] ?? item.label;
-  const navigate = (item: NavigationItem) => (event: React.MouseEvent<HTMLAnchorElement>) => { event.preventDefault(); navigateTo(item.href); };
-  const specialWorkPath = currentPath === "/mission-control" || currentPath === "/crm" || currentPath === "/manual-context" || currentPath === "/information-hub" || currentPath === "/projects" || currentPath === "/company-materials" || currentPath === "/company-generated-outputs";
-  const primaryNavigation = context.navigation.flatMap((item) => {
-    const items = [
-      <li key={item.id}><a href={item.href} onClick={navigate(item)} aria-current={item.id === active.id && !specialWorkPath ? "page" : undefined}><span>{navLabel(item)}</span></a></li>,
-    ];
-    if (item.id === "work") {
-      items.push(
-        <li key="information-hub"><a href="/information-hub" aria-current={currentPath === "/information-hub" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("/information-hub"); }}><span>{text("Входящая информация", "Information Hub")}</span></a></li>,
-        <li key="manual-context"><a href="/manual-context" aria-current={currentPath === "/manual-context" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("/manual-context"); }}><span>{text("Рабочие проекты и заметки", "Work projects and notes")}</span></a></li>,
-        <li key="mission-control"><a href="/mission-control" aria-current={currentPath === "/mission-control" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("/mission-control"); }}><span>{text("Управление компанией","Mission Control")}</span></a></li>,
-        <li key="crm"><a href="/crm" aria-current={currentPath === "/crm" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("/crm"); }}><span>CRM</span></a></li>,
-        <li key="company-projects"><a href="/projects" aria-current={currentPath === "/projects" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("/projects"); }}><span>{text("Проекты", "Projects")}</span></a></li>,
-        <li key="company-materials"><a href="/company-materials" aria-current={currentPath === "/company-materials" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("/company-materials"); }}><span>{text("Материалы компании", "Company materials")}</span></a></li>,
-        <li key="company-generated-outputs"><a href="/company-generated-outputs" aria-current={currentPath === "/company-generated-outputs" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("/company-generated-outputs"); }}><span>{text("Созданные документы", "Generated documents")}</span></a></li>,
-      );
-    }
-    return items;
-  });
+  const has=(id:string)=>context.navigation.some(x=>x.id===id&&x.availability==="available");
+  const link=(id:string,href:string,ru:string,en:string,secondary=false)=><a className={secondary?"exec-secondary-link":undefined} href={href} onClick={event=>{event.preventDefault();navigateTo(href);}} aria-current={activeId===id?"page":undefined}>{text(ru,en)}</a>;
+  const primaryNavigation=[
+    ...(has("today")?[["today","/","Обзор","Overview"]]:[]),
+    ...(has("work")?[["work","/work","Работа","Work"],["projects","/projects","Проекты","Projects"],["clients","/crm","Клиенты","Clients"],["finance","/finance","Финансы","Finances"]]:[]),
+    ...(has("information")||has("work")?[["information",has("work")?"/library":"/information","Документы","Documents"]]:[]),
+  ].map(([id,href,ru,en])=><li key={id}>{link(id,href,ru,en)}</li>);
+  const libraryRoute=["/library","/company-materials","/company-generated-outputs","/information","/search","/documents","/records","/knowledge"].includes(currentPath);
+  const documentTabs=libraryRoute&&has("work")?<div className="hub-filters exec-library-tabs" aria-label={text("Разделы документов","Document sections")}>{[
+    ["/library","Библиотека","Library"],["/company-generated-outputs","На проверке","Under review"],["/information","Поиск","Search"]
+  ].map(([href,ru,en])=><a key={href} className="quiet-link" href={href} aria-current={currentPath===href||href==="/library"&&currentPath==="/company-materials"?"page":undefined} onClick={event=>{event.preventDefault();navigateTo(href);}}>{text(ru,en)}</a>)}</div>:null;
 
   let content: React.ReactNode;
   if (objectId) content = <ObjectDetail objectId={objectId} />;
   else if (currentPath === "/products" || productId) content = <Products productId={productId} />;
-  else if (currentPath === "/mission-control") content = <MissionControl csrfToken={context.session.csrf_token} />;
+  else if (currentPath === "/control-details") content = <MissionControl csrfToken={context.session.csrf_token} />;
   else if (currentPath === "/crm") content = <CRM csrfToken={context.session.csrf_token} />;
   else if (currentPath === "/manual-context") content = <ManualContext csrfToken={context.session.csrf_token} />;
   else if (currentPath === "/information-hub") content = <InformationHub csrfToken={context.session.csrf_token} />;
   else if (currentPath === "/projects") content = <CompanyProjects />;
-  else if (currentPath === "/company-materials") content = <CompanyMaterials csrfToken={context.session.csrf_token} />;
+  else if (currentPath === "/library" || currentPath === "/company-materials") content = <CompanyMaterials csrfToken={context.session.csrf_token} />;
   else if (currentPath === "/company-generated-outputs") content = <CompanyGeneratedOutputs csrfToken={context.session.csrf_token} />;
   else if (currentPath === "/my-work") content = <MyWork />;
   else if (currentPath === "/search" || currentPath === "/information") content = <Discovery />;
@@ -119,8 +76,10 @@ export function Shell({ context, onLogout }: { context: WorkspaceContext; onLogo
   else if (currentPath === "/governed") content = <Governed csrfToken={context.session.csrf_token} />;
   else if (currentPath === "/dogfooding") content = <Dogfooding csrfToken={context.session.csrf_token} />;
   else if (currentPath === "/guide") content = <Guide release={context.release.id} />;
-  else if (activeId === "today") content = <Today />;
-  else if (activeId === "work") content = <Work />;
+  else if (activeId === "today") content = <ExecutiveOverview key={"overview-"+context.session.csrf_token} csrfToken={context.session.csrf_token}/>;
+  else if (activeId === "finance") content = <ExecutiveOverview key={"finance-"+context.session.csrf_token} mode="finance" csrfToken={context.session.csrf_token}/>;
+  else if (currentPath === "/operations") content = <Work/>;
+  else if (activeId === "work") content = <ExecutiveOverview key={"work-"+context.session.csrf_token} mode="work" csrfToken={context.session.csrf_token}/>;
   else if (activeId === "information") content = <Discovery />;
   else if (activeId === "copilot") content = <Copilot csrfToken={context.session.csrf_token} />;
   else content = <System release={context.release.id} />;
@@ -131,6 +90,9 @@ export function Shell({ context, onLogout }: { context: WorkspaceContext; onLogo
       <div className="brand" aria-label="Arvectum OS"><img src={arvectumLogo} className="brand-logo" alt="Arvectum" /><span className="brand-product">OS</span></div>
       <nav aria-label={text("Навигация Arvectum OS", "Workspace navigation")}><ul>{primaryNavigation}</ul></nav>
       <div className="sidebar-controls">
+        {has("work")&&link("work","/information-hub","Входящие","Inbox",true)}
+        {has("copilot")&&link("copilot","/copilot","Arvectum AI","Arvectum AI",true)}
+        {has("system")&&link("system","/system","Настройки","Settings",true)}
         <a href="/guide" onClick={(event) => { event.preventDefault(); navigateTo("/guide"); }}>{text("Руководство", "Guide")}</a>
         <div className="language-switch" role="group" aria-label={text("Язык интерфейса", "Interface language")}><button type="button" className={language === "ru" ? "active" : ""} aria-pressed={language === "ru"} onClick={() => setLanguage("ru")}>RU</button><button type="button" className={language === "en" ? "active" : ""} aria-pressed={language === "en"} onClick={() => setLanguage("en")}>EN</button></div><div className="sidebar-footnote">{text("Внутреннее рабочее пространство", "Internal workspace")} · {context.release.id}</div></div>
     </aside>
@@ -143,7 +105,7 @@ export function Shell({ context, onLogout }: { context: WorkspaceContext; onLogo
         </form>
         <button type="button" className="quiet-button" onClick={onLogout}>{text("Выйти", "Sign out")}</button>
       </header>
-      <main id="workspace-main" tabIndex={-1}>{content}</main>
+      <main id="workspace-main" tabIndex={-1}>{documentTabs}{content}</main>
     </div>
   </div>;
 }

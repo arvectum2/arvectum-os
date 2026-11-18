@@ -109,8 +109,8 @@ export function ManualContext({ csrfToken }: { csrfToken: string }) {
 
   return <section className="company-page manual-context" aria-labelledby="manual-title">
     <header className="company-page-head"><div>
-      <p className="eyebrow">Workspace First · WSF-04C</p>
-      <h1 id="manual-title">{text("Рабочие проекты и заметки", "Work projects and notes")}</h1>
+
+      <h1 id="manual-title">{text("Заметки проектов", "Project notes")}</h1>
       <p>{text("Ручные рабочие наблюдения. Не договоры, обязательства или решения.", "Manual work observations. Not contracts, obligations or decisions.")}</p>
     </div><button disabled={busy} type="button" onClick={() => void load()}>{text("Обновить", "Refresh")}</button></header>
     {error === "unavailable" && <p role="alert">{text("Ручной контекст недоступен или пилот не активирован. Данные скрыты.", "Manual context unavailable or pilot not activated. Data hidden.")}</p>}
@@ -119,7 +119,7 @@ export function ManualContext({ csrfToken }: { csrfToken: string }) {
     {data && <>
       {data.backup_status && <p role="status" className={data.backup_status === "verified" ? "hub-meta" : "hub-warning"}>{data.backup_status === "verified" ? text("Резервная копия проверена", "Backup verified") : text("Резервная копия устарела или недоступна. Перед новой записью потребуется восстановить резервирование.", "Backup stale or unavailable. Backup must be restored before new writes.")}</p>}
       <p className="hub-warning">{text("Закрытый пилот: не вводите персональные данные, секреты и конфиденциальные сведения заказчиков.", "Restricted pilot: do not enter personal data, secrets or confidential customer information.")}</p>
-      <div className="manual-forms">
+      <details className="exec-secondary" open={editing?true:undefined}><summary>{text("Добавить проект или заметку","Add project or note")}</summary><div className="manual-forms">
         <form className="company-card" onSubmit={e => { e.preventDefault(); void submit("project", { label, kind }); }}>
           <h2>{text("Создать проект", "Create project")}</h2>
           <label>{text("Название проекта", "Project name")}<input required maxLength={160} value={label} onChange={e => setLabel(e.target.value)} disabled={busy}/></label>
@@ -138,16 +138,16 @@ export function ManualContext({ csrfToken }: { csrfToken: string }) {
           <button disabled={busy || !title.trim() || !body.trim()} type="submit">{text("Сохранить заметку", "Save note")}</button>
           {editing && <button type="button" disabled={busy} onClick={() => {setEditing(null); setTitle(""); setBody("");}}>{text("Отмена", "Cancel")}</button>}
         </form>
-      </div>
+      </div></details>
       <div className="hub-filters"><label>{text("История проекта", "Project history")}<select disabled={busy} value={filter} onChange={e => {setFilter(e.target.value);setHistory([]);}}>
         <option value="">{text("Все заметки", "All notes")}</option>{data.projects.map(p => <option value={p.id} key={p.id}>{p.label}</option>)}
       </select></label><button disabled={busy} type="button" onClick={() => void download()}>{text("Экспортировать данные", "Export data")}</button></div>
-      {data.notes.filter(n => !filter || n.project_id === filter).slice().reverse().map(n => <article className="company-card" key={n.id}>
-        <h3>{n.title}</h3><p className="manual-note">{n.text}</p>
-        <p className="hub-meta">{data.projects.find(p => p.id === n.project_id)?.label ?? text("Без проекта", "No project")} · {text("Версия", "Revision")} {n.revision} · {n.at}</p>
+      {data.notes.filter(n => !filter || n.project_id === filter).slice().reverse().map(n => <details className="company-card" key={n.id}><summary><strong>{n.title}</strong></summary>
+        <p className="manual-note">{n.text}</p>
+        <p className="hub-meta">{data.projects.find(p => p.id === n.project_id)?.label ?? text("Без проекта", "No project")} · {text("Версия", "Revision")} {n.revision} · {new Date(n.at).toLocaleString()}</p>
         <div className="hub-filters"><button disabled={busy} type="button" onClick={() => {setEditing(n);setTitle(n.title);setBody(n.text);setProject(n.project_id ?? "");}}>{text("Редактировать", "Edit")}</button>
         <button disabled={busy} type="button" onClick={() => void showHistory(n)}>{text("Версии", "Versions")}</button></div>
-      </article>)}
+      </details>)}
       {!!history.length && <section className="company-card"><h2>{text("История версий", "Revision history")}</h2>{history.map(n => <div key={n.revision}><h3>{n.revision} · {n.title}</h3><p className="manual-note">{n.text}</p><p className="hub-meta">{n.at}</p></div>)}</section>}
     </>}
   </section>;

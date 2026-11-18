@@ -1,0 +1,411 @@
+{
+  "context": {
+    "schema": "arvectum.workspace.shell-context/1",
+    "release": {
+      "id": "p10.09.16",
+      "app_api_contract": "15",
+      "classification": "bounded-internal-provisional",
+      "public_api": false
+    },
+    "organization": {
+      "label": "ТЕСТОВЫЙ ПРИМЕР",
+      "scope_resolved_server_side": true
+    },
+    "actor": {
+      "label": "Preview",
+      "attributable": true,
+      "scope_resolved_server_side": true,
+      "authentication_source": "fixture"
+    },
+    "session": {
+      "csrf_token": "fixture",
+      "bounded": true,
+      "revocable": true,
+      "authority_provided": false
+    },
+    "navigation": [
+      {
+        "id": "today",
+        "label": "today",
+        "href": "/",
+        "availability": "available"
+      },
+      {
+        "id": "work",
+        "label": "work",
+        "href": "/work",
+        "availability": "available"
+      },
+      {
+        "id": "information",
+        "label": "information",
+        "href": "/information",
+        "availability": "available"
+      },
+      {
+        "id": "copilot",
+        "label": "copilot",
+        "href": "/copilot",
+        "availability": "available"
+      },
+      {
+        "id": "system",
+        "label": "system",
+        "href": "/system",
+        "availability": "available"
+      }
+    ],
+    "data_governance": {
+      "protected_read_revalidated": true,
+      "response_minimized": "shell-context-only",
+      "canonical_state_in_browser": false
+    }
+  },
+  "company-control-reference": {
+    "coverage": "partial",
+    "derived": true,
+    "canonical_authority": false,
+    "organizational_authority_provided": false,
+    "owner_action": [
+      {
+        "id": "WORK-001",
+        "title": "Пересмотр пилота",
+        "accountable_position": "POS-001",
+        "priority": "P1",
+        "control_state": "open",
+        "evidence_as_of": "2026-11-18T08:00:00Z",
+        "next_control_point": "Проверить подтверждения и условия",
+        "source_refs": [
+          "synthetic evidence"
+        ],
+        "due_or_trigger": {
+          "kind": "exact",
+          "value": "2026-12-17T09:35:36Z"
+        },
+        "decision_ready": false,
+        "canonical_authority": false
+      }
+    ],
+    "obligation_signals": [
+      {
+        "id": "OBL-001",
+        "title": "Клиентский проект — сдать результат",
+        "accountable_position": "POS-002",
+        "priority": "P0",
+        "control_state": "open",
+        "evidence_as_of": "2026-11-18T08:00:00Z",
+        "next_control_point": "Проверить подтверждения и условия",
+        "source_refs": [
+          "synthetic evidence"
+        ],
+        "due_or_trigger": {
+          "kind": "condition",
+          "value": "По договорному сроку"
+        },
+        "decision_ready": false,
+        "canonical_authority": false
+      },
+      {
+        "id": "OBL-002",
+        "title": "Клиентский проект — оформить приёмку",
+        "accountable_position": "POS-002",
+        "priority": "P0",
+        "control_state": "open",
+        "evidence_as_of": "2026-11-18T08:00:00Z",
+        "next_control_point": "Проверить подтверждения и условия",
+        "source_refs": [
+          "synthetic evidence"
+        ],
+        "due_or_trigger": {
+          "kind": "condition",
+          "value": "После завершения работ"
+        },
+        "decision_ready": false,
+        "canonical_authority": false
+      }
+    ]
+  },
+  "company-decision-reference": {
+    "coverage": "partial",
+    "derived": true,
+    "canonical_authority": false,
+    "organizational_authority_provided": false,
+    "schema": "arvectum.workspace.company-decision-reference/1",
+    "items": [
+      {
+        "id": "DEC-001",
+        "kind": "decision",
+        "title": "Историческое решение 1",
+        "capacity": "Owner",
+        "authority_basis": "fixture",
+        "constraints": "Ограниченный пилот",
+        "decision_ready": false,
+        "current_applicability": "unknown",
+        "position": "POS-001",
+        "question": "Продолжать ли пилот?",
+        "review_trigger": "Проверить результат",
+        "recorded_state": "decided",
+        "recorded_outcome": "approve_with_conditions",
+        "act_ref": "fixture",
+        "linked_work": null,
+        "review_due_at": null
+      },
+      {
+        "id": "DEC-002",
+        "kind": "decision",
+        "title": "Историческое решение 2",
+        "capacity": "Owner",
+        "authority_basis": "fixture",
+        "constraints": "Ограниченный пилот",
+        "decision_ready": false,
+        "current_applicability": "unknown",
+        "position": "POS-001",
+        "question": "Продолжать ли пилот?",
+        "review_trigger": "Проверить результат",
+        "recorded_state": "decided",
+        "recorded_outcome": "approve_with_conditions",
+        "act_ref": "fixture",
+        "linked_work": null,
+        "review_due_at": null
+      },
+      {
+        "id": "DEC-003",
+        "kind": "decision",
+        "title": "Связанное решение пилота",
+        "capacity": "Owner",
+        "authority_basis": "fixture",
+        "constraints": "Ограниченный пилот",
+        "decision_ready": false,
+        "current_applicability": "unknown",
+        "position": "POS-001",
+        "question": "Продолжать ли пилот?",
+        "review_trigger": "Проверить результат",
+        "recorded_state": "preparing",
+        "recorded_outcome": "none",
+        "act_ref": null,
+        "linked_work": "WORK-001",
+        "review_due_at": "2026-12-17T09:35:36Z"
+      },
+      {
+        "id": "APR-001",
+        "title": "Историческое согласование",
+        "kind": "approval",
+        "domain": "arvectum_os",
+        "recorded_state": "approved",
+        "scope": "Read",
+        "effective_period": "Fixture",
+        "act_ref": "fixture",
+        "capacity": "Owner",
+        "authority_basis": "fixture",
+        "constraints": "No effect",
+        "decision_ready": false,
+        "current_applicability": "unknown"
+      }
+    ]
+  },
+  "company-risk-reference": {
+    "coverage": "partial",
+    "derived": true,
+    "canonical_authority": false,
+    "organizational_authority_provided": false,
+    "schema": "arvectum.workspace.company-risk-reference/1",
+    "items": [
+      {
+        "id": "RSK-001",
+        "title": "Устойчивость рабочего пространства",
+        "position": "POS-006",
+        "priority": "P1",
+        "recorded_state": "active",
+        "response_intent": "reduce",
+        "risk_accepted": false,
+        "owner_attention": "not_required",
+        "likelihood": "unknown",
+        "current_applicability": "unknown",
+        "risk_statement": "Тестовый риск",
+        "residual_exposure": "Требуется проверка",
+        "control_evidence": "Частичные сведения",
+        "next_control_point": "Проверить первичный источник",
+        "review_trigger": "При изменении источника",
+        "source_refs": [
+          "fixture"
+        ],
+        "linked_work": [
+          "WORK-001"
+        ]
+      },
+      {
+        "id": "RSK-002",
+        "title": "Актуальность источника",
+        "position": "POS-004",
+        "priority": "P1",
+        "recorded_state": "active",
+        "response_intent": "reduce",
+        "risk_accepted": false,
+        "owner_attention": "not_required",
+        "likelihood": "unknown",
+        "current_applicability": "unknown",
+        "risk_statement": "Тестовый риск",
+        "residual_exposure": "Требуется проверка",
+        "control_evidence": "Частичные сведения",
+        "next_control_point": "Проверить первичный источник",
+        "review_trigger": "При изменении источника",
+        "source_refs": [
+          "fixture"
+        ],
+        "linked_work": [
+          "WORK-001"
+        ]
+      },
+      {
+        "id": "RSK-003",
+        "title": "Неполные подтверждения клиентского контракта",
+        "position": "POS-002",
+        "priority": "P0",
+        "recorded_state": "active",
+        "response_intent": "reduce",
+        "risk_accepted": false,
+        "owner_attention": "not_required",
+        "likelihood": "unknown",
+        "current_applicability": "unknown",
+        "risk_statement": "Тестовый риск",
+        "residual_exposure": "Требуется проверка",
+        "control_evidence": "Частичные сведения",
+        "next_control_point": "Проверить первичный источник",
+        "review_trigger": "При изменении источника",
+        "source_refs": [
+          "fixture"
+        ],
+        "linked_work": [
+          "WORK-001"
+        ]
+      }
+    ]
+  },
+  "company-finance-reference": {
+    "coverage": "partial",
+    "derived": true,
+    "canonical_authority": false,
+    "organizational_authority_provided": false,
+    "schema": "arvectum.workspace.company-finance-reference/1",
+    "report_as_of": "2026-11-18T08:00:00Z",
+    "position": "POS-005",
+    "payment_authority": false,
+    "liquidity_status": "unknown",
+    "decision_readiness": "blocked_by_missing_financial_evidence",
+    "facts": {
+      "available_cash_fact_ref": {
+        "status": "unknown",
+        "value": null
+      },
+      "material_due_outflows": {
+        "status": "unknown",
+        "value": null
+      },
+      "material_receivables": {
+        "status": "unknown",
+        "value": null
+      },
+      "material_payables": {
+        "status": "unknown",
+        "value": null
+      },
+      "recurring_cost_signal": {
+        "status": "unknown",
+        "value": null
+      },
+      "expected_outflows": {
+        "status": "unknown",
+        "value": null
+      },
+      "approved_not_yet_incurred_exposure": {
+        "status": "unknown",
+        "value": null
+      },
+      "procurement_cash_gap_cases": {
+        "status": "unknown",
+        "value": null
+      },
+      "mandatory_payment_attention": {
+        "status": "unknown",
+        "value": null
+      },
+      "actual_receipts": {
+        "status": "unknown",
+        "value": null
+      },
+      "project_profitability": {
+        "status": "unknown",
+        "value": null
+      }
+    },
+    "conditional_inflow": {
+      "basis": "contractual_conditional",
+      "contract_price_rub": "12345.00",
+      "expected_available_cash_rub": null,
+      "receivable_confirmed": false,
+      "actual_receipt_confirmed": false,
+      "advance_provided": false,
+      "timing_condition": "После подписания документа о приёмке",
+      "source_refs": [
+        "synthetic contract"
+      ],
+      "linked_obligations": [
+        "OBL-001",
+        "OBL-002"
+      ]
+    },
+    "unknowns": [
+      "Банк не подключён"
+    ],
+    "next_control_point": "Проверить первичные документы"
+  },
+  "crm/followups": {
+    "coverage": "partial",
+    "derived": true,
+    "canonical_authority": false,
+    "organizational_authority_provided": false,
+    "company_control_coverage": "unknown",
+    "as_of": "2026-11-18T08:00:00Z",
+    "items": []
+  },
+  "roadmap-inbox": {
+    "coverage": "partial",
+    "derived": true,
+    "canonical_authority": false,
+    "organizational_authority_provided": false,
+    "pending_count": 0,
+    "backup_status": "verified",
+    "sources": [
+      {
+        "source_id": "fixture",
+        "state": "stale-cache",
+        "freshness": "requires-refresh"
+      }
+    ],
+    "items": []
+  },
+  "my-work": {
+    "schema": "arvectum.workspace.my-work/1",
+    "generated_at": "2026-11-18T08:00:00Z",
+    "projection": {
+      "derived": true,
+      "canonical_authority": false,
+      "organizational_authority_provided": false,
+      "consequential_action_available": false,
+      "visibility_implies_permission": false
+    },
+    "scope": {
+      "organization_resolved_server_side": true,
+      "actor_resolved_server_side": true,
+      "denied_item_counts_exposed": false
+    },
+    "health": {
+      "state": "fresh",
+      "code": "OK",
+      "message": "Fixture",
+      "observed_at": "2026-11-18T08:00:00Z",
+      "heartbeat_age_seconds": 1
+    },
+    "items": []
+  }
+}

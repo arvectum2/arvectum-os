@@ -76,7 +76,7 @@ function OutputCard({
     <header className="company-card-head">
       <div>
         <p className="eyebrow">TransientOutput</p>
-        <h2>{item.filename}</h2>
+        <h2>{/^generated-OUT-/.test(item.filename)?text("Черновик документа","Document draft"):item.filename}</h2><details><summary>{text("Имя файла","Filename")}</summary><p>{item.filename}</p></details>
         <p className="project-source-updated">{text("Создан", "Created")}: {prettyDate(item.created_at)}</p>
       </div>
       <span className={`company-state ${promoted ? "company-state-canonical" : "company-state-staged"}`}>{badge}</span>
@@ -102,13 +102,13 @@ function OutputCard({
       )}</p>
       <Handling value={item.inherited_handling} />
     </section> : <p className="boundary-note" role="status">{text(
-      "Exact admitted source сейчас недоступен; governed promotion заблокирован fail-closed.",
+      "Источник не подтверждён. Принятие документа недоступно.",
       "The exact admitted source is currently unavailable; governed promotion is fail-closed.",
     )}</p>}
 
     <div className="asset-card-actions">
-      <button type="button" disabled={busy} onClick={() => void onDownload(item)}>{text("Скачать для review", "Download for review")}</button>
-      {!promoted ? <button type="button" disabled={busy || !item.exact_source_available} onClick={() => void onReview(item, { disposition: "KeepTransient" })}>{text("Оставить transient", "Keep transient")}</button> : null}
+      <button type="button" disabled={busy} onClick={() => void onDownload(item)}>{text("Скачать для проверки", "Download for review")}</button>
+      {!promoted ? <button type="button" disabled={busy || !item.exact_source_available} onClick={() => void onReview(item, { disposition: "KeepTransient" })}>{text("Оставить черновиком", "Keep transient")}</button> : null}
     </div>
 
     {!promoted ? <form className="asset-reject-form" onSubmit={(event) => {
@@ -127,10 +127,10 @@ function OutputCard({
         semantic_role: semanticRole,
       });
     }}>
-      <h3>{text("Запросить governed promotion", "Request governed promotion")}</h3>
+      <h3>{text("Запросить принятие документа", "Request governed promotion")}</h3>
       <label>{text("Название документа", "Document title")}<input value={documentTitle} onChange={(event) => setDocumentTitle(event.target.value)} required maxLength={320} /></label>
       <label>{text("Роль документа", "Document role")}<input value={semanticRole} onChange={(event) => setSemanticRole(event.target.value)} required maxLength={96} /></label>
-      <button type="submit" disabled={busy || !item.exact_source_available}>{text("Зафиксировать запрос на promotion", "Record promotion request")}</button>
+      <button type="submit" disabled={busy || !item.exact_source_available}>{text("Запросить принятие", "Record promotion request")}</button>
     </form> : null}
 
     {disposition === "PromotionRequested" && !promoted ? <section className="asset-review-actions">
@@ -139,7 +139,7 @@ function OutputCard({
         "Команда ниже не получает authority из интерфейса. Сервер заново проверяет credential, exact Authorization grant, Organizational Authority, Data Governance, Validation и Consequential Approval.",
         "The command below gets no authority from the UI. The server revalidates credential, exact Authorization grant, Organizational Authority, Data Governance, Validation, and Consequential Approval.",
       )}</p>
-      <button type="button" disabled={busy || !item.promotion_available} onClick={() => void onPromote(item)}>{text("Промоутировать через Governed Execution", "Promote through Governed Execution")}</button>
+      <button type="button" disabled={busy || !item.promotion_available} onClick={() => void onPromote(item)}>{text("Подтвердить принятие", "Promote through Governed Execution")}</button>
       {!item.promotion_available ? <p className="boundary-note">{text(
         "Governed promotion сейчас недоступен: отсутствует exact server-side evidence/grant или admitted source.",
         "Governed promotion is currently unavailable: exact server-side evidence/grant or admitted source is missing.",
@@ -222,25 +222,25 @@ export function CompanyGeneratedOutputs({ csrfToken }: { csrfToken: string }) {
     }
   };
 
-  if (state.kind === "loading") return <section className="company-page" aria-live="polite">{text("Открываем generated outputs…", "Opening generated outputs…")}</section>;
-  if (state.kind === "error") return <section className="company-page" role="alert"><p className="eyebrow">P10.05 · operation boundary Provisional 0.2.0</p><h1>{text("Generated outputs недоступны", "Generated outputs unavailable")}</h1><code>{state.code}</code><div><button type="button" onClick={() => void refresh()}>{text("Повторить", "Retry")}</button></div></section>;
+  if (state.kind === "loading") return <section className="company-page" aria-live="polite">{text("Открываем документы…", "Opening generated outputs…")}</section>;
+  if (state.kind === "error") return <section className="company-page" role="alert"><h1>{text("Документы недоступны", "Generated outputs unavailable")}</h1><code>{state.code}</code><div><button type="button" onClick={() => void refresh()}>{text("Повторить", "Retry")}</button></div></section>;
 
   return <section className="company-page" aria-labelledby="company-generated-outputs-title">
     <header className="company-page-head asset-library-head">
-      <p className="eyebrow">P10.05 · operation boundary Provisional 0.2.0</p>
-      <h1 id="company-generated-outputs-title">{text("Созданные документы · review", "Generated documents · review")}</h1>
+
+      <h1 id="company-generated-outputs-title">{text("Документы на проверке", "Documents under review")}</h1>
       <p>{text(
-        "Generated Artifact остаётся TransientOutput по умолчанию. Просмотр, скачивание, отклонение или повторное использование не делают его каноническим. Только отдельный успешно завершённый Governed Execution создаёт новую governed Document/Asset version.",
-        "A Generated Artifact remains a TransientOutput by default. Viewing, downloading, rejecting, or reusing it does not make it canonical. Only a separate successful Governed Execution creates a new governed Document/Asset version.",
+        "Черновики документов. Перед использованием проверьте файл и его источник. Просмотр не означает утверждение.",
+        "Document drafts. Check the file and source before use. Viewing is not approval.",
       )}</p>
-      <details className="company-boundary-details"><summary>{text("Граница authority и scope", "Authority and scope boundary")}</summary><p>{text(
+      <details className="company-boundary-details"><summary>{text("Правила проверки и принятия", "Authority and scope boundary")}</summary><p>{text(
         "UI/BFF не являются authority. P10.05 не создаёт validated Knowledge и не предоставляет отправку, подпись или публикацию: такие действия потребуют отдельного governed scope.",
         "UI/BFF are not authority. P10.05 creates no validated Knowledge and provides no send, signature, or publication action; those require separate governed scope.",
       )}</p></details>
     </header>
 
     {message ? <p className="company-message" role="status">{message}</p> : null}
-    {state.data.items.length ? <div className="company-grid">{state.data.items.map((item) => <OutputCard
+    {state.data.items.length ? <div className="exec-list">{state.data.items.map((item) => <details key={item.output_id}><summary><strong>{item.review.document_title??(/^generated-OUT-/.test(item.filename)?text("Черновик документа","Document draft"):item.filename)} · {prettyDate(item.created_at)}</strong><span>{item.canonical_promotion?text("Принят","Accepted"):item.exact_source_available?text("На проверке","Under review"):text("Источник недоступен","Source unavailable")}</span></summary><OutputCard
       key={item.output_id}
       item={item}
       busy={busy}
@@ -257,6 +257,6 @@ export function CompanyGeneratedOutputs({ csrfToken }: { csrfToken: string }) {
         async () => { await promoteCompanyGeneratedOutput(target.output_id, csrfToken); },
         text("Governed promotion завершён; создана отдельная каноническая Document/Asset version.", "Governed promotion completed; a separate canonical Document/Asset version was created."),
       )}
-    />)}</div> : <p className="asset-empty-state">{text("Generated outputs пока нет. Создайте документ из принятого шаблона в «Материалах компании».", "There are no generated outputs yet. Generate a document from an admitted template in Company materials.")}</p>}
+    /></details>)}</div> : <p className="asset-empty-state">{text("Черновиков пока нет. Создайте документ из принятого шаблона в «Материалах компании».", "There are no generated outputs yet. Generate a document from an admitted template in Company materials.")}</p>}
   </section>;
 }

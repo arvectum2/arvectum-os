@@ -2,7 +2,7 @@ import {useEffect,useRef,useState} from "react";
 import {useWorkspaceLanguage} from "./i18n";
 type Row={id:string;kind:"decision"|"approval";title:string;question?:string;scope?:string;capacity:string;authority_basis:string;recorded_state:string;recorded_outcome?:string;act_ref:string|null;constraints:string;review_trigger?:string;review_due_at?:string|null;linked_work?:string|null;effective_period?:string;domain?:string;position?:string};
 const names=["DEC-001","DEC-002","DEC-003","APR-001"];
-function parse(v:unknown):Row[]{
+export function parseDecision(v:unknown):Row[]{
  if(!v||typeof v!=="object")throw Error();
  const d=v as Record<string,unknown>;
  if(d.schema!=="arvectum.workspace.company-decision-reference/1"||d.coverage!=="partial"||d.derived!==true||d.canonical_authority!==false||d.organizational_authority_provided!==false||!Array.isArray(d.items)||d.items.length!==4)throw Error();
@@ -26,7 +26,7 @@ export function DecisionReference({csrfToken}:{csrfToken:string}){
   try{
    const r=await fetch("/api/app/v1/company-decision-reference",{method:"POST",credentials:"same-origin",cache:"no-store",headers:{"X-Arvectum-Workspace-Release":__ARVECTUM_WORKSPACE_RELEASE__,"X-Arvectum-CSRF":csrfToken}});
    if(!r.ok)throw Error();
-   const d=parse(await r.json());if(n===seq.current)setRows(d);
+   const d=parseDecision(await r.json());if(n===seq.current)setRows(d);
   }catch{if(n===seq.current)setError(true);}
   finally{if(n===seq.current)setBusy(false);}
  }

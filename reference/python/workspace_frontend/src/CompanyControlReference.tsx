@@ -1,17 +1,8 @@
 import {useEffect,useRef,useState} from "react";
 import {useWorkspaceLanguage} from "./i18n";
-type Row={id:string;title:string;accountable_position:string;priority:string;control_state:string;evidence_as_of:string;next_control_point:string;source_refs:string[];due_or_trigger:{kind:string;value:string};decision_ready:boolean};
-type View={owner_action:Row[];obligation_signals:Row[];coverage:string;canonical_authority:boolean};
-export function CompanyControlReference({csrfToken}:{csrfToken:string}){
- const {text}=useWorkspaceLanguage();
- const [data,setData]=useState<View|null>(null),[error,setError]=useState(false),[busy,setBusy]=useState(false);
- const seq=useRef(0);useEffect(()=>()=>{seq.current++;},[csrfToken]);
- async function load(){
-  const n=++seq.current;setData(null);setBusy(true);setError(false);
-  try{
-   const r=await fetch("/api/app/v1/company-control-reference",{method:"POST",credentials:"same-origin",cache:"no-store",headers:{"X-Arvectum-Workspace-Release":__ARVECTUM_WORKSPACE_RELEASE__,"X-Arvectum-CSRF":csrfToken}});
-   if(!r.ok)throw Error();
-   const v=await r.json();
+export type ControlRow={id:string;title:string;accountable_position:string;priority:string;control_state:string;evidence_as_of:string;next_control_point:string;source_refs:string[];due_or_trigger:{kind:string;value:string};decision_ready:boolean};
+export type ControlView={owner_action:ControlRow[];obligation_signals:ControlRow[];coverage:string;canonical_authority:boolean};
+export function parseControl(v:any):ControlView{
    if(v.coverage!=="partial"||v.derived!==true||v.canonical_authority!==false||v.organizational_authority_provided!==false||!Array.isArray(v.owner_action)||v.owner_action.length!==1||!Array.isArray(v.obligation_signals)||v.obligation_signals.length!==2)throw Error();
    const x=v.owner_action[0];
    if(x.id!=="WORK-001"||x.accountable_position!=="POS-001"||x.decision_ready!==false||x.canonical_authority!==false||x.due_or_trigger?.kind!=="exact"||!Number.isFinite(Date.parse(x.due_or_trigger.value))||!Array.isArray(x.source_refs)||!x.source_refs.every((s:unknown)=>typeof s==="string")||!["title","priority","control_state","evidence_as_of","next_control_point"].every(k=>typeof x[k]==="string"))throw Error();
@@ -20,7 +11,19 @@ export function CompanyControlReference({csrfToken}:{csrfToken:string}){
     if(!["OBL-001","OBL-002"].includes(o.id)||ids.has(o.id)||o.accountable_position!=="POS-002"||o.decision_ready!==false||o.canonical_authority!==false||o.due_or_trigger?.kind!=="condition"||typeof o.due_or_trigger.value!=="string"||o.control_state!=="open"||o.priority!=="P0"||!Array.isArray(o.source_refs)||!o.source_refs.every((s:unknown)=>typeof s==="string")||!["title","evidence_as_of","next_control_point"].every(k=>typeof o[k]==="string"))throw Error();
     ids.add(o.id);
    }
-   if(n===seq.current)setData(v);
+ return v as ControlView;
+}
+export function CompanyControlReference({csrfToken}:{csrfToken:string}){
+ const {text}=useWorkspaceLanguage();
+ const [data,setData]=useState<ControlView|null>(null),[error,setError]=useState(false),[busy,setBusy]=useState(false);
+ const seq=useRef(0);useEffect(()=>()=>{seq.current++;},[csrfToken]);
+ async function load(){
+  const n=++seq.current;setData(null);setBusy(true);setError(false);
+  try{
+   const r=await fetch("/api/app/v1/company-control-reference",{method:"POST",credentials:"same-origin",cache:"no-store",headers:{"X-Arvectum-Workspace-Release":__ARVECTUM_WORKSPACE_RELEASE__,"X-Arvectum-CSRF":csrfToken}});
+   if(!r.ok)throw Error();
+   const v=await r.json();
+   if(n===seq.current)setData(parseControl(v));
   }catch{if(n===seq.current)setError(true);}
   finally{if(n===seq.current)setBusy(false);}
  }

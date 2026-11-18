@@ -90,12 +90,13 @@ function renderOutputs(projection: CompanyGeneratedOutputsProjection) {
 describe("P10.05 reviewed generated-output owner journey", () => {
   it("keeps review visibly transient, shows inherited handling, and exposes no send/sign/publish action", async () => {
     renderOutputs(baseProjection);
-    expect(await screen.findByRole("heading", { name: "Созданные документы · review" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Документы на проверке" })).toBeTruthy();
+    fireEvent.click(document.querySelector(".exec-list > details > summary")!);
     expect(screen.getAllByText("TransientOutput").length).toBeGreaterThan(0);
     expect(screen.getByText("company governed document generation")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Оставить transient" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Оставить черновиком" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Отклонить" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Зафиксировать запрос на promotion" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Запросить принятие" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: /отправ/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /подпис/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /публи/i })).toBeNull();
@@ -103,8 +104,9 @@ describe("P10.05 reviewed generated-output owner journey", () => {
 
   it("records KeepTransient separately from the consequential promotion command", async () => {
     const fetchMock = renderOutputs(baseProjection);
-    await screen.findByRole("heading", { name: "Созданные документы · review" });
-    fireEvent.click(screen.getByRole("button", { name: "Оставить transient" }));
+    await screen.findByRole("heading", { name: "Документы на проверке" });
+    fireEvent.click(document.querySelector(".exec-list > details > summary")!);
+    fireEvent.click(screen.getByRole("button", { name: "Оставить черновиком" }));
     await waitFor(() => {
       const post = fetchMock.mock.calls.find((call) => call[1]?.method === "POST");
       expect(post).toBeTruthy();
@@ -131,7 +133,9 @@ describe("P10.05 reviewed generated-output owner journey", () => {
       }],
     };
     renderOutputs(requested);
-    expect(await screen.findByRole("button", { name: "Промоутировать через Governed Execution" })).toBeTruthy();
+    await screen.findByRole("heading",{name:"Документы на проверке"});
+    fireEvent.click(document.querySelector(".exec-list > details > summary")!);
+    expect(await screen.findByRole("button", { name: "Подтвердить принятие" })).toBeTruthy();
     expect(screen.getByText(/сервер заново проверяет credential/i)).toBeTruthy();
   });
 });

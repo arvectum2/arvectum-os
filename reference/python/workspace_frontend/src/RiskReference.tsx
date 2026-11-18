@@ -3,7 +3,7 @@ import {useWorkspaceLanguage} from "./i18n";
 type Row={id:string;title:string;position:string;priority:string;risk_statement:string;residual_exposure:string;control_evidence:string;next_control_point:string;review_trigger:string;source_refs:string[];linked_work:string[]};
 const ids=["RSK-001","RSK-002","RSK-003"];
 const positions=["POS-006","POS-004","POS-002"];
-function parse(v:unknown):Row[]{
+export function parseRisk(v:unknown):Row[]{
  if(!v||typeof v!=="object")throw Error();
  const d=v as Record<string,unknown>;
  if(d.schema!=="arvectum.workspace.company-risk-reference/1"||d.coverage!=="partial"||d.derived!==true||d.canonical_authority!==false||d.organizational_authority_provided!==false||!Array.isArray(d.items)||d.items.length!==3)throw Error();
@@ -21,7 +21,7 @@ export function RiskReference({csrfToken}:{csrfToken:string}){
   const n=++seq.current;setRows(null);setBusy(true);setError(false);
   try{
    const r=await fetch("/api/app/v1/company-risk-reference",{method:"POST",credentials:"same-origin",cache:"no-store",headers:{"X-Arvectum-Workspace-Release":__ARVECTUM_WORKSPACE_RELEASE__,"X-Arvectum-CSRF":csrfToken}});
-   if(!r.ok)throw Error();const d=parse(await r.json());if(n===seq.current)setRows(d);
+   if(!r.ok)throw Error();const d=parseRisk(await r.json());if(n===seq.current)setRows(d);
   }catch{if(n===seq.current)setError(true);}
   finally{if(n===seq.current)setBusy(false);}
  }
