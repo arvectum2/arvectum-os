@@ -172,14 +172,21 @@ class CollectorInbox(RoadmapInbox):
         self.file=_CollectorFile(directory,owner_scope,legacy_sha,legacy_event_count,create=create)
 
     def read(self,access,now=None):
-        v=super().read(access,now)
-        v["excluded_sources"]=[r for r in v["sources"] if r["source_id"] in EXCLUDED]
-        v["sources"]=[r for r in v["sources"] if r["source_id"] in ACTIVE]
-        return v
-
-    def scan(self,access,key,projection,checked_at):
-        with self.file.cycle_lock():
-            return super().scan(access,key,projection,checked_at)
+        f=self.file;f._authorize(access)
+        checked=stamp(now or _utc().isoformat())
+        with f._locked():
+            events=f._load();sources,items,_=f.replay(events)
+            for row in sources.values():
+                row["freshness"]="current-observation" if row["state"]=="current-source-backed" and 0<=(checked-stamp(row["checked_at"])).total_seconds()<=4*3600 else "requires-refresh"
+            active=[sources.get(k,{"source_id":k,"state":"unavailable","freshness":"requires-refresh","checkpoint":None,"checked_at":None}) for k in sorted(ACTIVE)]
+            excluded=[sources.get(k,{"source_id":k,"state":"reconciliation-required","freshness":"requires-refresh","checkpoint":None,"checked_at":None}) for k in sorted(EXCLUDED)]
+            service=[e for e in events if e["operation"]=="service-scan"]
+            size=len(f._encode(events))
+            return {"derived":True,"coverage":"partial" if sources else "unknown","canonical_authority":False,
+                    "organizational_authority_provided":False,"sources":active,"excluded_sources":excluded,
+                    "items":list(items.values()),"pending_count":sum(x["state"]=="pending" for x in items.values()),
+                    "collector":{"last_service_scan_at":service[-1]["at"] if service else None,
+                    "event_count":len(events),"bytes":size,"capacity_warning":len(events)>=MAX_EVENTS*.8 or size>=MAX_BYTES*.8}}
 
     def capacity(self,access):
         f=self.file;f._authorize(access)

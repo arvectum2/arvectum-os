@@ -125,6 +125,25 @@ acquire_lock() {
   mkdir "$LOCK_DIR" 2>/dev/null || fail "another P7.06 deployment transaction is active"
   printf '%s\n' "$$" > "$LOCK_DIR/pid"
   chmod 600 "$LOCK_DIR/pid"
+  # Collector takes its cycle flock first, then checks this deployment lock.
+  # Once this directory exists, no new collector/manual migrated cycle may commit.
+  if ! python3 - "$RUNTIME_ROOT/workspace-company-roadmap-inbox/.collector-cycle.lock" <<'PYLOCK'
+import fcntl, os, pathlib, stat, sys
+path = pathlib.Path(sys.argv[1])
+if path.exists() or path.is_symlink():
+    fd = os.open(path, os.O_RDWR | os.O_NOFOLLOW)
+    try:
+        s = os.fstat(fd)
+        if not stat.S_ISREG(s.st_mode) or s.st_uid != os.getuid() or s.st_mode & 0o077 or s.st_nlink != 1:
+            raise SystemExit(1)
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    finally:
+        os.close(fd)
+PYLOCK
+  then
+    release_lock
+    fail "roadmap collector cycle active or unsafe; retry after reconciliation"
+  fi
 }
 release_lock() { rm -rf "$LOCK_DIR"; }
 

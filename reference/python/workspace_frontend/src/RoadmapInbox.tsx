@@ -2,7 +2,7 @@ import {useEffect,useRef,useState} from "react";
 import {useWorkspaceLanguage} from "./i18n";
 
 type Item={id:string;source_id:string;repository:string;path:string;observed:{commit_sha:string};previous:{commit_sha:string};detected_at:string;state:string;revision:number};
-type Data={coverage:string;pending_count:number;backup_status:string;items:Item[];sources:{source_id:string;freshness:string}[]};
+type Data={coverage:string;pending_count:number;backup_status:string;items:Item[];sources:{source_id:string;freshness:string}[];excluded_sources?:{source_id:string;freshness:string}[]};
 const root="/api/app/v1/roadmap-inbox";
 const key=()=>Array.from(crypto.getRandomValues(new Uint8Array(16)),n=>n.toString(16).padStart(2,"0")).join("");
 function link(r:Item,sha:string){
@@ -55,6 +55,7 @@ export function RoadmapInbox({csrfToken}:{csrfToken:string}){
     {(warning||data.backup_status!=="verified")&&<p role="alert">{text("Резервная копия требует проверки.","Backup needs review.")}</p>}
     <p>{data.coverage==="unknown"?text("Первая проверка ещё не выполнена.","First scan not yet run."):text("Ожидают просмотра: ","Pending review: ")+data.pending_count}</p>
     <p>{text("Источники, требующие проверки: ","Sources needing review: ")}{data.sources.filter(s=>s.freshness!=="current-observation").length}</p>
+    {data.excluded_sources&&<p>{text("Исключено из активного мониторинга: ","Excluded from active monitoring: ")}{data.excluded_sources.length}</p>}
     <button disabled={busy} onClick={()=>void mutate("poll",{})}>{text("Проверить изменения","Scan for changes")}</button>
     <button disabled={busy} onClick={()=>void exportData()}>{text("Экспорт очереди","Export inbox")}</button>
     <label><input type="checkbox" checked={all} onChange={e=>setAll(e.target.checked)}/>{text("Показать обработанные","Show reviewed")}</label>
