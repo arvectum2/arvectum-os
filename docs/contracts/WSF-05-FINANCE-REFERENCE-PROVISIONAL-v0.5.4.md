@@ -1,0 +1,6 @@
+# WSF-05 — AC-404 financial reference Provisional 0.5.4
+
+Effective upon canonical publication. Owner approval 2026-11-18: «утверждаю. пока оставим заглушку, реальный токен Т-Бизнеса не подключаем. хочу сначала посмотреть на итог, что получится».
+Approval reference OWNER-2026-11-18-WSF05-FINANCE-054. Exact reviewed OS #55 head f08afe616e6225f4c72b4fc1ee924ee86402089d, draft blob 5e54a460059fc2ade1c0b50389282319fc84b1a2 incorporated unchanged. Company #22 read-intake proposal head 32668e5b2042e045b612944c2a46189404f3ab93 merged b7d92ab697dc6482ace54e110198028f56e08835; documentation only. Owner explicitly defers any real T-Business token or live connection.
+
+Selected Mac mini: deploy p10.09.15 and separately admit exactly the existing initial reviewed financial snapshot for restricted local human reading. All draft limitations, expiry and prior admissions preserved. No artificial bank facts, balances, transactions, new credentials, live bank/accounting call, connector, scheduler, payment or financial action authorized. Placeholder for future bank input consists of explicit unknowns rather than fictional zero or sample money. Existing contract amount and conditional terms only. Existing backup and original source unchanged. Actual protected read/negative gates, existing integration regression and owner UI review required. No Tender Agent change.
