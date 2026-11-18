@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useWorkspaceLanguage } from "./i18n";
 import "./CompanyWorkspace.css";
 import "./ManualContext.css";
+import { admittedProject, initialProject, projectHref } from "./projectNavigation";
 
 type Kind = "party"|"contact"|"opportunity"|"interaction";
 type RecordRow = {id:string;revision:number;recorded_at:string;authority_provided:boolean;[key:string]:unknown};
@@ -33,18 +34,18 @@ export function CRM({csrfToken}:{csrfToken:string}){
  const {text}=useWorkspaceLanguage();
  const [snapshot,setSnapshot]=useState<Snapshot|null>(null);
  const [catalog,setCatalog]=useState<Catalog|null>(null);
- const [kind,setKind]=useState<Kind>("party");
- const [draft,setDraft]=useState({...initial.party});
+ const [kind,setKind]=useState<Kind>(()=>initialProject()?"opportunity":"party");
+ const [draft,setDraft]=useState(()=>({...initial[initialProject()?"opportunity":"party"]}));
  const [edit,setEdit]=useState<RecordRow|null>(null);
  const [query,setQuery]=useState("");
- const [project,setProject]=useState("");
+ const [project,setProject]=useState<string | null>(()=>initialProject());
  const [followups,setFollowups]=useState<Followup[]|null>(null);
  const [detail,setDetail]=useState<{title:string;rows:RecordRow[]}|null>(null);
  const [error,setError]=useState("");
  const [backupWarning,setBackupWarning]=useState(false);
  const [busy,setBusy]=useState(true);
  const gen=useRef(0),pending=useRef<Command|null>(null);
- function clear(){setBackupWarning(false);setSnapshot(null);setCatalog(null);setDraft({...initial[kind]});setEdit(null);setDetail(null);setFollowups(null);setQuery("");setProject("");pending.current=null;}
+ function clear(){setBackupWarning(false);setSnapshot(null);setCatalog(null);setDraft({...initial[kind]});setEdit(null);setDetail(null);setFollowups(null);setQuery("");setProject(initialProject());pending.current=null;}
  async function load(){
   const seq=++gen.current;setBusy(true);setError("");setDetail(null);setFollowups(null);
   try{
@@ -86,6 +87,7 @@ export function CRM({csrfToken}:{csrfToken:string}){
   finally{if(seq===gen.current)setBusy(false);}
  }
  async function showFollowups(){
+  if(!catalog||!admittedProject(project,catalog.projects))return;
   const seq=++gen.current;setBusy(true);setError("");setFollowups(null);
   try{const response=await request("/followups"+(project?"?project_id="+encodeURIComponent(project):""));
    const data=await response.json();if(!Array.isArray(data.items))throw Error();
@@ -105,6 +107,7 @@ export function CRM({csrfToken}:{csrfToken:string}){
   for(const f of Object.keys(initial[kind]))next[f]=f==="evidence_refs"?JSON.stringify(Array.isArray(row[f])?row[f]:[]):String(row[f]??"");
   setDraft(next);setEdit(row);pending.current=null;setDetail(null);
  }
+ const availableProject=!!catalog&&admittedProject(project,catalog.projects);
  const labels={party:text("Контрагенты","Counterparties"),contact:text("Контакты","Contacts"),opportunity:text("Сделки","Opportunities"),interaction:text("Взаимодействия","Interactions")};
  function field(f:string,ru:string,en:string,required=true,limit=160){return <label>{text(ru,en)}<input value={draft[f]??""} disabled={busy} required={required} maxLength={limit} onChange={e=>change(f,e.target.value)}/></label>;}
  function select(f:string,ru:string,en:string,opts:[string,string][],required=false,locked=false){
@@ -137,7 +140,7 @@ export function CRM({csrfToken}:{csrfToken:string}){
   {snapshot&&catalog&&<>
    <p className="hub-warning">{catalog.handling?text("Ограниченный пилот: только организации и сделки без персональных и конфиденциальных данных.","Restricted pilot: organizations and opportunities only, no personal or confidential data."):text("Тестовый контур. Не вводите реальные персональные или конфиденциальные данные.","Test contour. Do not enter real personal or confidential data.")}</p>
    {(backupWarning||snapshot.backup_status&&snapshot.backup_status!=="verified")&&<p role="alert">{text("Резервная копия требует проверки. Сохранённые записи остаются в основном хранилище.","Backup needs review. Saved records remain in the primary store.")}</p>}
-   <div className="hub-filters">{kinds.filter(k=>!catalog.allowed_entities||catalog.allowed_entities.includes(k)).map(k=><button key={k} disabled={busy} aria-pressed={kind===k} onClick={()=>selectKind(k)}>{labels[k]}</button>)}<button disabled={busy} onClick={()=>void download()}>{text("Экспорт","Export")}</button><button disabled={busy} onClick={()=>void showFollowups()}>{text("Следующие контакты","Follow-ups")}</button></div>
+   <div className="hub-filters">{kinds.filter(k=>!catalog.allowed_entities||catalog.allowed_entities.includes(k)).map(k=><button key={k} disabled={busy} aria-pressed={kind===k} onClick={()=>selectKind(k)}>{labels[k]}</button>)}<button disabled={busy} onClick={()=>void download()}>{text("Экспорт","Export")}</button><button disabled={busy||!availableProject} onClick={()=>void showFollowups()}>{text("Следующие контакты","Follow-ups")}</button></div>
    <details className="exec-secondary" open={edit?true:undefined}><summary>{edit?text("Изменить запись","Edit record"):text("Добавить запись","Add record")}</summary><form className="company-card" onSubmit={e=>{e.preventDefault();void submit();}}>
     <h2>{edit?text("Редактировать запись","Edit record"):text("Новая запись","New record")}</h2>
     {kind==="party"?<>{field("name","Название компании","Company name")}{field("description","Описание","Description",true,1000)}{select("registry_ref","Источник реквизитов","Registry source",refs,false,!!edit?.registry_ref)}</>:<>
@@ -160,8 +163,10 @@ export function CRM({csrfToken}:{csrfToken:string}){
     {edit&&<button type="button" disabled={busy} onClick={()=>selectKind(kind)}>{text("Отмена","Cancel")}</button>}
    </form></details><div className="company-card"><h2>{labels[kind]}</h2>
     <label>{text("Поиск","Search")}<input type="search" value={query} onChange={e=>setQuery(e.target.value)} maxLength={160}/></label>
-    <label>{text("Проект","Project")}<select value={project} onChange={e=>{setProject(e.target.value);setFollowups(null);}} disabled={busy}><option value="">{text("Все проекты","All projects")}</option>{projects.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>
-    {snapshot[kind].filter(r=>matches(r)&&matchesProject(r)).map(r=><article key={r.id} className="company-card">{rowBody(r)}
+    <label>{text("Проект","Project")}<select value={availableProject?project??"":"__unavailable__"} onChange={e=>{setProject(e.target.value);setFollowups(null);setDetail(null);}} disabled={busy}>{!availableProject&&<option value="__unavailable__" disabled>{text("Проект недоступен","Project unavailable")}</option>}<option value="">{text("Все проекты","All projects")}</option>{projects.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>
+    {!availableProject&&<p role="status">{text("Запрошенный проект недоступен. Выберите проект в списке.","Requested project unavailable. Select a project from the list.")}</p>}
+    {availableProject&&project&&<p><a href={projectHref("/manual-context",project)}>{text("Заметки этого проекта","Notes for this project")}</a></p>}
+    {snapshot[kind].filter(r=>availableProject&&matches(r)&&matchesProject(r)).map(r=><article key={r.id} className="company-card">{rowBody(r)}
      <button disabled={busy} onClick={()=>editRow(r)}>{text("Редактировать","Edit")}</button>
      <button disabled={busy} onClick={()=>void showDetail("/records/"+encodeURIComponent(r.id)+"/history",text("История версий","Revision history"))}>{text("Версии","Versions")}</button>
      {kind==="party"&&<button disabled={busy} onClick={()=>void showDetail("/parties/"+encodeURIComponent(r.id)+"/timeline",text("История взаимодействия","Interaction timeline"))}>{text("История","Timeline")}</button>}

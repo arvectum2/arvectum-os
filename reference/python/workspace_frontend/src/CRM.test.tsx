@@ -55,3 +55,27 @@ it("shows follow-up coordination without interpreting it as an obligation",async
  expect(screen.getByText("Просрочен контакт")).toBeTruthy();
  expect(screen.getByText("Координация сделок, не подтверждённые обязательства.")).toBeTruthy();
 });
+
+it("opens linked project opportunities and offers return to notes",async()=>{
+ const project="PRJ-"+"a".repeat(32),other="PRJ-"+"b".repeat(32);
+ const row={id:"OPP-a",title:"Linked opportunity",party_id:"PARTY-a",project_id:project,stage:"qualified",next_action:"Review",revision:1,authority_provided:false};
+ window.history.replaceState(null,"","/crm?project_id="+project);
+ try{
+  const f=vi.fn(async(input:RequestInfo|URL)=>String(input).endsWith("/catalog")?response({...cat,projects:[{id:project,label:"Fixture project"},{id:other,label:"Other project"}],allowed_entities:["party","opportunity"]}):response({...empty,opportunity:[row,{...row,id:"OPP-b",title:"Other opportunity",project_id:other}]}));
+  vi.stubGlobal("fetch",f);show();
+  expect((await screen.findByRole("link",{name:"Заметки этого проекта"})).getAttribute("href")).toBe("/manual-context?project_id="+project);
+  await screen.findByRole("heading",{name:row.title});
+  expect(screen.queryByRole("heading",{name:"Other opportunity"})).toBeNull();
+  expect(f).toHaveBeenCalledTimes(2);
+ }finally{window.history.replaceState(null,"","/");}
+});
+it("invalid project links do not fall through to all CRM rows",async()=>{
+ window.history.replaceState(null,"","/crm?project_id=invalid");
+ try{
+  vi.stubGlobal("fetch",vi.fn(async(input:RequestInfo|URL)=>String(input).endsWith("/catalog")?response(cat):response({...empty,party:[{id:"p",name:"Unrelated party",revision:1}]})));
+  show();
+  await screen.findByText("Запрошенный проект недоступен. Выберите проект в списке.");
+  expect(screen.queryByRole("heading",{name:"Unrelated party"})).toBeNull();
+  expect((screen.getByRole("button",{name:"Следующие контакты"}) as HTMLButtonElement).disabled).toBe(true);
+ }finally{window.history.replaceState(null,"","/");}
+});
