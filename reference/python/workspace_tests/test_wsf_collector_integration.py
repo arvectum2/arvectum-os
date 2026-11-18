@@ -302,3 +302,71 @@ class CollectorIntegrationTests(TestCase):
         self.assertEqual(resolve().principal_kind,"service")
         atomic(self.root/"config"/"roadmap-collector-source-review.json",b"{}")
         with self.assertRaises(ManualContextError):resolve()
+
+    def repin_fixture(self):
+        from workspace_app import wsf_collector_repin as repin
+        self.migrate()
+        inbox,p,policy,resolve=service_inbox(self.root,publication=self.publication)
+        provider=provider_for(self.root,p)
+        with patch.object(provider,"project",side_effect=lambda *a,**k:self.projection(self.now)):
+            self.assertEqual(attempt_once(self.root,inbox,policy,resolve,provider,backup_factory=self.factory)["backup_status"],"verified")
+        plist=self.root/"collector.plist"
+        atomic(plist,launchd_template(self.root,self.release))
+        target="b"*40
+        dest=self.root/"releases"/target;dest.mkdir()
+        (self.root/"current").unlink();(self.root/"current").symlink_to(dest)
+        clock=patch.object(repin,"_now",return_value=self.now);clock.start();self.addCleanup(clock.stop)
+        opts={"source":self.release,"target":target,"publication":self.publication,
+              "decision":"OWNER-TEST-REPIN-062","archive":self.volume/"inbox"/"repin-archive",
+              "plist":plist,"backup_factory":self.factory,"quiescent":lambda:None,
+              "verify_release":lambda:None,"confirm":True}
+        return repin,inbox,p,opts
+
+    def test_repin_preserves_scope_ledger_and_same_window(self):
+        from workspace_app.wsf_collector_runner import read_status
+        repin,inbox,p,opts=self.repin_fixture()
+        raw=inbox.export(self.h);before=p704.load_access_store(self.root);status=read_status(self.root)
+        result=repin.switch(self.root,self.h,**opts)
+        self.assertTrue(result["ledger_unchanged"])
+        n,c,policy,resolve=service_inbox(self.root,publication=self.publication)
+        self.assertEqual(c,{**p,"release_sha":opts["target"]})
+        self.assertEqual(read_status(self.root),{**status,"release_sha":opts["target"]})
+        self.assertEqual(opts["plist"].read_bytes(),launchd_template(self.root,opts["target"]))
+        self.assertEqual(n.export(self.h),raw)
+        self.assertEqual(p704.load_access_store(self.root),before)
+        provider=provider_for(self.root,c)
+        with patch.object(provider,"project") as pull:
+            self.assertEqual(attempt_once(self.root,n,policy,resolve,provider,backup_factory=self.factory),{"status":"not-due","previous_state":"verified"})
+            pull.assert_not_called()
+        self.assertEqual(n.export(self.h),raw)
+
+    def test_repin_interrupted_resume(self):
+        from workspace_app.wsf_collector_runtime import PROVISION_JOURNAL,RECEIPT
+        repin,inbox,p,opts=self.repin_fixture()
+        raw=inbox.export(self.h)
+        def interrupted(path,data):
+            if path.name==RECEIPT:raise OSError("fixture interruption")
+            atomic(path,data)
+        with self.assertRaises(OSError):repin.switch(self.root,self.h,**opts,write=interrupted)
+        self.assertTrue((self.root/"config"/PROVISION_JOURNAL).exists())
+        with self.assertRaises(ManualContextError):self.hpilot.authorize(self.h,"read")
+        with self.assertRaises(ManualContextError):service_inbox(self.root,publication=self.publication)
+        with self.assertRaises(ManualContextError):repin.switch(self.root,self.h,**{**opts,"decision":"OWNER-WRONG-DECISION"})
+        self.assertEqual(repin.switch(self.root,self.h,**opts)["status"],"repinned")
+        self.assertFalse((self.root/"config"/PROVISION_JOURNAL).exists())
+        self.assertEqual(inbox.export(self.h),raw)
+
+    def test_repin_denies_modified_schedule_or_missing_approval(self):
+        repin,inbox,p,opts=self.repin_fixture()
+        before=p704.load_access_store(self.root)
+        with self.assertRaises(ManualContextError):repin.switch(self.root,self.h,**{**opts,"confirm":False})
+        atomic(opts["plist"],b"other schedule")
+        with self.assertRaises(ManualContextError):repin.switch(self.root,self.h,**opts)
+        self.assertFalse(opts["archive"].exists())
+        self.assertEqual(p704.load_access_store(self.root),before)
+
+    def test_repin_compatible_only_exact_allowed_paths(self):
+        from wsf_collector_repin_operator import compatible
+        self.assertTrue(compatible(["reference/python/workspace_frontend/src/CRM.tsx","docs/roadmap/WORKSPACE-FIRST-DELIVERY.md"]))
+        for p in ("reference/python/workspace_app/wsf_local_roadmap_collector.py","reference/python/workspace_app/requirements.lock","reference/python/p7_04_persistent_access.py"):
+            self.assertFalse(compatible([p]))

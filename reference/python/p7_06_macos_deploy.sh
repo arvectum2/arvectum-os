@@ -367,11 +367,28 @@ preflight() {
   python3 "$P706" preflight --runtime-root "$RUNTIME_ROOT" --target-release "$target" --decision-ref "$decision_ref"
 }
 
+collector_update_gate() {
+  cfg="$RUNTIME_ROOT/config/roadmap-collector-policy.json"
+  [ ! -e "$RUNTIME_ROOT/config/roadmap-collector-provision.json" ] || fail "collector journal requires reconciliation"
+  [ ! -e "$RUNTIME_ROOT/config/roadmap-collector-cutover.json" ] || fail "collector cutover requires reconciliation"
+  if [ -e "$cfg" ] || [ -L "$cfg" ]; then
+    launchctl print "$DOMAIN" >/dev/null 2>&1 || fail "collector launchd domain unavailable"
+    if detail=$(launchctl print "$DOMAIN/com.arvectum.os.roadmap-collector" 2>&1); then
+      fail "unload exact Collector job under reviewed continuity plan before release change"
+    fi
+    case "$detail" in
+      *'Could not find service "com.arvectum.os.roadmap-collector" in domain'*) ;;
+      *) fail "collector job state unknown" ;;
+    esac
+  fi
+}
+
 update_runtime() {
   decision_ref=${1:-}
   [ -n "$decision_ref" ] || fail "decision-ref is required"
   assert_macos
   command -v launchctl >/dev/null 2>&1 || fail "launchctl unavailable"
+  collector_update_gate
   source=$(current_release)
   target=$(assert_canonical_checkout)
   [ "$source" != "$target" ] || fail "canonical target is already the active release"
@@ -391,6 +408,7 @@ update_runtime() {
 
   acquire_lock
   trap 'release_lock' EXIT HUP INT TERM
+  collector_update_gate
   # Revalidate after taking the shared lock: login/desktop start may
   # have completed during preflight.
   [ "$(current_release)" = "$source" ] || fail "source changed during preflight"
@@ -444,6 +462,7 @@ PY
 
 rollback_last() {
   assert_macos
+  collector_update_gate
   pointer="$RUNTIME_ROOT/run/p7-06-last-success.json"
   [ -f "$pointer" ] || fail "no successful P7.06 transaction is available for rollback"
   source=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["source_release"])' "$pointer")
@@ -454,6 +473,10 @@ rollback_last() {
   backup_sha=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["backup_sha256"])' "$pointer")
   workspace_was_running=$(python3 -c 'import json,sys; print(str(json.load(open(sys.argv[1])).get("workspace_was_running", False)).lower())' "$pointer")
   [ "$(current_release)" = "$target" ] || fail "rollback source mismatch: active release is not transaction target"
+  if [ -e "$RUNTIME_ROOT/config/roadmap-collector-policy.json" ]; then
+    pinned=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["release_sha"])' "$RUNTIME_ROOT/config/roadmap-collector-policy.json")
+    [ "$pinned" = "$source" ] || fail "collector already re-pinned; reviewed compatibility/rollback plan required"
+  fi
   acquire_lock; trap 'release_lock' EXIT HUP INT TERM
   restore_plist_and_start "$txdir" "$source"
   payload="$txdir/rollback-payload-$(date -u '+%Y%m%dT%H%M%SZ').json"
