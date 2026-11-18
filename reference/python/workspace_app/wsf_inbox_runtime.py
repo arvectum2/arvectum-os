@@ -76,7 +76,7 @@ class RuntimeInboxPilot:
                 operation=exact,resource=RESOURCE,access_path="local")
             if not d.allowed or d.principal_kind!="human" or d.grant_id!=p["grants"][exact]:
                 raise ManualContextError("exact grant unavailable")
-            if collector.present(self.root,collector.JOURNAL):
+            if collector.present(self.root,collector.JOURNAL) or collector.present(self.root,collector.PROVISION_JOURNAL):
                 raise ManualContextError("inbox cutover incomplete")
             if collector.present(self.root,collector.RECEIPT) or collector.present(self.root,collector.CONFIG):
                 if draft!=self.successor_draft:raise ManualContextError("collector predecessor mismatch")
@@ -127,6 +127,8 @@ class RuntimeInboxPilot:
             access.grant_id,start,end,frozenset({operation}))
         def guard():
             a=authorize()
+            if collector.present(self.root,collector.PROVISION_JOURNAL):
+                raise ManualContextError("collector provisioning active")
             if isinstance(inbox,collector.CollectorInbox) and (self.root/"run"/"p7-06-deploy.lock").exists():
                 raise ManualContextError("deployment active")
             self.authorize(a,operation)

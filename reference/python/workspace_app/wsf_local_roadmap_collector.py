@@ -74,6 +74,14 @@ class ServicePolicy:
             raise ManualContextError("collector release mismatch")
         if not HEX32.fullmatch(self.credential_id):
             raise ManualContextError("collector credential invalid")
+        state=p704.load_access_store(root)
+        key=p704._principal_key(self.principal)
+        grants=[g for g in state["grants"].values() if g["principal_key"]==key and g["status"]=="active"]
+        credentials=[c for c in state["credentials"].values() if c["principal_key"]==key and c["status"]=="active"]
+        if (len(grants)!=1 or len(credentials)!=1 or grants[0]["grant_id"]!=self.grant_id
+            or credentials[0]["credential_id"]!=self.credential_id
+            or (grants[0]["operation"],grants[0]["resource"],grants[0]["access_paths"])!=(OPERATION,RESOURCE,["local"])):
+            raise ManualContextError("collector access scope changed")
         d=p704.authorize_from_credential_file(root,organization=self.organization,
             principal=self.principal,credential_id=self.credential_id,
             credential_file=root/"secrets"/"p7-04"/(self.credential_id+".secret"),

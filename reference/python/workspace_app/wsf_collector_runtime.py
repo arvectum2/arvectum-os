@@ -1,4 +1,4 @@
-"""0.6.2 runtime composition candidate. Effective publication pin is deliberately unset."""
+"""0.6.2 composition; publication pin is not an activation receipt."""
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -10,12 +10,13 @@ from .wsf_manual_context import ManualContextError, _identity, _digest, _json
 from .wsf_manual_policy import _private_file
 from .wsf_local_roadmap_collector import CollectorInbox, ServicePolicy, EXPIRY, REGISTRY_SHA, exact_registry
 
-# Must be set in an independently reviewed canonical publication/activation package.
-PUBLICATION_PIN = None
+# Exact proposed publication blob; only effective after owner-approved main publication.
+PUBLICATION_PIN = "725e89b43ef346fa6408cfc4484cb46548b6b1cc"
 DRAFT_BLOB = "290d7cf7eef5461bfce86ff39871b9267e6efcff"
 CONFIG = "roadmap-collector-policy.json"
 RECEIPT = "roadmap-collector-activation.json"
 JOURNAL = "roadmap-collector-cutover.json"
+PROVISION_JOURNAL = "roadmap-collector-provision.json"
 KEYS = {"schema","draft_blob","publication","registry_sha256","owner_scope",
         "organization","principal","credential_id","grant_id","release_sha",
         "starts_at","expires_at","legacy_sha256","legacy_event_count",
@@ -37,7 +38,7 @@ def load_config(root,*,publication=None):
     root=Path(root)
     if publication is None or not re.fullmatch("[0-9a-f]{40}",publication):
         raise ManualContextError("collector publication not admitted")
-    if not root.is_absolute() or root.resolve()!=root or present(root,JOURNAL):
+    if not root.is_absolute() or root.resolve()!=root or present(root,JOURNAL) or present(root,PROVISION_JOURNAL):
         raise ManualContextError("collector cutover incomplete")
     try:
         return validate_documents(_private_file(root/"config"/CONFIG),_private_file(root/"config"/RECEIPT),publication)
@@ -95,5 +96,15 @@ def service_inbox(root,*,publication=None):
         current,fresh=load_config(root,publication=publication)
         if current!=p or fresh!=policy:
             raise ManualContextError("collector policy changed")
+        # Pin the still-admitted predecessor and source-review document at each
+        # authorization boundary; never extend an earlier owner pilot expiry.
+        oldraw=_private_file(Path(root)/"config"/"roadmap-inbox-policy.json")
+        old=json.loads(oldraw)
+        receipt=json.loads(_private_file(Path(root)/"config"/"roadmap-inbox-activation.json"))
+        if (receipt.get("policy_sha256")!=_digest(oldraw) or receipt.get("draft_blob")!=old.get("draft_blob")
+            or old.get("scope")!=p["owner_scope"] or old.get("registry_sha256")!=REGISTRY_SHA
+            or datetime.fromisoformat(old["expires_at"])<policy.expires_at
+            or _digest(_private_file(Path(root)/"config"/"roadmap-collector-source-review.json"))!=p["source_review_sha256"]):
+            raise ManualContextError("collector predecessor or source review changed")
         return fresh.resolve(root)
     return inbox,p,policy,resolve

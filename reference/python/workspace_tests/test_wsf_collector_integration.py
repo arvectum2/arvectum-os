@@ -211,3 +211,94 @@ class CollectorIntegrationTests(TestCase):
             self.assertIn("roadmap collector cycle active or unsafe",attempt.stderr)
             self.assertFalse((self.root/"run"/"p7-06-deploy.lock").exists())
         self.assertEqual(subprocess.run(["/bin/sh","-c",command],env=env,capture_output=True,timeout=10).returncode,0)
+
+    def prepare_provision(self):
+        from workspace_app import wsf_collector_provision as p
+        (self.root/"config"/p.SOURCE_REVIEW).unlink()
+        decision="OWNER-TEST-COLLECTOR-062"
+        before=p704.load_access_store(self.root)
+        doc=p.approval_document(self.root,self.h,self.legacy,self.backup,self.release,self.publication,decision,self.archive,self.end)
+        atomic(self.root/"config"/p.APPROVAL,_json(doc))
+        clock=patch.object(p,"_now",return_value=self.now);clock.start();self.addCleanup(clock.stop)
+        opts={"release":self.release,"publication":self.publication,"decision":decision,
+              "archive":self.archive,"expires":self.end,"quiescent":lambda:None,
+              "confirm":True,"source_verified":True}
+        return p,before,opts
+
+    def recover_provision(self,p,opts):
+        return p.recover(self.root,self.h,self.legacy,self.backup,release=self.release,publication=self.publication,
+                         decision=opts["decision"],quiescent=lambda:None,confirm=True)
+
+    def test_provision_exact_approval_and_one_grant(self):
+        p,before,opts=self.prepare_provision()
+        for change in ({"confirm":False},{"source_verified":False},{"publication":None},
+                       {"expires":self.end-timedelta(hours=1)},{"release":"9"*40}):
+            with self.assertRaises(ManualContextError):
+                p.provision(self.root,self.h,self.legacy,self.backup,**{**opts,**change})
+        self.assertEqual(p704.load_access_store(self.root),before)
+        result=p.provision(self.root,self.h,self.legacy,self.backup,**opts)
+        self.assertEqual(result["grants_created"],1)
+        self.assertFalse(result["schedule_installed"])
+        inbox,doc,policy,resolve=service_inbox(self.root,publication=self.publication)
+        service=resolve()
+        self.assertEqual(service.principal_kind,"service")
+        self.assertNotEqual(service.actor,self.s.actor)
+        self.assertEqual(p._isolated_state(p704.load_access_store(self.root),p704._principal_key(service.actor)),before)
+        self.assertEqual(len(self.hpilot.authorize(self.h,"read").read(self.h)["sources"]),8)
+        with self.assertRaises(ManualContextError):
+            p.provision(self.root,self.h,self.legacy,self.backup,**opts)
+
+    def test_provision_interrupted_registration_recovery(self):
+        from workspace_app.wsf_collector_runtime import PROVISION_JOURNAL
+        p,before,opts=self.prepare_provision()
+        with patch.object(p704,"grant_access",side_effect=OSError("fixture interruption")):
+            with self.assertRaises(OSError):
+                p.provision(self.root,self.h,self.legacy,self.backup,**opts)
+        self.assertTrue((self.root/"config"/PROVISION_JOURNAL).exists())
+        with self.assertRaises(ManualContextError):self.hpilot.authorize(self.h,"read")
+        state=p704.load_access_store(self.root)
+        key=next(k for k in state["principals"] if k not in before["principals"])
+        self.assertEqual(self.recover_provision(p,opts)["status"],"aborted")
+        after=p704.load_access_store(self.root)
+        self.assertEqual(after["principals"][key]["status"],"disabled")
+        self.assertEqual(p._isolated_state(after,key),before)
+        self.assertEqual(self.legacy.export(self.h),self.docs["legacy.json"])
+        self.assertEqual(self.backup.verified_snapshot(self.h),self.docs["legacy.json"])
+        self.assertEqual(len(self.hpilot.authorize(self.h,"read").read(self.h)["sources"]),10)
+
+    def test_provision_interrupted_cutover_recovery(self):
+        p,before,opts=self.prepare_provision()
+        original=p.cutover
+        def interrupted(*args,**kwargs):
+            def write(path,raw):
+                if path.name==CONFIG:raise OSError("fixture interruption")
+                atomic(path,raw)
+            return original(*args,**kwargs,write=write)
+        with patch.object(p,"cutover",side_effect=interrupted):
+            with self.assertRaises(OSError):p.provision(self.root,self.h,self.legacy,self.backup,**opts)
+        self.assertEqual(self.recover_provision(p,opts)["status"],"aborted")
+        self.assertEqual(self.legacy.export(self.h),self.docs["legacy.json"])
+        self.assertEqual(self.backup.verified_snapshot(self.h),self.docs["legacy.json"])
+
+    def test_provision_completed_cutover_recovers_without_downgrade(self):
+        p,before,opts=self.prepare_provision()
+        with patch.object(p,"_remove",side_effect=OSError("fixture interruption")):
+            with self.assertRaises(OSError):p.provision(self.root,self.h,self.legacy,self.backup,**opts)
+        self.assertEqual(self.recover_provision(p,opts)["status"],"finalized")
+        inbox,doc,policy,resolve=service_inbox(self.root,publication=self.publication)
+        self.assertEqual(self.factory(inbox.file).verified_snapshot(self.h),inbox.export(self.h))
+        self.assertEqual(p._isolated_state(p704.load_access_store(self.root),p704._principal_key(resolve().actor)),before)
+
+    def test_service_fails_closed_on_grant_expansion(self):
+        self.migrate()
+        _,_,_,resolve=service_inbox(self.root,publication=self.publication)
+        self.assertEqual(resolve().principal_kind,"service")
+        p704.grant_access(self.root,self.svc,operation="workspace.inbox.review",resource="roadmap-inbox")
+        with self.assertRaises(ManualContextError):resolve()
+
+    def test_service_fails_closed_on_source_review_drift(self):
+        self.migrate()
+        _,_,_,resolve=service_inbox(self.root,publication=self.publication)
+        self.assertEqual(resolve().principal_kind,"service")
+        atomic(self.root/"config"/"roadmap-collector-source-review.json",b"{}")
+        with self.assertRaises(ManualContextError):resolve()
