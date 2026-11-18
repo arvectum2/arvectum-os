@@ -43,3 +43,30 @@ it("clears previous protected content on failed refresh",async()=>{
   await screen.findByRole("alert");
   expect(screen.queryByText("Private fixture")).toBeNull();
 });
+
+it("opens exact existing linked project and offers a CRM link without writing", async()=>{
+ const p={id:"PRJ-"+"a".repeat(32),label:"Fixture project",kind:"customer"};
+ const q={id:"PRJ-"+"b".repeat(32),label:"Other project",kind:"internal"};
+ const n={id:"NOTE-a",title:"Selected note",text:"Fixture",project_id:p.id,revision:1,at:"2026-11-17T10:00:00Z"};
+ window.history.replaceState(null,"","/manual-context?project_id="+p.id);
+ try{
+  const f=vi.fn(async()=>response({projects:[p,q],notes:[n,{...n,id:"NOTE-b",title:"Other note",project_id:q.id}]}));
+  vi.stubGlobal("fetch",f);show();
+  expect((await screen.findByRole("link",{name:"Клиенты и сделки этого проекта"})).getAttribute("href")).toBe("/crm?project_id="+p.id);
+  expect(screen.getByText(n.title)).toBeTruthy();
+  expect(screen.queryByText("Other note")).toBeNull();
+  expect(f).toHaveBeenCalledTimes(1);
+ }finally{window.history.replaceState(null,"","/");}
+});
+it("does not silently show all notes for an unknown project link",async()=>{
+ window.history.replaceState(null,"","/manual-context?project_id=PRJ-"+"c".repeat(32));
+ try{
+  vi.stubGlobal("fetch",vi.fn(async()=>response({projects:[],notes:[{id:"NOTE-a",title:"Unrelated note",text:"Synthetic",project_id:null,revision:1,at:"now"}]})));
+  show();
+  await screen.findByText("Запрошенный проект недоступен. Выберите проект в списке.");
+  expect(screen.queryByText("Unrelated note")).toBeNull();
+  expect(screen.queryByRole("link",{name:"Клиенты и сделки этого проекта"})).toBeNull();
+  fireEvent.change(screen.getByLabelText("История проекта"),{target:{value:""}});
+  expect(screen.getByText("Unrelated note")).toBeTruthy();
+ }finally{window.history.replaceState(null,"","/");}
+});

@@ -3,6 +3,7 @@ import { useWorkspaceLanguage } from "./i18n";
 import "./CompanyWorkspace.css";
 import "./InformationHub.css";
 import "./ManualContext.css";
+import { admittedProject, initialProject, projectHref } from "./projectNavigation";
 
 type Project = { id: string; label: string; kind: "customer" | "internal" };
 type Note = { id: string; revision: number; title: string; text: string; project_id: string | null; at: string };
@@ -33,14 +34,14 @@ export function ManualContext({ csrfToken }: { csrfToken: string }) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [project, setProject] = useState("");
-  const [filter, setFilter] = useState("");
+  const [filter, setFilter] = useState<string | null>(() => initialProject());
   const [editing, setEditing] = useState<Note | null>(null);
   const [history, setHistory] = useState<Note[]>([]);
   const pending = useRef<Pending | null>(null);
   const generation = useRef(0);
 
   function clearPrivate() {
-    setData(null); setLabel(""); setTitle(""); setBody(""); setProject(""); setFilter(""); setEditing(null); setHistory([]);
+    setData(null); setLabel(""); setTitle(""); setBody(""); setProject(""); setFilter(initialProject()); setEditing(null); setHistory([]);
   }
   async function load() {
     const seq = ++generation.current;
@@ -107,6 +108,7 @@ export function ManualContext({ csrfToken }: { csrfToken: string }) {
     } finally { if (seq === generation.current) setBusy(false); }
   }
 
+  const availableFilter = !!data && admittedProject(filter,data.projects);
   return <section className="company-page manual-context" aria-labelledby="manual-title">
     <header className="company-page-head"><div>
 
@@ -139,10 +141,13 @@ export function ManualContext({ csrfToken }: { csrfToken: string }) {
           {editing && <button type="button" disabled={busy} onClick={() => {setEditing(null); setTitle(""); setBody("");}}>{text("Отмена", "Cancel")}</button>}
         </form>
       </div></details>
-      <div className="hub-filters"><label>{text("История проекта", "Project history")}<select disabled={busy} value={filter} onChange={e => {setFilter(e.target.value);setHistory([]);}}>
+      <div className="hub-filters"><label>{text("История проекта", "Project history")}<select disabled={busy} value={availableFilter ? filter ?? "" : "__unavailable__"} onChange={e => {setFilter(e.target.value);setHistory([]);}}>
+        {!availableFilter&&<option value="__unavailable__" disabled>{text("Проект недоступен","Project unavailable")}</option>}
         <option value="">{text("Все заметки", "All notes")}</option>{data.projects.map(p => <option value={p.id} key={p.id}>{p.label}</option>)}
       </select></label><button disabled={busy} type="button" onClick={() => void download()}>{text("Экспортировать данные", "Export data")}</button></div>
-      {data.notes.filter(n => !filter || n.project_id === filter).slice().reverse().map(n => <details className="company-card" key={n.id}><summary><strong>{n.title}</strong></summary>
+      {!availableFilter && <p role="status">{text("Запрошенный проект недоступен. Выберите проект в списке.","Requested project unavailable. Select a project from the list.")}</p>}
+      {availableFilter && filter && <p><a href={projectHref("/crm",filter)}>{text("Клиенты и сделки этого проекта","Clients and deals for this project")}</a></p>}
+      {data.notes.filter(n => availableFilter && (!filter || n.project_id === filter)).slice().reverse().map(n => <details className="company-card" key={n.id}><summary><strong>{n.title}</strong></summary>
         <p className="manual-note">{n.text}</p>
         <p className="hub-meta">{data.projects.find(p => p.id === n.project_id)?.label ?? text("Без проекта", "No project")} · {text("Версия", "Revision")} {n.revision} · {new Date(n.at).toLocaleString()}</p>
         <div className="hub-filters"><button disabled={busy} type="button" onClick={() => {setEditing(n);setTitle(n.title);setBody(n.text);setProject(n.project_id ?? "");}}>{text("Редактировать", "Edit")}</button>
