@@ -3,6 +3,7 @@ import { CompanyGeneratedOutputs } from "./CompanyGeneratedOutputs";
 import { CompanyMaterials } from "./CompanyMaterials";
 import { CompanyProjects } from "./CompanyProjects";
 import { InformationHub } from "./InformationHub";
+import { FocusedRoadmapInbox } from "./RoadmapInbox";
 import { ManualContext } from "./ManualContext";
 import { CRM } from "./CRM";
 import { MissionControl } from "./MissionControl";
@@ -62,6 +63,7 @@ export function Shell({ context, onLogout }: { context: WorkspaceContext; onLogo
   else if (currentPath === "/control-details") content = <MissionControl csrfToken={context.session.csrf_token} />;
   else if (currentPath === "/crm") content = <CRM csrfToken={context.session.csrf_token} />;
   else if (currentPath === "/manual-context") content = <ManualContext csrfToken={context.session.csrf_token} />;
+  else if (currentPath === "/information-hub" && window.location.search === "?view=changes") content = <FocusedRoadmapInbox key={"focused-inbox-"+context.session.csrf_token} csrfToken={context.session.csrf_token} />;
   else if (currentPath === "/information-hub") content = <InformationHub csrfToken={context.session.csrf_token} />;
   else if (currentPath === "/projects") content = <CompanyProjects />;
   else if (currentPath === "/library" || currentPath === "/company-materials") content = <CompanyMaterials csrfToken={context.session.csrf_token} />;

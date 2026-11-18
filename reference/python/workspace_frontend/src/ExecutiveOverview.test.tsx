@@ -23,6 +23,7 @@ it("one explicit read of seven existing routes; no duplicate linked decision or 
  const {f}=setup();expect(f).not.toHaveBeenCalled();click();
  await screen.findByText("Клиентский проект — сдать результат");
  expect(f).toHaveBeenCalledTimes(7);
+ expect(screen.getByRole("link",{name:"Изменения ожидают просмотра"}).getAttribute("href")).toBe("/information-hub?view=changes");
  expect(screen.getByText("Пересмотр пилота")).toBeTruthy();
  expect(screen.queryByText("Связанное решение пилота")).toBeNull();
  expect(screen.queryByText("Историческое решение 1")).toBeNull();
