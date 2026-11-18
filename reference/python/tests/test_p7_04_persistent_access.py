@@ -71,6 +71,30 @@ class P704PersistentAccessTests(unittest.TestCase):
         self.assertEqual(first["credentials_issued"], 0)
         self.assertEqual(first["grants_issued"], 0)
 
+    def test_explicit_service_selection_preserves_other_principals(self):
+        from unittest.mock import patch
+        collector = Identity("principal", "collector", self.org.value)
+        ck = p704.register_principal(self.root, collector, kind="service")
+        sk = p704._principal_key(self.service)
+        cid = p704.issue_credential(self.root, collector)["credential_id"]
+        p704.grant_access(self.root, collector, operation="workspace.inbox.collect", resource="roadmap-inbox")
+        before = p704.load_access_store(self.root)
+        with patch.object(p704, "load_p6_owner_context", return_value=(self.org,self.human)):
+            with self.assertRaises(p704.IntegrityError):
+                p704.bootstrap_from_p6_owner_context(self.root, Path("unused"))
+            for bad in (p704._principal_key(self.human),"0"*64,"invalid"):
+                with self.assertRaises(p704.P704Error):
+                    p704.bootstrap_from_p6_owner_context(self.root, Path("unused"),service_principal_key=bad)
+            exact=p704.bootstrap_from_p6_owner_context(self.root, Path("unused"),service_principal_key=sk)
+            self.assertEqual(exact["service_identity"]["value"],self.service.value)
+            self.assertFalse(exact["service_created"])
+            self.assertEqual(exact["credentials_issued"],0)
+            self.assertEqual(exact["grants_issued"],0)
+            self.assertEqual(p704.load_access_store(self.root),before)
+            p704.disable_principal(self.root,collector)
+            with self.assertRaises(p704.IntegrityError):
+                p704.bootstrap_from_p6_owner_context(self.root, Path("unused"),service_principal_key=ck)
+
     def test_p6_context_with_authority_claim_is_rejected(self):
         p6_root = Path(self.tmp.name) / "bad-p6"
         p6_root.mkdir(mode=0o700)

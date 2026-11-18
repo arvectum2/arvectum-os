@@ -58,15 +58,24 @@ def _ensure_credential(root: Path, principal: Identity) -> tuple[str, str]:
     return issued["credential_id"], p704.read_credential_secret(Path(issued["secret_path"]))
 
 
-def run_selected_mac_proof(root: Path, p6_context_file: Path, release_sha: str) -> dict[str, Any]:
+def run_selected_mac_proof(root: Path, p6_context_file: Path, release_sha: str, *, service_principal_key: Optional[str] = None) -> dict[str, Any]:
     release_sha = p703._validate_release_sha(release_sha)
     root = root.expanduser().resolve()
     before = _runtime(root)
 
-    continuity = p704.bootstrap_from_p6_owner_context(root, p6_context_file)
+    continuity = p704.bootstrap_from_p6_owner_context(root, p6_context_file, service_principal_key=service_principal_key)
     organization = _identity(continuity["organization"])
     human = _identity(continuity["human_operator"])
     service = _identity(continuity["service_identity"])
+
+    # This proof rotates the observer credential. Never apply it to another
+    # service, even when explicitly selected or when it is the only enabled one.
+    state = p704.load_access_store(root)
+    grants = [g for g in state["grants"].values() if g["principal_key"] == p704._principal_key(service)]
+    def observer_grant(g):
+        return (g["operation"],g["resource"],g["access_paths"]) == ("runtime.health.observe","runtime:p7-02",["local"])
+    if any(not observer_grant(g) for g in grants) or ((grants or service_principal_key is not None) and not any(observer_grant(g) and g["status"]=="active" for g in grants)):
+        raise p704.IntegrityError("selected service is not an admitted runtime observer for credential rotation")
 
     human_cid, human_secret = _ensure_credential(root, human)
     service_cid, service_secret = _ensure_credential(root, service)
@@ -204,6 +213,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--runtime-root", required=True)
     parser.add_argument("--p6-context-file", required=True)
     parser.add_argument("--release-sha", required=True)
+    parser.add_argument("--service-principal-key", help="Exact existing enabled service key from local registry; required if ambiguous")
     parser.add_argument("--json", action="store_true")
     return parser
 
@@ -213,6 +223,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     try:
         result = run_selected_mac_proof(
             Path(args.runtime_root), Path(args.p6_context_file), args.release_sha,
+            service_principal_key=args.service_principal_key,
         )
         if args.json:
             print(json.dumps(result, ensure_ascii=False, sort_keys=True))

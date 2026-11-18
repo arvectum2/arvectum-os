@@ -2,6 +2,7 @@ import json
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 import p7_05_selected_mac_proof as proof
@@ -13,6 +14,9 @@ OTHER_SHA = "c" * 40
 
 class P705SelectedMacProofContractTests(unittest.TestCase):
     def setUp(self):
+        # Synthetic runtime fixture must not inspect the host's real launchd job.
+        observer = patch.object(proof, "_macos_observer_state", return_value={"loaded":True,"exact_release_pinned":True})
+        observer.start(); self.addCleanup(observer.stop)
         self.tmp = tempfile.TemporaryDirectory()
         base = Path(self.tmp.name)
         self.root = base / "runtime"
@@ -80,6 +84,25 @@ class P705SelectedMacProofContractTests(unittest.TestCase):
         self.assertFalse(result["external_effects"])
         self.assertTrue((self.root / "evidence" / result["attestation_basename"]).exists())
         self.assertFalse((self.root / "run" / "p7-05-alert.json").exists())
+
+    def test_explicit_selection_in_multi_service_registry(self):
+        from arvectum_os_ref.identity import Identity
+        p=proof.p704
+        first=p.bootstrap_from_p6_owner_context(self.root,self.context)
+        observer=p._principal_key(proof._identity(first["service_identity"]))
+        collector=Identity("principal","collector","org-arvectum")
+        key=p.register_principal(self.root,collector,kind="service")
+        cid=p.issue_credential(self.root,collector)["credential_id"]
+        gid=p.grant_access(self.root,collector,operation="workspace.inbox.collect",resource="roadmap-inbox")
+        before=p.load_access_store(self.root)
+        with self.assertRaises(p.IntegrityError):
+            proof.run_selected_mac_proof(self.root,self.context,SHA)
+        result=proof.run_selected_mac_proof(self.root,self.context,SHA,service_principal_key=observer)
+        self.assertEqual(result["status"],"PASS")
+        after=p.load_access_store(self.root)
+        self.assertEqual(after["principals"][key],before["principals"][key])
+        self.assertEqual(after["credentials"][cid],before["credentials"][cid])
+        self.assertEqual(after["grants"][gid],before["grants"][gid])
 
     def test_selected_mac_contract_fails_on_runtime_release_mismatch(self):
         health = json.loads(self.health_path.read_text(encoding="utf-8"))

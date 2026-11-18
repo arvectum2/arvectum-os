@@ -1,0 +1,11 @@
+# WSF-07A: explicit multi-service continuity candidate
+
+Status: development / technical review only. Scope: approved draft 290d7cf7eef5461bfce86ff39871b9267e6efcff; SHA256 d1ff2ac5b85be5280e6ac2c011d5bfb0fcda9596c60347b27b3e1820b0fa6a88 rechecked against original. Prior candidate 300faac71844c8aa277525386963ca62f7b73f6e. No effective contract publication, no activation or live grants.
+
+P7.04 continuity accepts an optional exact local service registry key, resolves existing enabled service in the original organization before any registry mutation, and does not create a service or issue a credential or grant on explicit selection. Default still refuses multiple enabled services. P7.04 and P7.05 proof CLI accept --service-principal-key. P7.04 proof refuses unrelated historical grants, explicit targets without an active exact observer grant, and revoked-only observer history before credential/grant operations; it must not rotate the collector credential or elevate it. P7.05 uses explicit selection for continuity but only performs its original human audit operations. Existing organization, human, service boundary unchanged. No registry schema change. Selection is not organizational authority nor approval to execute a proof.
+
+Selected-device read-only evidence: current registry contains one enabled human and one enabled service; the existing service's active grant is runtime.health.observe/runtime:p7-02. No live change. Collector not registered.
+
+47 test cases PASS on isolated fixtures: P7.04 access, P7.04 and P7.05 proof, collector core and integration, human runtime. New cases for ambiguous default, explicit old service, invalid/disabled/wrong-kind selector, preserving unrelated collector credential and grant, denial of observer proof against collector as sole service. P7.05 synthetic proof tests mock host launchd observation rather than interrogating live production job; real production proof requirement not changed. Initial fixture test failure was caused by inspecting the wrong live launchd release, corrected without touching system. TMPDIR=/private/tmp honors existing no-symlinks gate.
+
+Remaining: exact-head CI, effective contract/activation authority and selected-device provisioner/cutover review. Require explicit production approval; do not repurpose the existing observer.
