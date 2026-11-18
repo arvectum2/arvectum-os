@@ -37,6 +37,7 @@ from workspace_app.wsf_procurement_reference import RuntimeProcurementReference
 from workspace_app.wsf_company_control_reference import CompanyControlReference
 from workspace_app.wsf_decision_reference import DecisionReference
 from workspace_app.wsf_risk_reference import RiskReference
+from workspace_app.wsf_finance_reference import FinanceReference
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -96,7 +97,8 @@ def build_workspace_app(settings: WorkspaceSettings):
                      procurement_reference=RuntimeProcurementReference(settings.runtime_root),
                      company_control_reference=CompanyControlReference(settings.runtime_root),
                      decision_reference=DecisionReference(settings.runtime_root),
-                     risk_reference=RiskReference(settings.runtime_root))
+                     risk_reference=RiskReference(settings.runtime_root),
+                     finance_reference=FinanceReference(settings.runtime_root))
     app = install_f11_routes(
         app,
         asset_admission=admission,
