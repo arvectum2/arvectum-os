@@ -47,3 +47,23 @@ it("finance route reads finance only and work route is separately scoped",async(
  expect(screen.queryByRole("heading",{name:"Финансы"})).toBeNull();
  expect(screen.queryByRole("heading",{name:"Риски"})).toBeNull();
 });
+it("reports eight current sources and separately preserves two excluded historical locators",async()=>{
+ const active=["COMPANY","OS","PORT-001","PORT-002","PORT-003","PORT-004","PORT-007","PORT-008"];
+ const old=fixture["roadmap-inbox"];
+ const source=(source_id:string)=>({source_id,state:"current-source-backed",freshness:"current-observation"});
+ const inbox={...old,sources:active.map(source),excluded_sources:["PORT-005","PORT-006"].map(source),
+  items:[],pending_count:0,collector:{last_service_scan_at:"2026-11-18T15:00:00Z",last_verified_at:"2026-11-18T15:00:01Z",
+   run_state:"verified",expires_at:"2026-12-17T09:35:36Z",next_window_at:"2026-11-18T18:00:00Z",
+   release_sha:"a".repeat(40),event_count:20,bytes:10000,capacity_warning:false}};
+ const f=vi.fn(async(input:RequestInfo|URL)=>{
+  const k=String(input).replace("/api/app/v1/","");
+  return new Response(JSON.stringify(k==="roadmap-inbox"?inbox:fixture[k as keyof typeof fixture]),{status:200});
+ });
+ vi.stubGlobal("fetch",f);
+ render(<LanguageProvider initialLanguage="ru"><ExecutiveOverview csrfToken="fixture" mode="overview"/></LanguageProvider>);
+ click();
+ expect(await screen.findByText(/Актуальные сохранённые наблюдения: 8\/8/)).toBeTruthy();
+ expect(screen.getByText(/Исключено из мониторинга: 2/)).toBeTruthy();
+ expect(screen.getByText(/Локальный сборщик/)).toBeTruthy();
+ expect(f).toHaveBeenCalledTimes(7);
+});

@@ -90,6 +90,16 @@ export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;
  {crm?.items.slice(0,3).map(x=><p key={x.opportunity_id}>{x.party_name} · {x.next_action}</p>)}
  <div className="exec-signal"><span>{text("Изменения ожидают просмотра","Changes pending review")}</span><strong>{inbox?inbox.pending_count:status(sources.inbox)}</strong></div>
  {inbox&&<p className="exec-muted">{text("Актуальные сохранённые наблюдения: ","Current saved observations: ")}{inbox.sources.filter(s=>s.state==="current-source-backed"&&s.freshness==="current-observation").length}/{inbox.sources.length}. {text("Не новый сбор.","Not a new collection.")}</p>}
+ {inbox&&inbox.excluded_sources.length>0&&<p className="exec-muted">{text("Исключено из мониторинга: ","Excluded from monitoring: ")}{inbox.excluded_sources.length}</p>}
+ {inbox?.collector&&<details className="exec-row"><summary>{text("Локальный сборщик","Local collector")} · {text("состояние","state")}: {inbox.collector.run_state}</summary>
+ <p>{text("Последний сервисный сбор: ","Last service scan: ")}{inbox.collector.last_service_scan_at?fmt(inbox.collector.last_service_scan_at):"—"}</p>
+ <p>{text("Последняя проверенная запись: ","Last verified persistence: ")}{inbox.collector.last_verified_at?fmt(inbox.collector.last_verified_at):"—"}</p>
+ <p>{text("Следующее допустимое окно (не гарантия запуска): ","Next eligible window (not a guaranteed run): ")}{inbox.collector.next_window_at?fmt(inbox.collector.next_window_at):"—"}</p>
+ <p>{text("Резервная копия: ","Backup: ")}{inbox.backup_status}</p>
+ {inbox.sources.filter(s=>s.freshness!=="current-observation").map(s=><p key={s.source_id}>{s.source_id} · {s.state} · {text("требуется проверка","needs review")}</p>)}
+ <p>{text("События: ","Events: ")}{inbox.collector.event_count}/500 · {inbox.collector.bytes}/2097152 {text("байт","bytes")}</p>
+ {inbox.collector.capacity_warning&&<p role="alert">{text("Хранилище близко к лимиту","Storage nearing capacity")}</p>}
+ <p>{text("Полномочия до: ","Authority expires: ")}{inbox.collector.expires_at?fmt(inbox.collector.expires_at):"—"}</p></details>}
  <a href="/projects">{text("Портфель проектов","Project portfolio")}</a>
  </section>}</div>}
  {mode==="work"&&<div className="exec-panel"><a href="/operations">{text("Операционные очереди и продукты","Operational queues and products")}</a> · <a href="/information-hub">{text("Входящие и закупки","Inbox and procurement")}</a></div>}

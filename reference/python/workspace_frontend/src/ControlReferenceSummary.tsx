@@ -5,7 +5,8 @@ type Followup={opportunity_id:string;title:string;party_name:string;next_action:
 type RoadmapItem={id:string;source_id:string;repository:string;detected_at:string;state:string};
 type Source={source_id:string;state:string;freshness:string};
 type CRM={items:Followup[];as_of:string};
-type Inbox={items:RoadmapItem[];sources:Source[];coverage:string;pending_count:number;backup_status:string};
+type Collector={last_service_scan_at:string|null;run_state:string;last_verified_at:string|null;expires_at:string|null;next_window_at:string|null;release_sha:string|null;event_count:number;bytes:number;capacity_warning:boolean};
+type Inbox={excluded_sources:Source[];collector:Collector|null;items:RoadmapItem[];sources:Source[];coverage:string;pending_count:number;backup_status:string};
 type Result<T>={state:"unknown"|"unavailable"|"denied"}|{state:"ready";value:T};
 
 function record(v:unknown):Record<string,unknown>{
@@ -33,14 +34,17 @@ export function parseInbox(v:unknown):Inbox{
  if(!str(d.coverage)||!["partial","unknown"].includes(d.coverage)||!Array.isArray(d.items)||d.items.length>500||
   !Array.isArray(d.sources)||d.sources.length>10||!Number.isInteger(d.pending_count)||!str(d.backup_status))throw Error("shape");
  const ids=new Set<string>();
- const sources=d.sources.map((v:unknown)=>{
+ const parseSource=(v:unknown)=>{
   const s=record(v);
   if(!str(s.source_id)||ids.has(s.source_id)||!str(s.state)||!str(s.freshness)||
     !["current-source-backed","cached-source-backed","stale-cache","unavailable","reconciliation-required"].includes(s.state)||
     !["current-observation","requires-refresh"].includes(s.freshness))throw Error("shape");
   ids.add(s.source_id);
   return {source_id:s.source_id,state:s.state,freshness:s.freshness};
- });
+ };
+ const sources=d.sources.map(parseSource);
+ const excluded_sources=d.excluded_sources===undefined?[]:Array.isArray(d.excluded_sources)&&d.excluded_sources.length===2?d.excluded_sources.map(parseSource):(()=>{throw Error("excluded shape")})();
+ if(excluded_sources.length&&(sources.length!==8||sources.some(s=>!["COMPANY","OS","PORT-001","PORT-002","PORT-003","PORT-004","PORT-007","PORT-008"].includes(s.source_id))||excluded_sources.some(s=>!["PORT-005","PORT-006"].includes(s.source_id))))throw Error("active registry");
  const seen=new Set<string>();
  const items=d.items.map((v:unknown)=>{
   const r=record(v);
@@ -50,7 +54,19 @@ export function parseInbox(v:unknown):Inbox{
   return {id:r.id,source_id:r.source_id,repository:r.repository,detected_at:r.detected_at,state:r.state};
  });
  if(d.pending_count!==items.filter(r=>r.state==="pending").length)throw Error("count");
- return {items,sources,coverage:d.coverage,pending_count:d.pending_count as number,backup_status:d.backup_status};
+ let collector:Collector|null=null;
+ if(d.collector!==undefined){
+  const c=record(d.collector);
+  const dateOrNull=(v:unknown):v is string|null=>v===null||stamp(v);
+  if(!dateOrNull(c.last_service_scan_at)||!dateOrNull(c.last_verified_at)||!dateOrNull(c.expires_at)||!dateOrNull(c.next_window_at)
+    ||!str(c.run_state)||!["not-run","running","retry-pending","verified","degraded","blocked","unknown"].includes(c.run_state)
+    ||(c.release_sha!==null&&(!str(c.release_sha)||! /^[0-9a-f]{40}$/.test(c.release_sha)))
+    ||typeof c.event_count!=="number"||!Number.isInteger(c.event_count)||c.event_count<0||c.event_count>500
+    ||typeof c.bytes!=="number"||!Number.isInteger(c.bytes)||c.bytes<0||c.bytes>2097152||typeof c.capacity_warning!=="boolean")throw Error("collector shape");
+  collector={last_service_scan_at:c.last_service_scan_at,run_state:c.run_state,last_verified_at:c.last_verified_at,
+    expires_at:c.expires_at,next_window_at:c.next_window_at,release_sha:c.release_sha,event_count:c.event_count,bytes:c.bytes,capacity_warning:c.capacity_warning};
+ }
+ return {items,sources,excluded_sources,collector,coverage:d.coverage,pending_count:d.pending_count as number,backup_status:d.backup_status};
 }
 async function read<T>(path:string,parse:(v:unknown)=>T):Promise<Result<T>>{
  try{

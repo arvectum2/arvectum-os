@@ -291,15 +291,33 @@ def load_p6_owner_context(path: Path) -> tuple[Identity, Identity]:
     return org_id, op_id
 
 
-def bootstrap_from_p6_owner_context(root: Path, context_file: Path) -> dict[str, Any]:
-    org, human = load_p6_owner_context(context_file); initialize_access_store(root, org)
-    human_key = register_principal(root, human, kind="human"); state = load_access_store(root)
-    services = [r for r in state["principals"].values() if r["kind"] == "service" and r["status"] == "enabled"]
-    if len(services) > 1: raise IntegrityError("multiple enabled service identities require explicit selection")
-    if services:
-        service = _id_load(services[0]["identity"], "service"); created = False
+def bootstrap_from_p6_owner_context(root: Path, context_file: Path, *,
+                                    service_principal_key: Optional[str] = None) -> dict[str, Any]:
+    """Resolve continuity, not authority. Explicit recovery never creates a service."""
+    org, human = load_p6_owner_context(context_file)
+    if service_principal_key is not None:
+        # Resolve existing exact identity before any registry mutation.
+        if not isinstance(service_principal_key, str) or len(service_principal_key) != 64 or any(c not in "0123456789abcdef" for c in service_principal_key):
+            raise BoundaryError("invalid exact service selector")
+        state = load_access_store(root)
+        if _id_load(state["organization"], "Organization") != org:
+            raise BoundaryError("existing store belongs to another Organization")
+        selected = state["principals"].get(service_principal_key)
+        if not selected or selected["kind"] != "service" or selected["status"] != "enabled":
+            raise IntegrityError("selected service is not enabled and registered")
+        service = _id_load(selected["identity"], "service")
+        created = False
     else:
-        service = Identity("principal", secrets.token_hex(16), org.value); register_principal(root, service, kind="service"); created = True
+        state = initialize_access_store(root, org)
+        services = [r for r in state["principals"].values() if r["kind"] == "service" and r["status"] == "enabled"]
+        if len(services) > 1:
+            raise IntegrityError("multiple enabled service identities require explicit selection")
+        if services:
+            service = _id_load(services[0]["identity"], "service"); created = False
+        else:
+            service = Identity("principal", secrets.token_hex(16), org.value)
+            register_principal(root, service, kind="service"); created = True
+    human_key = register_principal(root, human, kind="human")
     return {"organization": _id_dict(org), "human_operator": _id_dict(human), "service_identity": _id_dict(service),
             "human_principal_key": human_key, "service_created": created, "credentials_issued": 0, "grants_issued": 0,
             "organizational_authority_provided": False}

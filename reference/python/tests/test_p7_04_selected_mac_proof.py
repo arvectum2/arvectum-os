@@ -78,6 +78,32 @@ class P704SelectedMacProofTests(unittest.TestCase):
         self.assertFalse(first["canonical_mutation"])
         self.assertFalse(first["external_effects"])
 
+    def test_multi_service_proof_never_rotates_collector(self):
+        from arvectum_os_ref.identity import Identity
+        p=proof.p704
+        proof.run_selected_mac_proof(self.root,self.context,"b"*40)
+        before=p.load_access_store(self.root)
+        observer=next(k for k,r in before["principals"].items() if r["kind"]=="service")
+        collector=Identity("principal","fixture-collector","org")
+        ck=p.register_principal(self.root,collector,kind="service")
+        cid=p.issue_credential(self.root,collector)["credential_id"]
+        gid=p.grant_access(self.root,collector,operation="workspace.inbox.collect",resource="roadmap-inbox")
+        baseline=p.load_access_store(self.root)
+        for kwargs in ({},{"service_principal_key":ck}):
+            with self.assertRaises(p.IntegrityError):
+                proof.run_selected_mac_proof(self.root,self.context,"b"*40,**kwargs)
+            self.assertEqual(p.load_access_store(self.root),baseline)
+        result=proof.run_selected_mac_proof(self.root,self.context,"b"*40,service_principal_key=observer)
+        self.assertEqual(result["status"],"PASS")
+        after=p.load_access_store(self.root)
+        self.assertEqual(after["credentials"][cid],baseline["credentials"][cid])
+        self.assertEqual(after["grants"][gid],baseline["grants"][gid])
+        self.assertEqual([g for g in after["grants"].values() if g["principal_key"]==ck],[baseline["grants"][gid]])
+        # Even if the observer is disabled, an unrelated single service must not be reused.
+        p.disable_principal(self.root,p._id_load(after["principals"][observer]["identity"],"observer"))
+        with self.assertRaises(p.IntegrityError):
+            proof.run_selected_mac_proof(self.root,self.context,"b"*40)
+
     def test_selected_mac_proof_fails_closed_when_runtime_is_not_healthy(self):
         health = json.loads(self.health.read_text(encoding="utf-8"))
         health["state"] = "stopped"

@@ -111,7 +111,7 @@ def _macos_observer_state(root: Path, release_sha: str) -> Optional[dict[str, An
     }
 
 
-def run_selected_mac_proof(root: Path, p6_context_file: Path, release_sha: str) -> dict[str, Any]:
+def run_selected_mac_proof(root: Path, p6_context_file: Path, release_sha: str, *, service_principal_key: Optional[str] = None) -> dict[str, Any]:
     release_sha = p703._validate_release_sha(release_sha)
     root = root.expanduser().resolve()
     p705.initialize(root)
@@ -130,7 +130,7 @@ def run_selected_mac_proof(root: Path, p6_context_file: Path, release_sha: str) 
             f"selected-Mac runtime release mismatch: health={current.release_sha} proof={release_sha}"
         )
 
-    continuity = p704.bootstrap_from_p6_owner_context(root, p6_context_file)
+    continuity = p704.bootstrap_from_p6_owner_context(root, p6_context_file, service_principal_key=service_principal_key)
     organization = _identity(continuity["organization"])
     human = _identity(continuity["human_operator"])
     cid, secret = _ensure_credential(root, human)
@@ -228,6 +228,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--runtime-root", required=True)
     parser.add_argument("--p6-context-file", required=True)
     parser.add_argument("--release-sha", required=True)
+    parser.add_argument("--service-principal-key", help="Exact existing enabled service key from local registry; required if ambiguous")
     parser.add_argument("--json", action="store_true")
     return parser
 
@@ -237,6 +238,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     try:
         result = run_selected_mac_proof(
             Path(args.runtime_root), Path(args.p6_context_file), args.release_sha,
+            service_principal_key=args.service_principal_key,
         )
         if args.json:
             print(json.dumps(result, ensure_ascii=False, sort_keys=True))
