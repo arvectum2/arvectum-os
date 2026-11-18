@@ -30,7 +30,7 @@ function ProjectCard({ project }: { project: CompanyProjectCard }) {
   const { language, text } = useWorkspaceLanguage();
   const status = project.roadmap.status ?? (
     project.state === "reconciliation-required"
-      ? text("Требуется reconciliation", "Reconciliation required")
+      ? text("Требуется сверка", "Reconciliation required")
       : project.state === "unavailable"
         ? text("Источник недоступен", "Source unavailable")
         : project.state === "stale-cache"
@@ -104,9 +104,9 @@ export function CompanyProjects() {
   return <section className="company-page" aria-labelledby="company-projects-title">
     <header className="company-page-head project-page-head">
       <div>
-        <p className="eyebrow">F11B · Product Contract Provisional 0.1.0</p>
+
         <h1 id="company-projects-title">{text("Проекты компании", "Company projects")}</h1>
-        <p>{text("Единая read-only сводка: где сейчас каждый проект, что уже сделано, что доступно дальше, какие ветки и блокеры есть и где выполнять работу.", "One read-only view of where each project is, what is complete, what is available next, its branches and blockers, and where the work belongs.")}</p>
+        <p>{text("Текущий статус проектов. Откройте проект для следующих шагов и истории.", "Project status. Open a project for next steps and history.")}</p>
       </div>
       <button type="button" disabled={state.refreshing} onClick={() => refresh(true)}>{state.refreshing ? text("Обновляем…", "Refreshing…") : text("Обновить из источников", "Refresh sources")}</button>
     </header>
@@ -115,7 +115,7 @@ export function CompanyProjects() {
       <span><strong>{sourceBacked}</strong>{text("обновлены сейчас", "freshly fetched")}</span>
       <span><strong>{cached}</strong>{text("из свежего локального кэша", "from recent local cache")}</span>
       <span><strong>{stale}</strong>{text("последняя известная сводка", "last known snapshot")}</span>
-      <span><strong>{reconciliation}</strong>{text("требуют reconciliation", "need reconciliation")}</span>
+      <span><strong>{reconciliation}</strong>{text("требуют сверки", "need reconciliation")}</span>
       <span><strong>{unavailable}</strong>{text("без данных", "without data")}</span>
     </div>
 
@@ -124,6 +124,7 @@ export function CompanyProjects() {
       <p>{text("Обычная навигация использует последнюю успешно полученную non-canonical сводку и не зависит от нового GitHub-запроса при каждом возврате на страницу. Кнопка «Обновить из источников» делает явную попытку перечитать зарегистрированные canonical sources. Если внешний источник временно недоступен, прежняя сводка остаётся видимой и маркируется как последняя известная; она не становится canonical truth. Технический источник и exact SHA спрятаны в каждой карточке.", "Ordinary navigation uses the last successful non-canonical snapshot instead of depending on a new GitHub request every time the page is revisited. Refresh sources explicitly re-reads registered canonical sources. If an external source is temporarily unavailable, the previous snapshot remains visible and is marked as last known; it does not become canonical truth. Exact source and SHA remain available in each card.")}</p>
     </details>
 
-    <div className="company-grid">{state.data.projects.map((project) => <ProjectCard project={project} key={project.id} />)}</div>
+    <div className="exec-list">{state.data.projects.map(project=><details key={project.id}><summary><strong>{project.label}</strong><span>{project.roadmap.status==="Active"?text("Активен","Active"):project.roadmap.status==="Paused"?text("На паузе","Paused"):""}{["Active","Paused"].includes(project.roadmap.status??"")?" · ":""}{project.state==="current-source-backed"?text("Получено сейчас","Fetched now"):project.state==="cached-source-backed"?text("Недавняя сводка","Recent snapshot"):project.state==="stale-cache"?text("Устарело","Stale"):text("Требуется проверка","Review needed")}</span></summary><ProjectCard project={project}/></details>)}</div>
+    <a href="/manual-context">{text("Заметки и рабочие проекты","Notes and work projects")}</a>
   </section>;
 }

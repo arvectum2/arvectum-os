@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Shell } from "./Shell";
 import type { MyWorkProjection, WorkspaceContext } from "./types";
@@ -73,9 +73,10 @@ describe("P9.04 shell", () => {
     expect(screen.getByLabelText("Organization: ООО «Арвектум»")).toBeTruthy();
     expect(screen.getByLabelText("User: Owner operator")).toBeTruthy();
     expect(screen.getByRole("navigation", { name: "Workspace navigation" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Tasks" })).toBeTruthy();
-    expect(await screen.findByRole("heading", { name: "Needs attention" })).toBeTruthy();
-    expect(screen.getByText("Execution is stopped")).toBeTruthy();
-    expect(screen.getAllByRole("link", { name: "Open tasks" })).not.toHaveLength(0);
+    expect(screen.getByRole("link", { name: "Work" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Company overview" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button",{name:"Read summary"}));
+    expect(await screen.findByRole("link",{name:"Governed preflight is waiting"})).toBeTruthy();
+    expect(screen.getByText(/Partial coverage: missing records/)).toBeTruthy();
   });
 });

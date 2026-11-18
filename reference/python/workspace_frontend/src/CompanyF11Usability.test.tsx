@@ -110,11 +110,11 @@ describe("F11 owner usability remediation", () => {
     render(<LanguageProvider initialLanguage="ru"><Shell context={context} onLogout={() => undefined} /></LanguageProvider>);
     expect(await screen.findByRole("heading", { name: "Материалы компании" })).toBeTruthy();
     const projectsLink = screen.getByRole("link", { name: "Проекты" });
-    const materialsLink = screen.getByRole("link", { name: "Материалы компании" });
+    const materialsLink = screen.getByRole("link", { name: "Документы" });
     expect(projectsLink.closest("nav")).toBeTruthy();
     expect(materialsLink.closest("nav")).toBeTruthy();
     expect(materialsLink.getAttribute("aria-current")).toBe("page");
-    expect(screen.getByRole("link", { name: "Задачи" }).getAttribute("aria-current")).toBeNull();
+    expect(screen.getByRole("link", { name: "Работа" }).getAttribute("aria-current")).toBeNull();
   });
 
   it("keeps last-known-good project content visible when explicit source refresh degrades to stale cache", async () => {

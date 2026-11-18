@@ -234,8 +234,9 @@ describe("R30 M9-alpha integrated J1-J4 ordinary path", () => {
     render(<App />);
 
     // J1: a preflight-only proof does not manufacture ordinary owner work.
-    expect(await screen.findByRole("heading", { name: "No tasks now" })).toBeTruthy();
-    expect(screen.getByText("There are no tasks requiring your decision now.")).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Company overview" })).toBeTruthy();
+    expect(screen.getByText(/Partial coverage: missing records/)).toBeTruthy();
+    expect(requests.every(r=>!r.path.includes("governed/preflight"))).toBeTruthy();
     expect(screen.queryByText("Execution is stopped")).toBeNull();
     expect(screen.queryByText("ЕИС / zakupki.gov.ru")).toBeNull();
 

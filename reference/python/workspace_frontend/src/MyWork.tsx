@@ -284,7 +284,7 @@ export function MyWork({ embedded = false }: { embedded?: boolean }) {
             {scenarioView
               ? text("Тестовые сценарии", "Test scenarios")
               : noLiveTasks
-                ? text(embedded ? "Сейчас нет задач" : "Задач сейчас нет", embedded ? "No tasks now" : "No tasks now")
+                ? projection.health.state==="fresh"?text("Операционная очередь пуста", "Operational queue empty"):text("Состояние очереди неизвестно","Queue state unknown")
                 : text("Требует внимания", "Needs attention")}
           </Heading>
           <p>
@@ -294,7 +294,7 @@ export function MyWork({ embedded = false }: { embedded?: boolean }) {
                   "Scenario data is separate from ordinary work and is not live activity.",
                 )
               : noLiveTasks
-                ? text("Нет текущих задач, которые требуют вашего решения или действия.", "There are no current tasks requiring your decision or action.")
+                ? text("В этой очереди нет видимых текущих задач. Работы и обязательства компании проверяются отдельно.", "No visible current tasks in this queue. Company commitments and work are checked separately.")
                 : text("Показываются только текущие задачи из live-источников.", "Only current tasks from live sources are shown.")}
           </p>
         </div>
@@ -433,15 +433,15 @@ export function MyWork({ embedded = false }: { embedded?: boolean }) {
                   "No test scenarios are available.",
                 )
               : text(
-                  "Сейчас нет задач, требующих вашего решения.",
-                  "There are no tasks requiring your decision now.",
+                  "Нет видимых записей в выбранном представлении.",
+                  "No visible items in this view.",
                 )}
           </strong>
           {!scenarioView ? (
             <p>
               {text(
-                "Система работает нормально. Технические проверки доступны в настройках.",
-                "The system is operating normally. Technical checks are available in Settings.",
+                "Это не означает, что у компании нет работ или обязательств.",
+                "This does not establish that the company has no work or obligations.",
               )}
             </p>
           ) : null}

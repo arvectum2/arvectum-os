@@ -2,7 +2,7 @@ import {useEffect,useRef,useState} from "react";
 import {useWorkspaceLanguage} from "./i18n";
 const labels=[["available_cash_fact_ref","Доступные средства","Available cash"],["material_due_outflows","Срочные платежи","Due outflows"],["material_receivables","Дебиторская задолженность","Receivables"],["material_payables","Кредиторская задолженность","Payables"],["recurring_cost_signal","Регулярные расходы","Recurring costs"],["expected_outflows","Ожидаемые расходы","Expected outflows"],["approved_not_yet_incurred_exposure","Утверждённые будущие затраты","Approved exposure"],["procurement_cash_gap_cases","Кассовые разрывы","Procurement cash gaps"],["mandatory_payment_attention","Обязательные платежи","Mandatory payments"],["actual_receipts","Фактические поступления","Actual receipts"],["project_profitability","Прибыльность проектов","Project profitability"]];
 type View={report_as_of:string;conditional_inflow:{contract_price_rub:string;timing_condition:string;source_refs:string[];linked_obligations:string[]};unknowns:string[];next_control_point:string};
-function parse(raw:unknown):View{
+export function parseFinance(raw:unknown):View{
  if(!raw||typeof raw!=="object")throw Error();
  const d=raw as Record<string,any>;
  if(d.schema!=="arvectum.workspace.company-finance-reference/1"||d.coverage!=="partial"||d.derived!==true||d.canonical_authority!==false||d.organizational_authority_provided!==false||d.payment_authority!==false||d.position!=="POS-005"||d.liquidity_status!=="unknown"||d.decision_readiness!=="blocked_by_missing_financial_evidence"||!Number.isFinite(Date.parse(d.report_as_of)))throw Error();
@@ -21,7 +21,7 @@ export function FinanceReference({csrfToken}:{csrfToken:string}){
   const n=++seq.current;setData(null);setBusy(true);setError(false);
   try{
    const r=await fetch("/api/app/v1/company-finance-reference",{method:"POST",credentials:"same-origin",cache:"no-store",headers:{"X-Arvectum-Workspace-Release":__ARVECTUM_WORKSPACE_RELEASE__,"X-Arvectum-CSRF":csrfToken}});
-   if(!r.ok)throw Error();const d=parse(await r.json());if(n===seq.current)setData(d);
+   if(!r.ok)throw Error();const d=parseFinance(await r.json());if(n===seq.current)setData(d);
   }catch{if(n===seq.current)setError(true);}
   finally{if(n===seq.current)setBusy(false);}
  }

@@ -88,7 +88,7 @@ describe("P9.11 dogfooding", () => {
 
     render(<Dogfooding csrfToken="csrf-test" />);
     expect(await screen.findByText(/not canonical Events, validated Knowledge/)).toBeTruthy();
-    expect(screen.getByText(/Real owner sessions are still required/)).toBeTruthy();
+    expect(await screen.findByText(/Real owner sessions are still required/)).toBeTruthy();
 
     fireEvent.change(screen.getByLabelText("Short observation"), { target: { value: recorded.summary } });
     fireEvent.change(screen.getByLabelText("Minimal supporting detail"), { target: { value: recorded.details } });

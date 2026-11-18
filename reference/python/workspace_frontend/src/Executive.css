@@ -1,0 +1,84 @@
+.executive {max-width:1280px;display:grid;gap:10px;color:#152639;font-size:15px}
+.executive h1 {font-size:clamp(1.7rem,3vw,2.2rem);max-width:none;margin:0 0 6px;line-height:1.15}
+.executive h2 {font-size:1.05rem;margin:0;letter-spacing:0;line-height:1.3}
+.exec-head,.exec-panel>header {display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.executive p {margin:6px 0;line-height:1.4}
+.exec-head p,.exec-muted,.exec-row small {color:#526171;font-size:.84rem}
+.exec-primary {border:1px solid #137b72;border-radius:8px;background:#3ee1c4;color:#102b35;font-weight:650;min-height:42px;padding:8px 16px;cursor:pointer}
+.exec-primary:disabled {opacity:.65;cursor:wait}
+.exec-panel {background:white;border:1px solid #d9e1e7;border-radius:12px;padding:11px 16px;min-width:0}
+.exec-panel header {margin-bottom:8px}
+.exec-panel a {font-size:.86rem;color:#17665e;text-underline-offset:3px}
+.exec-columns {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.exec-columns>:only-child {grid-column:1/-1}
+.exec-warning {border-left:3px solid #b27c28;border-radius:4px;background:#fffaf0;padding:9px 12px;font-size:.84rem;line-height:1.4}
+.exec-row {border-top:1px solid #e5e9ed;padding:6px 0;overflow-wrap:anywhere}
+.exec-row summary {display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer;list-style:none}
+.exec-row summary::-webkit-details-marker {display:none}
+.exec-row summary::before {content:"›";color:#53716d;font-size:1.2rem;flex:0 0 auto}
+.exec-row[open]>summary::before {transform:rotate(90deg)}
+.exec-row summary>span:not(.exec-priority):not(.exec-date),.exec-row summary>strong {flex:1;min-width:0}
+.exec-row small {display:block;margin-top:3px}
+.exec-row strong {font-size:.92rem;font-weight:650}
+.exec-row>p,.exec-row>details {margin-left:16px;font-size:.86rem}
+.exec-date,.exec-priority {font-size:.76rem;color:#546371;white-space:nowrap}
+.exec-priority {background:#fff4e0;color:#75480d;border-radius:5px;padding:3px 6px;flex:none}
+.exec-signal {display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #e5e9ed;gap:12px;font-size:.87rem}
+.exec-money {font-size:1.75rem;font-weight:700;letter-spacing:-.03em;margin-top:8px}
+.exec-facts {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:10px 0;font-size:.8rem;color:#526171}
+.exec-facts strong {display:block;color:#1d3044;font-size:1rem;margin-top:3px}
+.exec-secondary {background:white;border:1px solid #d9e1e7;border-radius:8px;padding:10px 14px}
+.exec-secondary summary {cursor:pointer;font-weight:600}
+#workspace-main:has(.executive) {padding:16px clamp(16px,3.5vw,48px)}
+.sidebar-controls a {color:#c9e0e8}
+.sidebar .exec-secondary-link {font-size:.87rem;color:#c9e0e8;display:block;padding:.55rem .75rem;border-radius:6px;text-decoration:none}
+.sidebar .exec-secondary-link[aria-current="page"] {background:#18444f;color:white}
+.company-page h1 {max-width:none;font-size:clamp(1.8rem,3vw,2.4rem)}
+.company-page button,.company-page input,.company-page select,.company-page textarea,.discovery select {border:1px solid #aebcc7;border-radius:6px;padding:7px 10px;min-height:36px;font:inherit;color:inherit;background:#fff}
+.company-page button {cursor:pointer}
+.company-page button:disabled {cursor:default;opacity:.6}
+.company-page select {max-width:100%}
+.company-page button[aria-pressed="true"] {border-color:#137b72;background:#e5f7f3}
+.company-page a {color:#17665e;text-underline-offset:3px}
+.exec-list {display:grid;gap:8px}
+.exec-list>details {background:white;border:1px solid #d9e1e7;border-radius:8px;padding:12px 16px}
+.exec-list>details>summary {cursor:pointer;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.exec-list>details>summary>strong {font-size:1rem}
+.exec-list>details>summary>span {font-size:.82rem;color:#526171}
+@media(max-width:1000px){.exec-columns {grid-template-columns:1fr}.exec-date {white-space:normal}}
+@media(max-width:650px){.exec-head {align-items:start}.exec-row summary {flex-wrap:wrap}.exec-row summary>span:not(.exec-priority):not(.exec-date) {flex:1 1 65%}}
+
+.exec-library-tabs {margin:0 0 16px;display:flex;gap:8px;flex-wrap:wrap}
+.exec-library-tabs .quiet-link {margin:0}
+.exec-library-tabs a[aria-current="page"] {background:#e5f7f3;border-color:#137b72}
+.exec-list>details>.company-card {margin-top:10px}
+.exec-row small {overflow-wrap:anywhere}
+.exec-secondary>form,.exec-secondary>.manual-forms {margin-top:10px}
+
+/* Executive shell: do not let the legacy full-height desktop sidebar cover a narrow viewport. */
+@media(max-width:1120px) and (min-width:761px){
+  .app-shell{grid-template-columns:200px minmax(0,1fr)}
+  .sidebar .brand-logo{max-width:100%}
+}
+@media(max-width:760px){
+  .app-shell .sidebar{height:auto;min-height:0;position:relative;overflow:visible;padding:12px 14px}
+  .app-shell .brand{flex-direction:row;align-items:center;padding:0 0 9px;gap:5px}
+  .app-shell .brand-logo{width:136px;max-width:70%}
+  .app-shell .sidebar nav ul{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;overflow:visible}
+  .app-shell .sidebar nav a{justify-content:center;padding:8px 3px;font-size:.84rem;min-height:38px;white-space:normal}
+  .app-shell .sidebar-controls{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;margin-top:8px;padding:7px 0 0}
+  .app-shell .sidebar-controls a.exec-secondary-link{font-size:.78rem;padding:4px 0}
+  .app-shell .sidebar-controls>a:not(.exec-secondary-link){font-size:.78rem}
+  .app-shell .sidebar-controls .language-switch{padding:2px}
+  .app-shell .sidebar-controls .language-switch button{min-width:34px;padding:5px}
+  .app-shell .topbar{position:static;padding:8px 12px;gap:6px}
+  .app-shell .global-search{order:0;flex:1;min-width:160px;width:auto}
+  .app-shell .global-search input,.app-shell .global-search button,.app-shell .topbar>.quiet-button{font-size:.8rem;padding:8px}
+  .app-shell .context-chip{display:none}
+  #workspace-main:has(.executive){padding:14px 12px}
+  .executive h1{font-size:1.5rem}
+  .exec-head .exec-primary{min-height:38px;padding:6px 10px;font-size:.83rem}
+  .exec-panel{padding:12px}
+  .exec-date,.exec-priority{white-space:normal;flex:none}
+  .exec-row summary>strong{flex:1 1 60%}
+}

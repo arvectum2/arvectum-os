@@ -26,6 +26,7 @@ it("creates project and captures a linked note via protected API",async()=>{
     return response(current);
   });
   vi.stubGlobal("fetch",mock);show();
+  fireEvent.click(await screen.findByText("Добавить проект или заметку"));
   fireEvent.change(await screen.findByLabelText("Название проекта"),{target:{value:p.label}});
   fireEvent.click(screen.getByRole("button",{name:"Создать проект"}));
   await waitFor(()=>expect(screen.getAllByRole("option",{name:p.label})).toHaveLength(2));
@@ -33,7 +34,7 @@ it("creates project and captures a linked note via protected API",async()=>{
   fireEvent.change(screen.getByLabelText("Заметка"),{target:{value:n.text}});
   fireEvent.change(screen.getByLabelText("Привязка к проекту"),{target:{value:p.id}});
   fireEvent.click(screen.getByRole("button",{name:"Сохранить заметку"}));
-  await screen.findByRole("heading",{name:n.title});
+  await screen.findByText(n.title);
 });
 it("clears previous protected content on failed refresh",async()=>{
   vi.stubGlobal("fetch",vi.fn().mockImplementationOnce(async()=>response({projects:[],notes:[{id:"NOTE-x",title:"Private fixture",text:"Synthetic",project_id:null,revision:1,at:"now"}]})).mockImplementationOnce(async()=>response({},403)));

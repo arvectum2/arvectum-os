@@ -34,13 +34,12 @@ describe("P9.11 owner-first Workspace", () => {
     expect(arvectumLogo).toContain("BRAND__Ok----Block");
     expect(screen.getByRole("img", { name: "Arvectum" })).toBeTruthy();
     expect(screen.queryByText("AV")).toBeNull();
-    expect(screen.getAllByRole("link").filter((link) => ["Главная", "Задачи", "Документы", "Arvectum AI", "Настройки"].includes(link.textContent ?? "")).map((link) => link.textContent)).toEqual(["Главная", "Задачи", "Документы", "Arvectum AI", "Настройки"]);
-    expect(screen.queryByRole("link", { name: "Записи" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Знания" })).toBeNull();
-    expect(screen.getByRole("heading", { name: "Что делать сейчас" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Открыть задачи" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Найти документ" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Спросить Arvectum" })).toBeTruthy();
+    const nav=screen.getByRole("navigation",{name:"Навигация Arvectum OS"});
+    expect([...nav.querySelectorAll("a")].map(a=>a.textContent)).toEqual(["Обзор","Работа","Проекты","Клиенты","Финансы","Документы"]);
+    expect(screen.getByRole("heading",{name:"Обзор компании"})).toBeTruthy();
+    expect(screen.getByRole("button",{name:"Обновить сводку"})).toBeTruthy();
+    expect(screen.queryByRole("link",{name:"Спросить Arvectum"})).toBeNull();
+
   });
 
   it("switches to English without browser storage", async () => {
@@ -48,29 +47,27 @@ describe("P9.11 owner-first Workspace", () => {
     render(<LanguageProvider><Shell context={context} onLogout={() => undefined} /></LanguageProvider>);
     fireEvent.click(screen.getByRole("button", { name: "EN" }));
     expect(document.documentElement.lang).toBe("en");
-    expect(screen.getByRole("link", { name: "Home" })).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "What to do now" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Overview" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Company overview" })).toBeTruthy();
   });
 
   it("shows a compact action-first Home and withholds scenario evidence", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(projection), { status: 200, headers: { "Content-Type": "application/json" } })));
     render(<LanguageProvider><Shell context={context} onLogout={() => undefined} /></LanguageProvider>);
-    expect(screen.getByText("Arvectum OS · Рабочее пространство")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Что делать сейчас" })).toBeTruthy();
-    expect(screen.queryByRole("heading", { name: "Добро пожаловать" })).toBeNull();
-    expect(screen.getByRole("link", { name: "Открыть задачи" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Найти документ" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Спросить Arvectum" })).toBeTruthy();
-    expect(await screen.findByRole("heading", { name: "Сейчас нет задач" })).toBeTruthy();
-    expect(screen.getByText("Просмотр задач не даёт разрешений или полномочий.")).toBeTruthy();
-    expect(screen.getAllByRole("link", { name: "Открыть задачи" }).length).toBeGreaterThan(0);
-    expect(screen.getByText("Сейчас нет задач, требующих вашего решения.")).toBeTruthy();
+    expect(screen.getByRole("heading",{name:"Обзор компании"})).toBeTruthy();
+    expect(screen.getByText(/Покрытие частичное/)).toBeTruthy();
+    expect(screen.queryByText("Сейчас нет задач")).toBeNull();
+    fireEvent.click(screen.getByRole("button",{name:"Обновить сводку"}));
+    expect(await screen.findByText(/Операционная очередь: 0/)).toBeTruthy();
+    expect(screen.queryByText("Система работает нормально.")).toBeNull();
+
   });
 
   it("does not present scenario fixtures as ordinary Home work", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(scenarioProjection), { status: 200, headers: { "Content-Type": "application/json" } })));
     render(<LanguageProvider><Shell context={context} onLogout={() => undefined} /></LanguageProvider>);
-    expect(await screen.findByText("Сейчас нет задач, требующих вашего решения.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button",{name:"Обновить сводку"}));
+    expect(await screen.findByText(/Операционная очередь: 0/)).toBeTruthy();
     expect(screen.queryByText("Fixture approval")).toBeNull();
     expect(screen.queryByText("fixture/workspace/attention")).toBeNull();
     expect(screen.queryByText(/тестовые сценарии/i)).toBeNull();
@@ -79,7 +76,7 @@ describe("P9.11 owner-first Workspace", () => {
   it("groups legacy product and technical deep routes under Work and System", () => {
     window.history.replaceState({}, "", "/products/tender-operator");
     const { unmount } = render(<LanguageProvider initialLanguage="en"><Shell context={context} onLogout={() => undefined} /></LanguageProvider>);
-    expect(screen.getByRole("link", { name: "Tasks" }).getAttribute("aria-current")).toBe("page");
+    expect(screen.getByRole("link", { name: "Work" }).getAttribute("aria-current")).toBe("page");
     unmount();
 
     window.history.replaceState({}, "", "/governed?focus=11111111111111111111");

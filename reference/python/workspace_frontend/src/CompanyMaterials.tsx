@@ -503,7 +503,7 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
       }}
     />
 
-    <section aria-labelledby="company-asset-governance-title">
+    <details className="exec-secondary"><summary>{text("Новые и изменённые материалы","New and changed materials")}</summary>
       <div className="company-page-head"><h2 id="company-asset-governance-title">{text("Новые и изменённые материалы", "New and changed materials")}</h2><p>{text("Этот раздел нужен только для одноразовой подготовки нового файла или новой версии. Уже принятые материалы используйте через библиотеку выше.", "Use this section only for one-time setup of a new file or version. Use accepted materials from the library above.")}</p></div>
       <nav className="asset-library-tabs" aria-label={text("Состояния материалов", "Material lifecycle views")}>
         {VIEW_OPTIONS.map((view) => <button key={view.key} type="button" className={activeView === view.key ? "active" : ""} onClick={() => setActiveView(view.key)}>{text(view.ru, view.en)} <span>{state.data.views[view.key].length}</span></button>)}
@@ -542,12 +542,12 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
           }}
         />)}</div> : <p className="asset-empty-state">{text("В этом состоянии материалов пока нет.", "There are no materials in this lifecycle view yet.")}</p>}
       </section>
-    </section>
+    </details>
 
     {message ? <p className="company-message" role="status">{message}</p> : null}
 
     <div className="company-two-column">
-      <form className="company-form" onSubmit={(event) => void submitStage(event)}>
+      <details className="exec-secondary" open={selectedMaterialId?true:undefined}><summary>{text("Добавить материал","Add material")}</summary><form className="company-form" onSubmit={(event) => void submitStage(event)}>
         <h2>{selectedMaterialId ? text("Добавить новую версию", "Add new version") : text("Добавить материал", "Add material")}</h2>
         <label>{text("Материал", "Material")}<select value={selectedMaterialId} onChange={(event) => setSelectedMaterialId(event.target.value)}><option value="">{text("Новый материал", "New material")}</option>{latest.map((item) => <option key={item.material_id} value={item.material_id}>{item.title}</option>)}</select></label>
         <label>{text("Проект", "Project")}<select name="project_id" defaultValue="COMPANY"><option value="COMPANY">{text("Компания в целом", "Company-wide")}</option>{projectOptions.map((project) => <option key={project.id} value={project.id}>{project.label}</option>)}</select></label>
@@ -559,7 +559,7 @@ export function CompanyMaterials({ csrfToken }: { csrfToken: string }) {
         <label>{text("Использование", "Use") }<select name="rights" defaultValue="company-internal-use"><option value="company-internal-use">{text("Внутри компании", "Inside the company")}</option></select></label>
         <label>{text("Хранение", "Retention")}<select name="retention_rule" defaultValue="until-replaced-or-explicit-deletion"><option value="until-replaced-or-explicit-deletion">{text("До замены или явного удаления", "Until replaced or explicitly deleted")}</option></select></label>
         <button type="submit" disabled={busy}>{busy ? text("Сохраняем…", "Saving…") : text("Сохранить как черновик", "Save as draft")}</button>
-      </form>
+      </form></details>
 
       <form id="company-docx-generator" className="company-form" onSubmit={(event) => void submitGenerate(event)}>
         <h2>{text("Создать документ по шаблону", "Create a document from a template")}</h2>

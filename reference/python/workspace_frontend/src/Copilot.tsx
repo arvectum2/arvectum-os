@@ -5,8 +5,8 @@ import { useWorkspaceLanguage } from "./i18n";
 import type { CopilotAnswer, CopilotClaimKind } from "./types";
 
 const starters = {
-  ru: ["Что известно о текущем контексте Tender Operator?", "Что известно о Discount Parser?", "Найди информацию по закупке 0344100006426000005.", "Какие источники подтверждают этот контекст?"],
-  en: ["What is known about the current Tender Operator context?", "What is known about Discount Parser?", "Find information about procurement notice 0344100006426000005.", "Which sources support this context?"],
+  ru: ["Какие документы доступны для работы?", "Какие сведения подтверждены источниками?", "Каких данных не хватает для ответа?"],
+  en: ["Which documents are available?", "Which facts are supported by sources?", "What information is missing?"],
 };
 
 export function Copilot({ csrfToken }: { csrfToken: string }) {
@@ -28,7 +28,7 @@ export function Copilot({ csrfToken }: { csrfToken: string }) {
   };
 
   return <section className="copilot" aria-labelledby="copilot-title">
-    <div className="copilot-heading"><p className="eyebrow">Arvectum AI</p><h1 id="copilot-title">{text("Задайте вопрос Arvectum", "Ask Arvectum a question")}</h1><p>{text("Получите ответ с проверяемыми источниками по вашему рабочему контексту.", "Get an answer with inspectable sources about your work context.")}</p><p className="boundary-note">{text("Ответ отделяет контекст источников, вывод ИИ, неопределённость и недоступные свидетельства. Он временный и не создаёт Знание, разрешение или полномочие.", "The answer separates source context, AI synthesis, uncertainty, and unavailable evidence. It is transient and creates no Knowledge, permission, or authority.")}</p></div>
+    <div className="copilot-heading"><p className="eyebrow">Arvectum AI</p><h1 id="copilot-title">{text("Задайте вопрос Arvectum", "Ask Arvectum a question")}</h1><p>{text("Получите ответ с проверяемыми источниками по вашему рабочему контексту.", "Get an answer with inspectable sources about your work context.")}</p><p className="boundary-note">{text("Ответ опирается только на доступные источники. Проверяйте основания перед решением.", "Answers use only available sources. Check the evidence before making a decision.")}</p></div>
     <div className="copilot-starters" aria-label={text("Примеры вопросов", "Example grounded questions")}>{starters[language].map((starter) => <button key={starter} type="button" onClick={() => setQuestion(starter)}>{starter}</button>)}</div>
     <form className="copilot-form" onSubmit={(event) => void submit(event)}><label htmlFor="copilot-question">{text("Вопрос", "Question")}</label><textarea id="copilot-question" value={question} onChange={(event) => setQuestion(event.target.value)} maxLength={800} rows={5} placeholder={text("Спросите о записях, свидетельствах, продуктах, происхождении данных или текущем управляемом состоянии…", "Ask about organizational records, evidence, product context, provenance or current governed state…")} /><div className="copilot-form-footer"><small>{text("Для поиска используется только текущий серверно-авторизованный контекст рабочего пространства.", "Only the current server-authorized Workspace scope is eligible for retrieval.")}</small><button type="submit" disabled={!question.trim() || loading}>{loading ? text("Формируем ответ…", "Grounding answer…") : text("Спросить Arvectum", "Ask Arvectum")}</button></div></form>
     {error ? <div className="copilot-unavailable" role="alert"><strong>{text("Arvectum AI недоступен", "Copilot unavailable")}</strong><p>{text("Запрос нельзя безопасно обработать в текущем контексте.", "The request could not be answered safely in the current Workspace context.")}</p><code>{error}</code></div> : null}
