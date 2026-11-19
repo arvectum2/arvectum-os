@@ -68,3 +68,46 @@ it("reports eight current sources and separately preserves two excluded historic
  expect(screen.getByText(/Локальный сборщик/)).toBeTruthy();
  expect(f).toHaveBeenCalledTimes(7);
 });
+
+it("makes next checks visible without opening evidence and separates owner work from execution queue",async()=>{
+ const {f}=setup();click();
+ await screen.findByText("Пересмотр пилота");
+ const titles=["Клиентский проект — сдать результат","Клиентский проект — оформить приёмку","Пересмотр пилота"];
+ for(const title of titles){
+  const row=screen.getByText(title).closest("details")!;
+  expect(row.open).toBe(false);
+  expect(row.querySelector("summary .exec-next-point")?.textContent).toContain("Проверить подтверждения и условия");
+  expect(row.querySelector("summary")?.textContent).not.toContain("synthetic evidence");
+ }
+ expect(screen.getByText(/Прочитаны источники: 7\/7/)).toBeTruthy();
+ expect(screen.getByText("Отдельная очередь исполнения, не реестр решений собственника.")).toBeTruthy();
+ expect(screen.getByText("Контроль исполнения. Ответственная Position указана в основаниях; это не список личных поручений собственнику.")).toBeTruthy();
+ expect(screen.queryByRole("button",{name:/утвердить|принять решение/i})).toBeNull();
+ expect(f).toHaveBeenCalledTimes(7);
+});
+it("does not mistake a failed decision read for an unprepared decision",async()=>{
+ const a=setup();a.fail("company-decision-reference",503);click();
+ const label=await screen.findByText("Сведения о решении недоступны");
+ expect(label.closest("summary")).toBeTruthy();
+ expect(screen.getByText(/Прочитаны источники: 6\/7/)).toBeTruthy();
+ expect(screen.queryByText("Решение готовится · не готово к утверждению")).toBeNull();
+ expect(screen.getByText("Пересмотр пилота")).toBeTruthy();
+});
+it("preserves the preparing decision if linked work is unavailable without fabricating a task",async()=>{
+ const a=setup("work");a.fail("company-control-reference",503);click();
+ await screen.findByText(/Связанное решение пилота · Готовится/);
+ expect(screen.getByText(/Связанная работа недоступна в текущей сводке: WORK-001/)).toBeTruthy();
+ expect(screen.queryByText("Пересмотр пилота")).toBeNull();
+ expect(screen.getByText(/Прочитаны источники: 2\/3/)).toBeTruthy();
+});
+it("distinguishes exact review deadline from conditional obligations without inferring completion",async()=>{
+ vi.setSystemTime(new Date("2026-12-18T10:00:00Z"));
+ try{
+  setup();click();await screen.findByText("Пересмотр пилота");
+  expect(screen.getAllByText("Контрольный срок наступил · состояние исполнения не подтверждено")).toHaveLength(1);
+  const obligation=screen.getByText("Клиентский проект — сдать результат").closest("summary")!;
+  expect(obligation.textContent).toContain("Срок / условие: По договорному сроку");
+  expect(obligation.textContent).not.toContain("Контрольный срок наступил");
+  expect(screen.getByText("Решение готовится · не готово к утверждению")).toBeTruthy();
+ }finally{vi.useRealTimers();}
+});
