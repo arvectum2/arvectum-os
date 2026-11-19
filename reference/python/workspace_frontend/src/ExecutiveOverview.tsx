@@ -88,8 +88,10 @@ export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;
  {mode!=="work"&&<div className="exec-columns">{financePanel}{mode==="overview"&&<section className="exec-panel"><header><h2>{text("Изменения и клиенты","Changes and clients")}</h2><a href="/information-hub">{text("Входящие","Inbox")}</a></header>
  <div className="exec-signal"><a href="/crm">{text("Следующие контакты","Follow-ups")}</a><strong>{crm?crm.items.length:status(sources.crm)}</strong></div>
  {crm?.items.slice(0,3).map(x=><p key={x.opportunity_id}>{x.party_name} · {x.next_action}</p>)}
- <div className="exec-signal"><span>{text("Изменения ожидают просмотра","Changes pending review")}</span><strong>{inbox?inbox.pending_count:status(sources.inbox)}</strong></div>
+ <div className="exec-signal"><a href="/information-hub?view=changes">{text("Изменения ожидают просмотра","Changes pending review")}</a><strong>{inbox?inbox.pending_count:status(sources.inbox)}</strong></div>
  {inbox&&<p className="exec-muted">{text("Актуальные сохранённые наблюдения: ","Current saved observations: ")}{inbox.sources.filter(s=>s.state==="current-source-backed"&&s.freshness==="current-observation").length}/{inbox.sources.length}. {text("Не новый сбор.","Not a new collection.")}</p>}
+ {inbox&&inbox.backup_status!=="verified"&&<p className="exec-warning" role="status">{text("Резервная копия очереди требует проверки.","Inbox backup needs review.")}</p>}
+ {inbox&&inbox.sources.some(s=>s.freshness!=="current-observation")&&<p className="exec-warning" role="status">{text("Есть источники, требующие проверки актуальности.","Some sources need a freshness check.")}</p>}
  {inbox&&inbox.excluded_sources.length>0&&<p className="exec-muted">{text("Исключено из мониторинга: ","Excluded from monitoring: ")}{inbox.excluded_sources.length}</p>}
  {inbox?.collector&&<details className="exec-row"><summary>{text("Локальный сборщик","Local collector")} · {text("состояние","state")}: {inbox.collector.run_state}</summary>
  <p>{text("Последний сервисный сбор: ","Last service scan: ")}{inbox.collector.last_service_scan_at?fmt(inbox.collector.last_service_scan_at):"—"}</p>

@@ -80,3 +80,23 @@ describe("P9.04 shell", () => {
     expect(screen.getByText(/Partial coverage: missing records/)).toBeTruthy();
   });
 });
+
+it("focused changes entry reads only the saved inbox, never portfolio or procurement",async()=>{
+ window.history.replaceState({},"","/information-hub?view=changes");
+ const f=vi.fn(async(input:RequestInfo|URL,init?:RequestInit)=>{
+  expect(String(input)).toBe("/api/app/v1/roadmap-inbox");
+  expect(init?.method??"GET").toBe("GET");
+  expect(init?.cache).toBe("no-store");
+  return new Response(JSON.stringify({coverage:"partial",pending_count:0,backup_status:"verified",items:[],sources:[]}),{status:200});
+ });
+ vi.stubGlobal("fetch",f);
+ render(<Shell context={context} onLogout={()=>undefined}/>);
+ expect(screen.getByRole("heading",{name:"Change inbox"})).toBeTruthy();
+ await screen.findByText("No saved changes pending review.");
+ expect(f).toHaveBeenCalledTimes(1);
+ expect(screen.getByRole("link",{name:"All incoming information and sources"}).getAttribute("href")).toBe("/information-hub");
+ expect(screen.queryByRole("button",{name:"Refresh sources"})).toBeNull();
+ fireEvent.click(screen.getByRole("button",{name:"Refresh inbox"}));
+ await screen.findByText("No saved changes pending review.");
+ expect(f).toHaveBeenCalledTimes(2);
+});

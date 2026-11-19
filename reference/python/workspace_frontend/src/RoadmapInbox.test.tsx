@@ -1,6 +1,7 @@
 import {cleanup,fireEvent,render,screen} from "@testing-library/react";
 import {afterEach,expect,it,vi} from "vitest";
-import {RoadmapInbox} from "./RoadmapInbox";
+import {RoadmapInbox,FocusedRoadmapInbox} from "./RoadmapInbox";
+import {StrictMode} from "react";
 import {LanguageProvider} from "./i18n";
 const r={id:"INBOX-"+"a".repeat(32),source_id:"COMPANY",repository:"arvectum2/arvectum-company",path:"docs/roadmap/ROADMAP.md",observed:{commit_sha:"b".repeat(40)},previous:{commit_sha:"a".repeat(40)},detected_at:"2026-11-17T10:00:00Z",state:"pending",revision:1};
 const d={coverage:"partial",pending_count:1,backup_status:"verified",items:[r],sources:[]};
@@ -32,4 +33,19 @@ it("does not retain records after revoked access",async()=>{
  await screen.findByRole("heading",{name:r.repository});
  f.mockImplementation(async()=>response({},403));fireEvent.click(screen.getByRole("button",{name:"Обновить очередь"}));
  await screen.findByRole("alert");expect(screen.queryByRole("heading",{name:r.repository})).toBeNull();
+});
+
+it("focused view makes one GET even under StrictMode, and denial clears its data",async()=>{
+ const f=vi.fn(async()=>response(d));
+ vi.stubGlobal("fetch",f);
+ render(<StrictMode><LanguageProvider initialLanguage="ru"><FocusedRoadmapInbox csrfToken="fixture"/></LanguageProvider></StrictMode>);
+ await screen.findByRole("heading",{name:r.repository});
+ expect(f).toHaveBeenCalledTimes(1);
+ expect(screen.getByText("Ручной сбор и экспорт").closest("details")?.open).toBe(false);
+ expect(screen.getByText(/Обновление очереди не запускает сбор GitHub/)).toBeTruthy();
+ f.mockImplementation(async()=>response({},403));
+ fireEvent.click(screen.getByRole("button",{name:"Обновить очередь"}));
+ await screen.findByRole("alert");
+ expect(screen.queryByRole("heading",{name:r.repository})).toBeNull();
+ expect(f).toHaveBeenCalledTimes(2);
 });
