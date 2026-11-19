@@ -143,7 +143,21 @@ def create_app(
     decision_reference: DecisionReference | None = None,
     risk_reference: RiskReference | None = None,
     finance_reference: FinanceReference | None = None,
+    remote_read_fixture=None,
 ) -> FastAPI:
+    if remote_read_fixture is not None:
+        # Explicit experimental composition, never mount local live providers.
+        if settings is not None or any(x is not None for x in (
+            access_resolver, attention_provider, actionable_work_provider,
+            discovery_provider, governed_provider, product_provider, organization_provider,
+            copilot_provider, dogfooding_store, session_store, static_dir,
+            manual_context_fixture, manual_context_runtime, crm_fixture, crm_runtime,
+            inbox_fixture, inbox_runtime, procurement_reference, company_control_reference,
+            decision_reference, risk_reference, finance_reference
+        )) or supplemental_copilot_sources:
+            raise ValueError("remote fixture cannot combine with local composition")
+        from .remote_read_fixture import create_fixture_app
+        return create_fixture_app(remote_read_fixture,load_release())
     settings = settings or WorkspaceSettings.from_env()
     release = load_release()
     resolver = access_resolver or P704AccessResolver(settings.runtime_root)

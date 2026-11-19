@@ -1,0 +1,22 @@
+# WSF-08 — isolated BFF remote-read / WebAuthn verification
+
+Status: experimental candidate, NOT an approved product profile, remote deployment, browser proof or Owner-use acceptance. Stacked on PR #64, base main 37ccdcbff8da6ccad2d7e471c4a390f97039a27a. PR #63 feasibility and source coverage review remain separate.
+
+## Implemented and verified
+
+Explicit create_app(remote_read_fixture=...) selects a synthetic-only FastAPI BFF composition; rejects any simultaneous local settings/provider. Normal create_app path unchanged, no environment switch or production route. A new private temporary P7.04 store with synthetic organization/human and explicit remote grant is the only authority/credential source. Fixture issues a fresh 60s challenge binding exact credential, grant, actor/org and test device proof; requires exact enrolled public key, real signature verification, expected RP ID/origin and user verification via py_webauthn, rejects replay and cross-origin ceremony. Browser session binds exact identities, credential, grant and device, uses host-only Secure/HttpOnly/SameSite=Strict cookie, bounded idle/absolute TTL; every read checks grant again. Four admitted fixture routes (challenge/bootstrap/overview/logout), exact Host/Origin, release header, CSRF logout, no caching. No local API, writes, export, copilot, real provider or actual user credential.
+
+Tests 7/7 WebAuthn/BFF scenarios with locally generated EC P-256 signing key, real COSE and valid/invalid authenticator assertion. 10/10 previous actual loopback TLS cases and 20/20 P7.04/config regression: combined 37/37, selected Mac Python 3.14. Default BFF imports without WebAuthn. Important limitation: the new BFF receives an opaque in-process synthetic device-proof object explicitly injected in ASGI tests; no actual TLS-to-ASGI ingress binding yet. Prior TLS spike tests physical socket cert matching separately. Software-generated UV flag is not a genuine verified human biometric. No real Safari, browser enrollment, Touch ID, trusted host certificate, or production remote provider tested. No unapproved activation. Initial diagnostic import used a different Python interpreter and failed to load the 3.14 native cbor2 extension; exact 3.14 import and all tests succeeded. No runtime dependency installation.
+
+## Isolated dependency decision (evaluation only)
+
+Candidate: Duo Labs py_webauthn 3.0.1, BSD-3-Clause, https://github.com/duo-labs/py_webauthn ; https://pypi.org/project/webauthn/3.0.1/ ; https://duo-labs.github.io/py_webauthn/authentication.html . Source-readable and replaceable standard WebAuthn verifier; no hosted service required by this fixture. PyPI publishes hashes but release artifacts lack supply-chain provenance attestation; not a completed security, jurisdiction, Russian availability, licensing, CVE or sovereignty review. Dependencies evaluated in separate hash-locked Python 3.14 fixture target: webauthn, cbor2, cryptography, cffi, pycparser, pyOpenSSL, pyasn1 and pyasn1-modules. Experimental lock is under workspace_tests/remote_bff_experiment.lock; do not include in production requirements. Transitive licenses and version provenance/security, offline reproducibility/replacement and real device compatibility still require review. Production dependencies unmodified.
+
+Reproduce on a disposable test environment with the existing project dev dependencies:
+    uv pip install --target /path/to/new-private-test-target --only-binary :all: --require-hashes -r workspace_tests/remote_bff_experiment.lock
+    TMPDIR=/private/tmp PYTHONPATH="$PWD:$PWD/workspace_tests:$PWD/tests:/path/to/new-private-test-target" python3.14 -B -m unittest test_remote_bff_fixture test_remote_access_spike test_p7_04_persistent_access test_workspace_config
+Default CI without optional experimental dependencies skips the seven WebAuthn fixture tests; local selected device run explicitly included all seven. No CI claim until exact candidate checks finish.
+
+## Next gate
+
+Draft remote-read scope, real TLS peer identity integration with existing BFF, locally authorized enrollment, WebAuthn challenge/credential registration and durable counter/revocation handling, remote provider access gates, full browser proof and deployment review. Existing local P10.09.20 remains the only productive profile. No fixture listener, production remote grant, CA trust installation, credential provisioning, network exposure or real data.
