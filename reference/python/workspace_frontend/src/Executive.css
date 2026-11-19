@@ -82,3 +82,12 @@
   .exec-date,.exec-priority{white-space:normal;flex:none}
   .exec-row summary>strong{flex:1 1 60%}
 }
+
+/* Ready-to-read control points; source evidence remains in the disclosures. */
+.exec-next-point {display:block;line-height:1.4;font-size:.84rem;color:#263e4b;margin-top:6px;overflow-wrap:anywhere}
+.exec-next-point b {font-weight:600}
+.exec-row summary {align-items:start}
+.exec-row .exec-date,.exec-row .exec-priority {margin-top:2px}
+.exec-read-coverage {margin:0!important}
+.exec-operational {border-top:1px solid #e5e9ed;margin-top:10px;padding-top:9px}
+.exec-operational h3 {font-size:.92rem;margin:0}
