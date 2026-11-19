@@ -9,6 +9,7 @@ import threading
 import tempfile
 from datetime import datetime,timedelta,timezone
 from pathlib import Path
+from urllib.parse import urlsplit
 from fastapi import FastAPI,Request
 from fastapi.responses import JSONResponse
 from arvectum_os_ref.identity import Identity
@@ -28,7 +29,13 @@ OVERVIEW={"coverage":"synthetic-only","open_work":1,"canonical_authority":False,
           "organizational_authority_provided":False}
 
 class RemoteReadFixture:
-    def __init__(self,credential_id:bytes,public_key:bytes,*,clock=None):
+    def __init__(self,credential_id:bytes,public_key:bytes,*,clock=None,origin=ORIGIN):
+        parsed=urlsplit(origin)
+        if origin!=ORIGIN and not (parsed.scheme=="https" and parsed.hostname=="localhost" and parsed.port and origin==f"https://localhost:{parsed.port}"):
+            raise ValueError("synthetic or ephemeral localhost HTTPS origin only")
+        self.origin=origin
+        self.host=parsed.netloc
+        self.rp_id=parsed.hostname
         # Optional library is imported ONLY in this explicit experiment.
         from webauthn import verify_authentication_response,generate_authentication_options
         from webauthn.helpers import options_to_json
@@ -75,7 +82,7 @@ class RemoteReadFixture:
     def begin(self,access):
         raw=secrets.token_bytes(32)
         self.challenge=(raw,self.clock()+timedelta(seconds=60),self.bind(access))
-        opts=self.options(rp_id=HOST,challenge=raw,timeout=60000,
+        opts=self.options(rp_id=self.rp_id,challenge=raw,timeout=60000,
             allow_credentials=[self.descriptor(id=self.passkey_id)],user_verification=self.uv)
         return json.loads(self.options_json(opts))
     def finish(self,access,payload):
@@ -90,8 +97,8 @@ class RemoteReadFixture:
             # Do not admit cross-origin/top-origin ceremonies in this slice.
             client=json.loads(credential.response.client_data_json)
             if client.get("crossOrigin",False) is not False or "topOrigin" in client:return None
-            v=self.verify(credential=credential,expected_challenge=saved[0],expected_rp_id=HOST,
-                expected_origin=ORIGIN,credential_public_key=self.public_key,
+            v=self.verify(credential=credential,expected_challenge=saved[0],expected_rp_id=self.rp_id,
+                expected_origin=self.origin,credential_public_key=self.public_key,
                 credential_current_sign_count=self.sign_count,require_user_verification=True)
             if v.credential_id!=self.passkey_id or not v.user_verified:return None
         except Exception:return None
@@ -120,9 +127,9 @@ def create_fixture_app(fixture,release):
     async def boundary(request:Request,call_next):
         # Scope proof established only by an explicitly constructed ASGI TEST
         # request; normal HTTP servers cannot populate this Python object.
-        if request.scope.get("scheme")!="https" or request.headers.getlist("host")!=[HOST]:
+        if request.scope.get("scheme")!="https" or request.headers.getlist("host")!=[fixture.host]:
             return response(400,{"code":"TRANSPORT_PROFILE_REJECTED"})
-        if request.method=="POST" and request.headers.getlist("origin")!=[ORIGIN]:
+        if request.method=="POST" and request.headers.getlist("origin")!=[fixture.origin]:
             return response(403,{"code":"ORIGIN_REJECTED"})
         if (request.method,request.url.path) not in ROUTES or request.url.query:
             return response(403,{"code":"ROUTE_NOT_ADMITTED"})
