@@ -157,3 +157,7 @@
 .oq-more{width:100%;margin:10px 0 3px}
 @media(max-width:1250px){.exec-overview-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.exec-overview-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.exec-overview-tile{padding:10px}.exec-overview-tile:last-child{grid-column:1/-1}.oq-project>summary{grid-template-columns:auto minmax(0,1fr)}.oq-count{grid-column:2;justify-self:start}.oq-summary>div{padding:8px}.oq-summary span{font-size:.74rem}.oq-select{width:100%;flex-wrap:wrap}.oq-select select{flex:1}.oq-filters button{min-height:40px}.oq-details{padding-left:12px}#exec-obligations,#exec-decisions,#exec-risks,#exec-finance,#exec-projects{scroll-margin-top:14px}}
+
+/* Override shell-wide metadata no-wrap/uppercase on compact cards. */
+.exec-overview-grid .exec-overview-tile>small{white-space:normal;text-transform:none;letter-spacing:normal;overflow-wrap:anywhere;max-width:100%}
+.exec-overview-grid .exec-overview-tile>strong{white-space:normal;overflow-wrap:anywhere}

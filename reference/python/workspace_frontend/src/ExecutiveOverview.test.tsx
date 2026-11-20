@@ -209,7 +209,7 @@ it("reconciles admitted risk links and separates historical acts from Owner acti
 
 it("shows the separately admitted dated project queue and clears it if source denied",async()=>{
  const a=setup();click();await screen.findAllByText("Synthetic held next action");
- expect(screen.getAllByText(/Снимок от 2026-11-20/).length).toBeGreaterThan(0);
+ expect(screen.getByText(/Снимок от 2026-11-20/)).toBeTruthy();
  fireEvent.click(screen.getByRole("button",{name:"Подготовка · 0"}));
  expect(screen.queryByText("Synthetic held next action")).toBeNull();
  fireEvent.click(screen.getByRole("button",{name:"Отложено · 1"}));
@@ -253,4 +253,19 @@ it("keeps every project accessible when list is compact",async()=>{
  expect(document.querySelector(".oq-project[open]")?.textContent).toContain("REF-7");
  fireEvent.click(screen.getByRole("button",{name:"Подготовка · 0"}));
  expect(screen.getByText(/По выбранным условиям действий нет/)).toBeTruthy();
+});
+
+it("keeps technical original wording in disclosure while localizing visible action",async()=>{
+ const q=fixture["company-owner-project-queue"];
+ const snapshot={...q,items:[{...q.items[0],action:"Read-only сверка фактических receipts"}]};
+ vi.stubGlobal("fetch",vi.fn(async(input:RequestInfo|URL)=>{
+  const k=String(input).replace("/api/app/v1/","");
+  return new Response(JSON.stringify(k==="company-owner-project-queue"?snapshot:fixture[k as keyof typeof fixture]),{status:200});
+ }));
+ render(<LanguageProvider initialLanguage="ru"><ExecutiveOverview csrfToken="fixture"/></LanguageProvider>);
+ click();await screen.findByText(/Следующее по списку/);
+ expect(document.querySelector(".oq-project>summary")?.textContent).toContain("Сверка без изменения данных фактических подтверждений");
+ expect(document.querySelector(".oq-project>summary")?.textContent).not.toContain("receipts");
+ fireEvent.click(document.querySelector(".oq-project>summary")!);
+ expect(screen.getByText("Read-only сверка фактических receipts").closest("details")?.open).toBe(false);
 });
