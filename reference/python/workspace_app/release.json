@@ -1,6 +1,6 @@
 {
   "schema": "arvectum.workspace.application-release/1",
-  "release_id": "p10.09.26-owner-queue-candidate",
+  "release_id": "p10.09.27-compact-overview-candidate",
   "app_api_contract": "16",
   "classification": "bounded-internal-provisional",
   "public_api": false
