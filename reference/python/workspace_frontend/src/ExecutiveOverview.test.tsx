@@ -19,10 +19,10 @@ function setup(mode:"overview"|"work"|"finance"="overview"){
  render(<LanguageProvider initialLanguage="ru"><ExecutiveOverview csrfToken="fixture" mode={mode}/></LanguageProvider>);
  return {f,fail:(k:string,n:number)=>{bad=k;code=n;}};
 }
-it("one explicit read of seven existing routes; no duplicate linked decision or historic authority",async()=>{
+it("one explicit read of eight existing routes; no duplicate linked decision or historic authority",async()=>{
  const {f}=setup();expect(f).not.toHaveBeenCalled();click();
  await screen.findByText("Клиентский проект — сдать результат");
- expect(f).toHaveBeenCalledTimes(7);
+ expect(f).toHaveBeenCalledTimes(8);
  expect(screen.getByRole("link",{name:"Изменения ожидают просмотра"}).getAttribute("href")).toBe("/information-hub?view=changes");
  expect(screen.getByText("Пересмотр пилота")).toBeTruthy();
  expect(screen.queryByText("Связанное решение пилота")).toBeNull();
@@ -66,7 +66,7 @@ it("reports eight current sources and separately preserves two excluded historic
  expect(await screen.findByText(/Актуальные сохранённые наблюдения: 8\/8/)).toBeTruthy();
  expect(screen.getByText(/Исключено из мониторинга: 2/)).toBeTruthy();
  expect(screen.getByText(/Локальный сборщик/)).toBeTruthy();
- expect(f).toHaveBeenCalledTimes(7);
+ expect(f).toHaveBeenCalledTimes(8);
 });
 
 it("makes next checks visible without opening evidence and separates owner work from execution queue",async()=>{
@@ -79,17 +79,17 @@ it("makes next checks visible without opening evidence and separates owner work 
   expect(row.querySelector("summary .exec-next-point")?.textContent).toContain("Проверить подтверждения и условия");
   expect(row.querySelector("summary")?.textContent).not.toContain("synthetic evidence");
  }
- expect(screen.getByText(/Прочитаны источники: 7\/7/)).toBeTruthy();
+ expect(screen.getByText(/Прочитаны источники: 8\/8/)).toBeTruthy();
  expect(screen.getByText("Отдельная очередь исполнения, не реестр решений собственника.")).toBeTruthy();
  expect(screen.getByText("Контроль исполнения. Ответственная Position указана в основаниях; это не список личных поручений собственнику.")).toBeTruthy();
  expect(screen.queryByRole("button",{name:/утвердить|принять решение/i})).toBeNull();
- expect(f).toHaveBeenCalledTimes(7);
+ expect(f).toHaveBeenCalledTimes(8);
 });
 it("does not mistake a failed decision read for an unprepared decision",async()=>{
  const a=setup();a.fail("company-decision-reference",503);click();
  const label=await screen.findByText("Сведения о решении недоступны");
  expect(label.closest("summary")).toBeTruthy();
- expect(screen.getByText(/Прочитаны источники: 6\/7/)).toBeTruthy();
+ expect(screen.getByText(/Прочитаны источники: 7\/8/)).toBeTruthy();
  expect(screen.queryByText("Решение готовится · не готово к утверждению")).toBeNull();
  expect(screen.getByText("Пересмотр пилота")).toBeTruthy();
 });
@@ -134,7 +134,7 @@ it("shows dated and unscheduled follow-ups without silently hiding the remaining
  expect(screen.getByText(/Запланирован ·/)).toBeTruthy();
  expect(screen.getByRole("link",{name:"Открыть все контакты: 4"}).getAttribute("href")).toBe("/crm");
  expect(screen.queryByText("Компания Г")).toBeNull();
- expect(f).toHaveBeenCalledTimes(7);
+ expect(f).toHaveBeenCalledTimes(8);
 });
 it("distinguishes uncovered delegation and portfolio control from real technical evidence",async()=>{
  setup();click();await screen.findByText("Пересмотр пилота");
@@ -149,7 +149,7 @@ it("never treats a failed CRM read as an empty or zero follow-up queue",async()=
  const a=setup();a.fail("crm/followups",503);click();await screen.findByText("Пересмотр пилота");
  expect(screen.queryByText(/Дата не задана: 0/)).toBeNull();
  expect(screen.queryByText("В допущенной очереди нет следующих контактов.")).toBeNull();
- expect(screen.getByText(/Прочитаны источники: 6\/7/)).toBeTruthy();
+ expect(screen.getByText(/Прочитаны источники: 7\/8/)).toBeTruthy();
 });
 
 it("shows admitted Position work separately, without a new owner decision or invented deadline",async()=>{
@@ -198,11 +198,22 @@ it("reconciles admitted risk links and separates historical acts from Owner acti
  expect(screen.getAllByText(/Связь не подтверждает выполнение работы или закрытие риска/)).toHaveLength(3);
  expect(screen.getAllByText(/WORK-001 · Пересмотр пилота/).length).toBeGreaterThan(0);
  expect(screen.getAllByText(/Следующая проверка:/)).toHaveLength(3);
- expect(a.f).toHaveBeenCalledTimes(7);
+ expect(a.f).toHaveBeenCalledTimes(8);
  a.fail("company-control-reference",503);click();
  await screen.findAllByText(/Связанная запись не допущена или недоступна/);
  expect(screen.queryByText(/WORK-001 · Пересмотр пилота/)).toBeNull();
  a.fail("company-risk-reference",403);click();await screen.findByRole("alert");
  expect(screen.queryByText(/Исторические решения и согласования в допущенном реестре/)).toBeNull();
  expect(screen.queryByText(/Связь не подтверждает выполнение работы или закрытие риска/)).toBeNull();
+});
+
+it("shows the separately admitted dated project queue and clears it if source denied",async()=>{
+ const a=setup();click();await screen.findByText("Synthetic held next action");
+ expect(screen.getByText(/Снимок на 2026-11-20/)).toBeTruthy();
+ fireEvent.click(screen.getByRole("button",{name:"Подготовка · 0"}));
+ expect(screen.queryByText("Synthetic held next action")).toBeNull();
+ fireEvent.click(screen.getByRole("button",{name:"Отложено · 1"}));
+ expect(screen.getByText("Synthetic held next action")).toBeTruthy();
+ a.fail("company-owner-project-queue",403);click();await screen.findByRole("alert");
+ expect(screen.queryByText("Synthetic held next action")).toBeNull();
 });
