@@ -1,0 +1,23 @@
+name: Source section review
+on:
+  pull_request:
+    paths:
+      - 'docs/engineering/specs/001-roadmap-traceability/**'
+      - 'docs/roadmap/ROADMAP.md'
+      - 'docs/roadmap/WORKSPACE-FIRST-DELIVERY.md'
+      - '.github/workflows/source-section-review.yml'
+permissions:
+  contents: read
+jobs:
+  source-section-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python docs/engineering/specs/001-roadmap-traceability/checks/check_section_review.py
+      - run: python -m unittest discover -s docs/engineering/specs/001-roadmap-traceability/checks -p test_section_review.py
