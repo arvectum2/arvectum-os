@@ -645,3 +645,56 @@ class StartToStatusRegressionTests(unittest.TestCase):
         self.assertEqual(meta["release_sha"], release)
         self.assertIn("Application Support", meta["requested_python"])
         temporary.cleanup()
+
+
+class OwnerQueueLaunchTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = pathlib.Path(self.tmp.name).resolve()
+        (self.root / "config").mkdir(mode=0o700)
+        self.path = self.root / "config/owner-project-queue-launch.json"
+        self.release = "a"*40
+        self.pin = "b"*64
+        self.record = {"schema": "arvectum.workspace.owner-project-queue-launch/1",
+                       "release_commit": self.release,
+                       "contract_blob": process.OWNER_QUEUE_CONTRACT,
+                       "policy_sha256": self.pin}
+    def put(self):
+        self.path.write_text(json.dumps(self.record))
+        self.path.chmod(0o600)
+    def test_default_off_no_policy_derived_pin(self):
+        (self.root/"config/owner-project-queue-policy.json").write_text("{}")
+        self.assertEqual(process._owner_queue_launch_args(self.root,self.release), [])
+    def test_exact_launch_and_rollback(self):
+        self.put()
+        self.assertEqual(process._owner_queue_launch_args(self.root,self.release),
+            ["--owner-queue-policy-sha256",self.pin,"--owner-queue-contract-blob",process.OWNER_QUEUE_CONTRACT])
+        self.assertEqual(process._owner_queue_launch_args(self.root,"c"*40), [])
+    def test_bad_contract(self):
+        self.record["contract_blob"]="f"*40
+        self.put()
+        with self.assertRaises(process.WorkspaceProcessError):
+            process._owner_queue_launch_args(self.root,self.release)
+    def test_insecure_file(self):
+        self.put()
+        self.path.chmod(0o644)
+        with self.assertRaises(process.WorkspaceProcessError):
+            process._owner_queue_launch_args(self.root,self.release)
+    def test_symlink(self):
+        self.put()
+        other=self.path.with_name("other.json")
+        self.path.rename(other)
+        self.path.symlink_to(other)
+        with self.assertRaises(process.WorkspaceProcessError):
+            process._owner_queue_launch_args(self.root,self.release)
+    def test_exact_two_pin_suffix_and_no_extra_flags(self):
+        self.put()
+        python=self.root/"python"
+        python.write_text("#!/bin/sh\n")
+        python.chmod(0o700)
+        entry=self.root/"p9_03_workspace.py"
+        command=f"{python} {entry} serve "+" ".join(process._owner_queue_launch_args(self.root,self.release))
+        self.assertTrue(process._process_identity(command,self.root,python,entry)[0])
+        self.assertFalse(process._process_identity(command+" --extra",self.root,python,entry)[0])
+        self.assertFalse(process._process_identity(command.replace(process.OWNER_QUEUE_CONTRACT,"f"*40),self.root,python,entry)[0])
