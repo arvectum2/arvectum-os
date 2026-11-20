@@ -91,3 +91,7 @@
 .exec-read-coverage {margin:0!important}
 .exec-operational {border-top:1px solid #e5e9ed;margin-top:10px;padding-top:9px}
 .exec-operational h3 {font-size:.92rem;margin:0}
+
+.exec-followup {border-top:1px solid #e5e9ed;padding:9px 0;overflow-wrap:anywhere}
+.exec-followup p {margin:4px 0;font-size:.86rem}
+.exec-followup small {color:#526171;font-size:.8rem}
