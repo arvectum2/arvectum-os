@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { loadCompanyPortfolio } from "./f11Api";
+import { PortfolioReview } from "./PortfolioReview";
 import type { CompanyPortfolioProjection, CompanyProjectCard } from "./f11Types";
 import { useWorkspaceLanguage } from "./i18n";
 import "./CompanyWorkspace.css";
@@ -111,6 +112,7 @@ export function CompanyProjects() {
       <button type="button" disabled={state.refreshing} onClick={() => refresh(true)}>{state.refreshing ? text("Обновляем…", "Refreshing…") : text("Обновить из источников", "Refresh sources")}</button>
     </header>
 
+    <PortfolioReview candidate={state.data.review_packet}/>
     <div className="project-portfolio-summary" aria-label={text("Состояние источников", "Source status")}>
       <span><strong>{sourceBacked}</strong>{text("обновлены сейчас", "freshly fetched")}</span>
       <span><strong>{cached}</strong>{text("из свежего локального кэша", "from recent local cache")}</span>

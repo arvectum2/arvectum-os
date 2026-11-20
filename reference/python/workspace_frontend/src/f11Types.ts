@@ -52,6 +52,7 @@ export type CompanyPortfolioProjection = {
     cross_organization_aggregation: false;
   };
   projects: CompanyProjectCard[];
+  review_packet?: unknown; // optional separately admitted AC-405 projection
 };
 
 export type StagedMaterialVersion = {
