@@ -15,9 +15,9 @@ from .wsf_manual_policy import _private_file
 from .wsf_manual_backup import PilotBackup,BACKUP_NAME
 from .wsf_control_projection import project_controls
 
-PUBLICATION=None
-APPROVED_PLAN_SHA=None
-PUBLICATION_PATH="docs/contracts/WSF-05-COMPANY-CONTROL-SUCCESSOR-PROVISIONAL-v0.5.5.md"
+PUBLICATION='5c49b6079f113c06b26f197a6e0d805c9b5bb704'
+APPROVED_PLAN_SHA='58969b2a2024ca3c06dfc5ee11311e5323e74b743ef278414f3acb9a1dda3056'
+PUBLICATION_PATH="ac401-approved-publication.md"
 PREFIX="company-control-successor"
 JOURNAL="company-control-cutover.json"
 PARTS=("Arvectum","backups","arvectum-company","control-register")
@@ -29,7 +29,7 @@ def exists(path):
 def load_plan(root):
     if PUBLICATION is None or APPROVED_PLAN_SHA is None:
         raise ManualContextError("successor not published")
-    raw=(Path(__file__).resolve().parents[3]/PUBLICATION_PATH).read_bytes()
+    raw=(Path(__file__).resolve().parent/PUBLICATION_PATH).read_bytes()
     blob=sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
     if blob!=PUBLICATION:raise ManualContextError("publication mismatch")
     raw=_private_file(root/"config"/(PREFIX+"-approved.json"))

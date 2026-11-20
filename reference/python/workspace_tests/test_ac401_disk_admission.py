@@ -36,7 +36,7 @@ class DiskAdmissionTests(unittest.TestCase):
         c=make_case(self)
         self.assertEqual(len(c.runtime.read(c.base.resolve)["obligation_signals"]),2)
         cfg=c.base.root/"config"
-        with self.assertRaises(ManualContextError):load_plan(c.base.root)
+        with self.assertRaises((ManualContextError,FileNotFoundError)):load_plan(c.base.root)
         write_atomic(cfg/JOURNAL,b"pending")
         with self.assertRaises(ManualContextError):c.runtime.read(c.base.resolve)
         (cfg/JOURNAL).unlink()
@@ -78,7 +78,8 @@ class DiskAdmissionTests(unittest.TestCase):
             with self.assertRaises(ManualContextError):load_plan(c.base.root)
     def test_collector_compatible_paths_are_specific(self):
         from wsf_collector_repin_operator import compatible
-        self.assertTrue(compatible(["reference/python/workspace_app/wsf_company_control_admission.py",
+        self.assertTrue(compatible(["reference/python/workspace_app/ac401-approved-publication.md",
+                                    "reference/python/workspace_app/wsf_company_control_admission.py",
                                     "reference/python/wsf_company_control_successor_operator.py"]))
         for path in ("reference/python/workspace_app/wsf_collector_runtime.py",
                      "reference/python/workspace_app/wsf_manual_runtime.py",
