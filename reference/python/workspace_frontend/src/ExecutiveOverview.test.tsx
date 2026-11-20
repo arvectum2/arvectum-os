@@ -172,3 +172,20 @@ it("shows admitted Position work separately, without a new owner decision or inv
  expect(screen.getByText("Пересмотр пилота")).toBeTruthy();
  expect(f).toHaveBeenCalledTimes(3);
 });
+
+it("finance structure shows a conditional calendar item and blocked calculations, not fabricated balances",async()=>{
+ const a=setup("finance");click();
+ await screen.findByRole("heading",{name:"Платёжный календарь"});
+ for(const name of ["Деньги и движения","Расходы и лимиты","Прогноз ликвидности","Экономика проектов","Источники и контроль"])
+  expect(screen.getByRole("heading",{name})).toBeTruthy();
+ expect(screen.getByText("Дата не подтверждена")).toBeTruthy();
+ expect(screen.getByText("Расчёт недоступен — недостаточно подтверждённых данных")).toBeTruthy();
+ expect(screen.getByText("Условное поступление по контракту")).toBeTruthy();
+ expect(screen.getAllByText("Не установлено").length).toBeGreaterThan(15);
+ expect(screen.queryByRole("button",{name:/оплатить|сохранить|подключить/i})).toBeNull();
+ expect(a.f).toHaveBeenCalledTimes(1);
+ a.fail("company-finance-reference",403);click();
+ await screen.findByRole("alert");
+ expect(screen.queryByRole("heading",{name:"Платёжный календарь"})).toBeNull();
+ expect(screen.queryByText("Условное поступление по контракту")).toBeNull();
+});

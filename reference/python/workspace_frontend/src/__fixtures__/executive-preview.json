@@ -2,7 +2,7 @@
   "context": {
     "schema": "arvectum.workspace.shell-context/1",
     "release": {
-      "id": "p10.09.23",
+      "id": "p10.09.24",
       "app_api_contract": "15",
       "classification": "bounded-internal-provisional",
       "public_api": false
