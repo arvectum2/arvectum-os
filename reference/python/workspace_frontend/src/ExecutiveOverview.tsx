@@ -5,6 +5,7 @@ import {parseDecision} from "./DecisionReference";
 import {parseRisk} from "./RiskReference";
 import {parseFinance} from "./FinanceReference";
 import {FinanceStructure} from "./FinanceStructure";
+import {OperatingCadence} from "./OperatingCadence";
 import {parseCRM,parseInbox} from "./ControlReferenceSummary";
 import type {MyWorkProjection} from "./types";
 import "./Executive.css";
@@ -149,6 +150,7 @@ export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;
  <a href="/projects">{text("Портфель проектов","Project portfolio")}</a>
  </section>}</div>}
  {mode==="finance"&&finance&&<FinanceStructure finance={finance}/>}
+ {mode==="overview"&&<OperatingCadence/>}
  {mode==="overview"&&<section className="exec-panel"><header><h2>{text("Доказательства работы системы","Reference-implementation evidence")}</h2></header>
  <p className="exec-muted">{text("Только подтверждённые технические наблюдения в этой сводке. Не оценка зрелости, автономности или экономии времени.","Only verified technical observations in this summary. Not a maturity, autonomy or time-saving score.")}</p>
  {inbox?.collector?<><p>{text("Последний подтверждённый сбор: ","Last verified collection: ")}{inbox.collector.last_verified_at?fmt(inbox.collector.last_verified_at):text("Не установлен","Unknown")}</p><p>{text("Состояние сборщика: ","Collector state: ")}{inbox.collector.run_state} · {text("Резервная копия: ","Backup: ")}{inbox.backup_status}</p></>:<p>{text("Сведения о сервисном сборе: ","Service collection evidence: ")}{inbox?text("Не установлено","Unknown"):status(sources.inbox)}</p>}
