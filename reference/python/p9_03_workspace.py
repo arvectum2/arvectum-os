@@ -38,6 +38,7 @@ from workspace_app.wsf_company_control_reference import CompanyControlReference
 from workspace_app.wsf_decision_reference import DecisionReference
 from workspace_app.wsf_risk_reference import RiskReference
 from workspace_app.wsf_finance_reference import FinanceReference
+from workspace_app.wsf_owner_queue import OwnerQueueReference
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -58,7 +59,9 @@ def _parser() -> argparse.ArgumentParser:
         help="create only the exact local reviewed generated-output promotion authorization grant",
     )
     promotion.add_argument("--confirm", action="store_true")
-    sub.add_parser("serve", help="serve the bounded same-origin SPA+BFF on the configured profile")
+    serve = sub.add_parser("serve", help="serve the bounded same-origin SPA+BFF on the configured profile")
+    serve.add_argument("--owner-queue-policy-sha256", help="independently approved policy digest; both pins required")
+    serve.add_argument("--owner-queue-contract-blob", help="effective approved contract publication blob; no implicit activation")
     return parser
 
 
@@ -66,7 +69,7 @@ def _frontend_root() -> Path:
     return Path(__file__).resolve().parent / "workspace_frontend"
 
 
-def build_workspace_app(settings: WorkspaceSettings):
+def build_workspace_app(settings: WorkspaceSettings, *, owner_queue_policy_sha256=None, owner_queue_contract_blob=None):
     """Build one same-origin Workspace app with bounded Company product routes.
 
     P10.04 asset admission and P10.05 reviewed-output promotion are installed by
@@ -80,6 +83,12 @@ def build_workspace_app(settings: WorkspaceSettings):
     entry-point composition step.
     """
 
+    if (owner_queue_policy_sha256 is None) != (owner_queue_contract_blob is None):
+        raise ValueError("owner queue requires both independently approved pins")
+    owner_queue = (OwnerQueueReference(settings.runtime_root,
+        approved_policy_sha256=owner_queue_policy_sha256,
+        approved_contract_blob=owner_queue_contract_blob)
+        if owner_queue_policy_sha256 is not None else None)
     admission, promotion = build_durable_company_governed_executors(settings.runtime_root)
     materials = CompanyMaterialsStore(Path(settings.runtime_root))
     library = CompanyAssetLibrary(materials, admission)
@@ -98,7 +107,8 @@ def build_workspace_app(settings: WorkspaceSettings):
                      company_control_reference=CompanyControlReference(settings.runtime_root),
                      decision_reference=DecisionReference(settings.runtime_root),
                      risk_reference=RiskReference(settings.runtime_root),
-                     finance_reference=FinanceReference(settings.runtime_root))
+                     finance_reference=FinanceReference(settings.runtime_root),
+                     owner_queue_reference=owner_queue)
     app = install_f11_routes(
         app,
         asset_admission=admission,
@@ -194,7 +204,8 @@ def main() -> None:
     import uvicorn
 
     uvicorn.run(
-        build_workspace_app(settings),
+        build_workspace_app(settings, owner_queue_policy_sha256=args.owner_queue_policy_sha256,
+                            owner_queue_contract_blob=args.owner_queue_contract_blob),
         host=settings.bind_host,
         port=settings.bind_port,
         proxy_headers=False,
