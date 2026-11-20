@@ -151,3 +151,24 @@ it("never treats a failed CRM read as an empty or zero follow-up queue",async()=
  expect(screen.queryByText("В допущенной очереди нет следующих контактов.")).toBeNull();
  expect(screen.getByText(/Прочитаны источники: 6\/7/)).toBeTruthy();
 });
+
+it("shows admitted Position work separately, without a new owner decision or invented deadline",async()=>{
+ const prior=fixture["company-control-reference"];
+ const position_work=[
+ {...prior.owner_action[0],id:"WORK-002",title:"Коммерческая квалификация",accountable_position:"POS-002",priority:"P1",control_state:"open",owner_action:"not_required",decision_ready:false,due_or_trigger:{kind:"none",value:null,source_ref:null}},
+ {...prior.owner_action[0],id:"WORK-003",title:"Управленческие финансовые данные",accountable_position:"POS-005",priority:"P1",control_state:"open",owner_action:"not_required",decision_ready:false,due_or_trigger:{kind:"none",value:null,source_ref:null}}
+ ];
+ const f=vi.fn(async(input:RequestInfo|URL)=>{
+  const k=String(input).replace("/api/app/v1/","");
+  return new Response(JSON.stringify(k==="company-control-reference"?{...prior,position_work}:fixture[k as keyof typeof fixture]),{status:200});
+ });
+ vi.stubGlobal("fetch",f);
+ render(<LanguageProvider initialLanguage="ru"><ExecutiveOverview csrfToken="fixture" mode="work"/></LanguageProvider>);
+ click();await screen.findByText("Работы ответственных должностей");
+ expect(screen.getByText("Коммерческая квалификация")).toBeTruthy();
+ expect(screen.getByText("Управленческие финансовые данные")).toBeTruthy();
+ expect(screen.getByText("WORK-002 · POS-002 · P1")).toBeTruthy();
+ expect(screen.getAllByText("Срок не задан · состояние требует сверки")).toHaveLength(2);
+ expect(screen.getByText("Пересмотр пилота")).toBeTruthy();
+ expect(f).toHaveBeenCalledTimes(3);
+});

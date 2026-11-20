@@ -54,14 +54,14 @@ export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;
  const status=(r:Result<unknown>)=>busy?text("Проверяем…","Checking…"):r.state==="unavailable"?text("Недоступно","Unavailable"):denied?text("Доступ закрыт","Access denied"):text("Не проверено","Not checked");
  const work=value(sources.work),decisions=value(sources.decisions),risks=value(sources.risks),finance=value(sources.finance),crm=value(sources.crm),inbox=value(sources.inbox),queue=value(sources.tasks);
  const activeTasks=queue?.items.filter(x=>x.evidence_mode==="live"&&x.group!=="informational"&&x.group!=="recent-outcome")??[];
- const due=(x:ControlRow)=>x.due_or_trigger.kind==="exact"?fmt(x.due_or_trigger.value):x.due_or_trigger.value;
+ const due=(x:ControlRow)=>x.due_or_trigger.kind==="exact"&&x.due_or_trigger.value?fmt(x.due_or_trigger.value):x.due_or_trigger.value;
  const pending=decisions?.filter(x=>x.recorded_state==="preparing")??[];
  const linked=new Set(work?.owner_action.map(x=>x.id)??[]);
  // A successful read is not a business status, and a missing source is not a zero.
  const readResults=mode==="finance"?[sources.finance]:mode==="work"?[sources.work,sources.decisions,sources.tasks]:Object.values(sources);
  const readyCount=readResults.filter(r=>r.state==="ready").length;
  const dueStatus=(x:ControlRow)=>{
-  if(x.due_or_trigger.kind!=="exact"||!checked)return null;
+  if(x.due_or_trigger.kind!=="exact"||!x.due_or_trigger.value||!checked)return null;
   const timestamp=Date.parse(x.due_or_trigger.value);
   if(!Number.isFinite(timestamp))return null;
   return timestamp<=checked.getTime()?text("Контрольный срок наступил · состояние исполнения не подтверждено","Review deadline reached · completion unconfirmed"):text("Контрольный срок ещё не наступил","Review deadline not yet reached");
@@ -114,6 +114,11 @@ export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;
  {risks&&<p className="exec-muted">{text("Открытые риски, не приняты. Актуальность требует проверки.","Open risks, not accepted. Current applicability unverified.")}</p>}
  </section>}</div>
  </>}
+ {mode!=="finance"&&work?.position_work&&<section className="exec-panel"><header><h2>{text("Работы ответственных должностей","Accountable Position work")}</h2><a href="/control-details">{text("Реестр","Register")}</a></header>
+ <p className="exec-muted">{text("Работы компании, не новые договорные обязательства, не доказательство делегирования и не решения собственника.","Company work, not new contractual obligations, proven delegation or Owner decisions.")}</p>
+ {work.position_work.map(x=><details className="exec-row" key={x.id}><summary><span><strong>{x.title}</strong><small>{x.id} · {x.accountable_position} · {x.priority}</small><small>{text("Срок не задан · состояние требует сверки","No deadline set · status needs verification")}</small>{nextPoint(x)}</span></summary>
+ <details><summary>{text("Основания","Evidence")}</summary><p>{fmt(x.evidence_as_of)}</p>{x.source_refs.map((s,i)=><p key={i}>{s}</p>)}</details></details>)}
+ </section>}
  {mode==="overview"&&<section className="exec-panel"><header><h2>{text("Делегированная работа и наблюдение","Delegated work and watch")}</h2><a href="/my-work">{text("Операционные задачи","Operational tasks")}</a></header>
  <p className="exec-muted">{text("Назначение ответственной должности само по себе не подтверждает делегирование. Реестр действующих назначений и ожиданий внешнего ответа в эту сводку не допущен.","An accountable position alone does not establish delegation. Current assignments and external-wait states are not admitted to this summary.")}</p>
  <p>{text("Покрытие делегированной работы: не установлено.","Delegated-work coverage: unknown.")}</p>

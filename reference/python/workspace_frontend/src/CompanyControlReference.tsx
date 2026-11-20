@@ -1,7 +1,7 @@
 import {useEffect,useRef,useState} from "react";
 import {useWorkspaceLanguage} from "./i18n";
-export type ControlRow={id:string;title:string;accountable_position:string;priority:string;control_state:string;evidence_as_of:string;next_control_point:string;source_refs:string[];due_or_trigger:{kind:string;value:string};decision_ready:boolean};
-export type ControlView={owner_action:ControlRow[];obligation_signals:ControlRow[];coverage:string;canonical_authority:boolean};
+export type ControlRow={id:string;title:string;accountable_position:string;priority:string;control_state:string;evidence_as_of:string;next_control_point:string;source_refs:string[];due_or_trigger:{kind:string;value:string|null};decision_ready:boolean};
+export type ControlView={owner_action:ControlRow[];obligation_signals:ControlRow[];position_work?:ControlRow[];coverage:string;canonical_authority:boolean};
 export function parseControl(v:any):ControlView{
    if(v.coverage!=="partial"||v.derived!==true||v.canonical_authority!==false||v.organizational_authority_provided!==false||!Array.isArray(v.owner_action)||v.owner_action.length!==1||!Array.isArray(v.obligation_signals)||v.obligation_signals.length!==2)throw Error();
    const x=v.owner_action[0];
@@ -11,6 +11,19 @@ export function parseControl(v:any):ControlView{
     if(!["OBL-001","OBL-002"].includes(o.id)||ids.has(o.id)||o.accountable_position!=="POS-002"||o.decision_ready!==false||o.canonical_authority!==false||o.due_or_trigger?.kind!=="condition"||typeof o.due_or_trigger.value!=="string"||o.control_state!=="open"||o.priority!=="P0"||!Array.isArray(o.source_refs)||!o.source_refs.every((s:unknown)=>typeof s==="string")||!["title","evidence_as_of","next_control_point"].every(k=>typeof o[k]==="string"))throw Error();
     ids.add(o.id);
    }
+ if(v.position_work!==undefined){
+   if(!Array.isArray(v.position_work)||v.position_work.length!==2)throw Error();
+   const expected:Record<string,string>={"WORK-002":"POS-002","WORK-003":"POS-005"};
+   const ids=new Set<string>();
+   for(const w of v.position_work){
+    if(!Object.hasOwn(expected,w.id)||ids.has(w.id)||w.accountable_position!==expected[w.id]||
+       w.control_state!=="open"||w.priority!=="P1"||w.decision_ready!==false||w.canonical_authority!==false||
+       w.owner_action!=="not_required"||w.due_or_trigger?.kind!=="none"||w.due_or_trigger.value!==null||
+       w.due_or_trigger.source_ref!==null||!Array.isArray(w.source_refs)||!w.source_refs.every((s:unknown)=>typeof s==="string")||
+       !["title","evidence_as_of","next_control_point"].every(k=>typeof w[k]==="string"))throw Error();
+    ids.add(w.id);
+   }
+ }
  return v as ControlView;
 }
 export function CompanyControlReference({csrfToken}:{csrfToken:string}){
@@ -36,6 +49,11 @@ export function CompanyControlReference({csrfToken}:{csrfToken:string}){
  <p>{text("Контрольный срок","Review deadline")}: {x.due_or_trigger.value}</p>
  <p>{x.next_control_point}</p><p>{text("Решение ещё не подготовлено; полнота обязательств неизвестна.","Decision not ready; obligation coverage unknown.")}</p>
  <details><summary>{text("Свидетельства","Evidence")}</summary><p>{x.evidence_as_of}</p>{x.source_refs.map((s,i)=><p key={i}>{s}</p>)}</details></article>)}
+ {data?.position_work&&<><h3>{text("Работы ответственных должностей","Accountable Position work")}</h3>
+ <p>{text("Не подтверждает назначение исполнителя или делегирование.","Does not establish an executor Assignment or delegation.")}</p>
+ {data.position_work.map(x=><article key={x.id}><h4>{x.id} · {x.title}</h4>
+ <p>{x.accountable_position} · {x.priority} · {text("Срок не задан","No deadline set")}</p><p>{x.next_control_point}</p>
+ <details><summary>{text("Свидетельства","Evidence")}</summary>{x.source_refs.map((s,i)=><p key={i}>{s}</p>)}</details></article>)}</>}
  {data&&<><h3>{text("Договорные обязательства","Contractual obligations")}</h3>
  <p>{text("Сроки — из проверенного комплекта контракта. Фактическое исполнение и приёмка требуют отдельной проверки.","Terms from the reviewed contract package. Actual fulfillment and acceptance require separate verification.")}</p>
  {data.obligation_signals.map(o=><article key={o.id}><h4>{o.id} · {o.title}</h4>

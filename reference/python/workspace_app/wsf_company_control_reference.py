@@ -80,7 +80,11 @@ class CompanyControlReference:
     def read(self,authorize):
         try:
             from .wsf_company_control_admission import selected_successor, exists, JOURNAL
+            from .wsf_company_control_material_admission import selected_material, JOURNAL as MATERIAL_JOURNAL
+            material=selected_material(self,authorize)
+            if material is not None:return material
             successor=selected_successor(self,authorize)
+            if exists(self.root/"config"/MATERIAL_JOURNAL):raise ManualContextError("material transition incomplete")
             if successor is not None:return successor
             a=authorize();p,pin,review=self.gate(a)
             raw=read_snapshot(self.source)
@@ -91,6 +95,6 @@ class CompanyControlReference:
             rows=normalized_rows(d,review,now)
             result=project_controls(a,{"scope":_identity(a),"source_ref":"Company AC-401","as_of":now,"coverage":"partial","records":rows},admitted_scope=p["scope"],admitted_positions=set(BINDINGS.values()),now=now)
             a=authorize();_,after,review_after=self.gate(a)
-            if after!=pin or review_after!=review or read_snapshot(self.source)!=raw or exists(self.root/"config"/JOURNAL):raise ManualContextError("source or authorization changed")
+            if after!=pin or review_after!=review or read_snapshot(self.source)!=raw or exists(self.root/"config"/JOURNAL) or exists(self.root/"config"/MATERIAL_JOURNAL):raise ManualContextError("source or authorization changed")
             return result
         except (OSError,ValueError,TypeError,KeyError,AttributeError,RecursionError,p704.P704Error) as exc:raise ManualContextError("Company control reference unavailable") from exc
