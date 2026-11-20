@@ -21,7 +21,15 @@ from workspace_app.wsf_collector_runner import LABEL
 def compatible(paths):
     # No change to collection, policy, dependency lock, store or authorization code.
     allowed={"reference/python/workspace_app/release.json","reference/python/wsf_collector_repin_operator.py",
-             "reference/python/workspace_app/wsf_collector_repin.py","reference/python/p7_06_macos_deploy.sh"}
+             "reference/python/workspace_app/wsf_collector_repin.py","reference/python/p7_06_macos_deploy.sh",
+             # AC-401 read/cutover only; collector contracts, source reader,
+             # policy, access store and dependencies remain excluded.
+             "reference/python/workspace_app/wsf_company_control_reference.py",
+             "reference/python/workspace_app/wsf_company_control_successor.py",
+             "reference/python/workspace_app/wsf_company_control_cutover.py",
+             "reference/python/workspace_app/wsf_company_control_admission.py",
+             "reference/python/workspace_app/ac401-approved-publication.md",
+             "reference/python/wsf_company_control_successor_operator.py"}
     return all(p in allowed or p.startswith(("docs/","reference/python/workspace_frontend/src/",
                 "reference/python/workspace_frontend/dist/","reference/python/workspace_tests/","reference/python/tests/")) for p in paths)
 
@@ -39,7 +47,7 @@ def verify(root,source,target,decision):
         if subprocess.check_output(["git","-C",str(REPO),"rev-parse",sha+":"+CONTRACT],text=True,timeout=5).strip()!=PUBLICATION_PIN:
             raise ManualContextError("contract changed")
     paths=subprocess.check_output(["git","-C",str(REPO),"diff","--name-only","--no-renames","-z",source,target],timeout=10).decode().split("\0")
-    if not compatible([p for p in paths if p]):raise ManualContextError("not a compatible UI-only successor")
+    if not compatible([p for p in paths if p]):raise ManualContextError("not a compatible bounded successor")
     pointer=json.loads(_private_file(root/"run"/"p7-06-last-success.json"))
     txid=pointer["transaction_id"];pid=pointer["plan_id"]
     if not all(re.fullmatch("[0-9a-f]{64}",v) for v in (txid,pid)):raise ManualContextError("invalid deployment evidence")

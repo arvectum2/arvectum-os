@@ -1,0 +1,9 @@
+# AC-401 first successor transition evidence
+
+Candidate stacked on PR #68 (4/4 CI PASS). OS main b87ec72460c81a5f0be9bf49937b5df47c856082, Company main b7d92ab697dc6482ace54e110198028f56e08835. No productive source, backup, policy or grant change.
+
+Bounded WORK-001 projection and abstract forward-only exact SHA/journal transaction. Temporary filesystem adapter uses actual local P7.04 authorization fixtures. Exact source/backup/policy/receipt order, incomplete read rejected, per-step recheck and idempotent completion. One WORK revision; no state transition, obligation/delegation change or authority inferred. Canonical Company validation and authenticated approval remain required.
+
+32/32 focused tests PASS on selected Mac Python 3.14: previous 23 plus nine cutover tests; eight before/after interruption points; backup mismatch, missing/altered journal, revoked grant after source write, expiry, receipt tamper, wrong plan, invalid digests and unsupported record changes. Separately exercised actual canonical Company writer blob 7b9f4f6d1be6b221f1b0ec4a5b417902285a3356 on temporary synthetic records: interruption after primary commit, forward recovery, exact four events, source/backup byte-equal, permitted derived read, idempotent repetition. No duplicate event or rollback.
+
+Limits: fixture in-process lock/quiescence and independent synthetic approval are not real shared production lock or authenticated approval. Interruptions injected before/after writes, not within write/fsync or physical power loss. Unknown/torn file states fail closed. Real volume verification, durable production adapter, partial artifact recovery, publication/decision verification and BFF composition remain open. No route enabled. Oversized ARC command rejected; smaller calls succeeded. Draft 0.5.5 is not approval.
