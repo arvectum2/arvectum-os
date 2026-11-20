@@ -20,12 +20,12 @@ export function parseOwnerQueue(v:unknown):OwnerQueue{
  !str(v.source_commit)||!/^[a-f0-9]{40}$/.test(v.source_commit)||!str(v.source_blob)||!/^[a-f0-9]{40}$/.test(v.source_blob)||
  !Array.isArray(v.projects)||!v.projects.length||v.projects.length>100||!Array.isArray(v.items)||!v.items.length||v.items.length>2000||
  !Array.isArray(v.sections)||v.sections.length!==6||!record(v.counts)||!record(v.counts.queues)||v.counts.decision_ready_owner_items!==0)throw Error("queue shape");
- const labels=new Set<string>();const keys=new Set<string>();const counts:Record<Queue,number>={prepare_within_existing_envelope:0,read_only_reconciliation:0,blocked:0,watch:0,hold:0};
+ const labels=new Set<string>();const itemProjects=new Set<string>();const keys=new Set<string>();const counts:Record<Queue,number>={prepare_within_existing_envelope:0,read_only_reconciliation:0,blocked:0,watch:0,hold:0};
  for(const p of v.projects){if(!record(p)||!str(p.label)||labels.has(p.label)||!fields(p,["stage","source_as_of"])||!Array.isArray(p.subviews)||p.subviews.length>30||!p.subviews.every(s=>record(s)&&fields(s,["label","next","state"])))throw Error("project");labels.add(p.label);}
  for(const i of v.items){if(!record(i)||!str(i.project)||!labels.has(i.project)||!str(i.ref)||!queues.includes(i.queue as Queue)||!fields(i,["action","source_as_of","trigger"])||!strings(i.unknowns)||!strings(i.related_control_refs))throw Error("action");
- const k=JSON.stringify([i.project,i.ref]);if(keys.has(k))throw Error("duplicate");keys.add(k);counts[i.queue as Queue]++;}
+ const k=JSON.stringify([i.project,i.ref]);if(keys.has(k))throw Error("duplicate");keys.add(k);itemProjects.add(i.project);counts[i.queue as Queue]++;}
  for(const [n,s] of v.sections.entries()){if(!record(s)||s.key!==sectionKeys[n]||!Array.isArray(s.entries)||s.entries.length>100||!s.entries.every(e=>record(e)&&fields(e,["title","next","qualification"]))||(n===1&&s.entries.length))throw Error("section");}
- if(v.counts.projects!==labels.size||v.counts.actions!==keys.size||queues.some(q=>v.counts && record(v.counts)&&record(v.counts.queues)&&v.counts.queues[q]!==counts[q])||v.projects.some(p=>!v.items?.some(i=>i.project===p.label)))throw Error("counts");
+ if(v.counts.projects!==labels.size||v.counts.actions!==keys.size||queues.some(q=>v.counts && record(v.counts)&&record(v.counts.queues)&&v.counts.queues[q]!==counts[q])||[...labels].some(p=>!itemProjects.has(p)))throw Error("counts");
  return v as unknown as OwnerQueue;
 }
 export function OwnerProjectQueue({data,state}:{data:OwnerQueue|null;state:string}){

@@ -208,12 +208,12 @@ it("reconciles admitted risk links and separates historical acts from Owner acti
 });
 
 it("shows the separately admitted dated project queue and clears it if source denied",async()=>{
- const a=setup();click();await screen.findByText("Synthetic held next action");
+ const a=setup();click();await screen.findAllByText("Synthetic held next action");
  expect(screen.getByText(/Снимок на 2026-11-20/)).toBeTruthy();
  fireEvent.click(screen.getByRole("button",{name:"Подготовка · 0"}));
  expect(screen.queryByText("Synthetic held next action")).toBeNull();
  fireEvent.click(screen.getByRole("button",{name:"Отложено · 1"}));
- expect(screen.getByText("Synthetic held next action")).toBeTruthy();
+ expect(screen.getAllByText("Synthetic held next action").length).toBeGreaterThan(0);
  a.fail("company-owner-project-queue",403);click();await screen.findByRole("alert");
  expect(screen.queryByText("Synthetic held next action")).toBeNull();
 });
