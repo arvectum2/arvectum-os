@@ -334,3 +334,9 @@
     justify-self: start;
   }
 }
+
+.portfolio-review{margin:12px 0;overflow-wrap:anywhere}
+.portfolio-review h2{font-size:1.05rem;margin:0 0 8px}
+.portfolio-review .company-facts{margin:12px 0}
+.portfolio-cadence{display:flex;flex-wrap:wrap;gap:8px}
+.portfolio-cadence span{padding:6px 9px;background:#f2f5f6;border-radius:6px;font-size:.83rem}
