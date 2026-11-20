@@ -1,0 +1,17 @@
+# WSF-05 — local Company control admission, 0.5.7
+
+Status: DRAFT, not effective. Owner directed simplification for the internal owner-operated Company on 2026-11-20. This candidate replaces the distributed-security development direction for this pilot, not the effective older contracts or universal OS security requirements. PRs #80/#81 are retained experimental alternatives for later multi-tenant or higher-risk use. No new host, key, listener, authority store or mandatory approval traversal through MacBook.
+
+## Narrow local boundary
+
+Single trusted Owner-operated Mac mini/user and existing local human P7.04 grants. Preserve Organization/actor/grant, credential, original policy/receipt, expiry, pilot review and authorization/access recheck. Explicitly reviewed effective publication required once for standing read scope; no new grant or implicit write permission. Immutable original four-event prefix verified against previous source pin; valid canonical append chain, bounded record identities and semantic fields. Read primary and actual encrypted external backup, require byte parity; revalidate both and live access before returning. No stale fallback. Existing exact read remains effective until reviewed transition.
+
+Historical AC-402 indexes DEC-004 and DEC-005 are restricted to existing exact published Company act locators at da51e6a1bb44bce282270ea0d88c72e3c07d1d6b; not new authority, readiness or approvals. AC-403 RSK-002 permits repeated evidence/control-reference/next-review changes only; no priority, acceptance, closure, assignment, lifecycle or other risk mutation. Source history and unaffected records preserved. No per-revision compiled digest. Actual fields limited to narrow display; no source data expansion. Valid-looking source text is not verified business truth or approval.
+
+## Operations
+
+Reuse canonical Company's existing append/writer and private source/external backup. For actual updates verify the eligible Assignment/authority and evidence separately; routine evidence reconciliation within a duly approved envelope does not require a new Owner act per review. No permission to carry out reserved actions. The existing local reader is not a writer or independent reviewer. Perform one bounded append at a time, validate exact predecessor, preserve reviewed candidate and record provenance, exclude concurrent writers under existing maintenance and canonical locks, verify encrypted destination and backup parity after append. If interrupted with mismatched pair, read fails closed; inspect exact predecessor/candidate and complete the missing backup append only under valid authority, never truncate history to recover. Follow existing approved recovery procedures. Operator wiring/actual update exercise on selected host remains required before activation; no new production command shipped in this candidate.
+
+## Risk and business priorities
+
+Both source and backup under a compromised privileged local user, complete rollback of both, or compromise of runtime/config are outside this pilot's demonstrated protection. No claim of independent anti-rollback or malicious administrator isolation. Retain OS constitutional controls and company legal/authority boundaries. When threat or tenant boundary changes, review separate stronger design. Prioritize real work and existing AI-ENG-001 Assignment, not more security infrastructure. No new protocol or universal data platform for these records. Other source scopes and broader delegation remain separate governed decisions.

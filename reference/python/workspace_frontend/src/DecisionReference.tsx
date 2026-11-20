@@ -1,15 +1,15 @@
 import {useEffect,useRef,useState} from "react";
 import {useWorkspaceLanguage} from "./i18n";
 type Row={id:string;kind:"decision"|"approval";title:string;question?:string;scope?:string;capacity:string;authority_basis:string;recorded_state:string;recorded_outcome?:string;act_ref:string|null;constraints:string;review_trigger?:string;review_due_at?:string|null;linked_work?:string|null;effective_period?:string;domain?:string;position?:string};
-const names=["DEC-001","DEC-002","DEC-003","APR-001"];
+const names=["DEC-001","DEC-002","DEC-003","APR-001","DEC-004","DEC-005"];
 export function parseDecision(v:unknown):Row[]{
  if(!v||typeof v!=="object")throw Error();
  const d=v as Record<string,unknown>;
- if(d.schema!=="arvectum.workspace.company-decision-reference/1"||d.coverage!=="partial"||d.derived!==true||d.canonical_authority!==false||d.organizational_authority_provided!==false||!Array.isArray(d.items)||d.items.length!==4)throw Error();
- for(let i=0;i<4;i++){
+ if(d.schema!=="arvectum.workspace.company-decision-reference/1"||d.coverage!=="partial"||d.derived!==true||d.canonical_authority!==false||d.organizational_authority_provided!==false||!Array.isArray(d.items)||(d.items.length<4||d.items.length>6))throw Error();
+ for(let i=0;i<d.items.length;i++){
   const x=d.items[i];
   if(!x||x.id!==names[i]||x.decision_ready!==false||x.current_applicability!=="unknown"||x.capacity!=="Owner"||!["title","authority_basis","constraints"].every(k=>typeof x[k]==="string"))throw Error();
-  if(i<3){
+  if(i!==3){
    if(x.kind!=="decision"||x.position!=="POS-001"||typeof x.question!=="string"||typeof x.review_trigger!=="string")throw Error();
    if(i===2){if(x.recorded_state!=="preparing"||x.recorded_outcome!=="none"||x.act_ref!==null||x.linked_work!=="WORK-001"||!Number.isFinite(Date.parse(x.review_due_at)))throw Error();}
    else if(x.recorded_state!=="decided"||x.recorded_outcome!=="approve_with_conditions"||typeof x.act_ref!=="string")throw Error();
