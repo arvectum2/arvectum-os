@@ -33,7 +33,12 @@ def compatible(paths):
              "reference/python/workspace_app/wsf_company_control_material.py",
              "reference/python/workspace_app/wsf_company_control_material_admission.py",
              "reference/python/wsf_company_control_material_operator.py",
-             "reference/python/wsf_company_control_successor_operator.py"}
+             "reference/python/wsf_company_control_successor_operator.py",
+             "reference/python/workspace_app/wsf_local_control.py",
+             "reference/python/workspace_app/wsf_decision_reference.py",
+             "reference/python/workspace_app/wsf_risk_reference.py",
+             "reference/python/workspace_app/ac402-403-local-publication.md",
+             "reference/python/wsf_local_control_operator.py"}
     return all(p in allowed or p.startswith(("docs/","reference/python/workspace_frontend/src/",
                 "reference/python/workspace_frontend/dist/","reference/python/workspace_tests/","reference/python/tests/")) for p in paths)
 

@@ -189,3 +189,20 @@ it("finance structure shows a conditional calendar item and blocked calculations
  expect(screen.queryByRole("heading",{name:"Платёжный календарь"})).toBeNull();
  expect(screen.queryByText("Условное поступление по контракту")).toBeNull();
 });
+
+it("reconciles admitted risk links and separates historical acts from Owner action",async()=>{
+ const a=setup();click();await screen.findByText("Пересмотр пилота");
+ expect(screen.getByText(/Исторические решения и согласования в допущенном реестре: 3/)).toBeTruthy();
+ expect(screen.getByText(/Эскалации: сведения не допущены/)).toBeTruthy();
+ expect(screen.getByText(/Исключения и инциденты: сведения не допущены/)).toBeTruthy();
+ expect(screen.getAllByText(/Связь не подтверждает выполнение работы или закрытие риска/)).toHaveLength(3);
+ expect(screen.getAllByText(/WORK-001 · Пересмотр пилота/).length).toBeGreaterThan(0);
+ expect(screen.getAllByText(/Следующая проверка:/)).toHaveLength(3);
+ expect(a.f).toHaveBeenCalledTimes(7);
+ a.fail("company-control-reference",503);click();
+ await screen.findAllByText(/Связанная запись не допущена или недоступна/);
+ expect(screen.queryByText(/WORK-001 · Пересмотр пилота/)).toBeNull();
+ a.fail("company-risk-reference",403);click();await screen.findByRole("alert");
+ expect(screen.queryByText(/Исторические решения и согласования в допущенном реестре/)).toBeNull();
+ expect(screen.queryByText(/Связь не подтверждает выполнение работы или закрытие риска/)).toBeNull();
+});
