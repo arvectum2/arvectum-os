@@ -63,7 +63,7 @@ class DecisionReference:
     def read(self,authorize):
         try:
             from .wsf_local_control import enabled,read_local
-            if enabled():return read_local(self,authorize,'decision')
+            if enabled(self.root):return read_local(self,authorize,'decision')
             a=authorize();p,pin,review=self.gate(a)
             raw=read_snapshot(self.source)
             if sha(raw)!=p["source_sha256"]:raise ManualContextError("source changed")

@@ -64,3 +64,17 @@ class LocalTests(unittest.TestCase):
         with patch.object(local,"backup_bytes",return_value=raw),self.assertRaises(ManualContextError):f.runtime.read(f.resolve)
         f.runtime.source.write_bytes(old);p704.revoke_grant(f.root,f.g)
         with patch.object(local,"backup_bytes",return_value=old),self.assertRaises(ManualContextError):f.runtime.read(f.resolve)
+
+class ReceiptTests(unittest.TestCase):
+    def test_published_receipt_required(self):
+        import tempfile
+        from pathlib import Path
+        from wsf_manual_operator import write_new
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp).resolve();(root/"config").mkdir(mode=0o700)
+            self.assertFalse(local.enabled(root))
+            path=root/"config/ac402-403-local-activation.json"
+            write_new(path,_json({"schema":"arvectum.workspace.local-control-activation/1","publication":local.PUBLICATION,"owner_act":"edc59e48b1788859e275907d3d6749b7a88e1da6"}))
+            self.assertTrue(local.enabled(root))
+            path.write_bytes(b"{}")
+            with self.assertRaises(ManualContextError):local.enabled(root)

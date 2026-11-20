@@ -11,7 +11,7 @@ from .wsf_company_control_reference import read_snapshot,sha
 from .wsf_control_projection import stamp
 
 # Approval of this standing read policy is separate from candidate development.
-PUBLICATION=None
+PUBLICATION="5863ad8ef2b970456073f53746a96a5494f44e3d"
 PUBLICATION_PATH="ac402-403-local-publication.md"
 ACTS={
  "DEC-004":"DECISION-2026-11-20-AC401-WORK001-SUCCESSOR",
@@ -23,10 +23,14 @@ RISK_FIELDS={"source_refs","current_controls_refs","control_evidence_state","res
 def need(value,msg):
     if not value:raise ManualContextError(msg)
 
-def enabled():
+def enabled(root):
     if PUBLICATION is None:return False
     raw=(Path(__file__).resolve().parent/PUBLICATION_PATH).read_bytes()
     need(sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()==PUBLICATION,"publication mismatch")
+    from .wsf_manual_policy import _private_file
+    try:receipt=json.loads(_private_file(Path(root)/'config/ac402-403-local-activation.json'))
+    except FileNotFoundError:return False
+    need(receipt=={'schema':'arvectum.workspace.local-control-activation/1','publication':PUBLICATION,'owner_act':'edc59e48b1788859e275907d3d6749b7a88e1da6'},'local receipt mismatch')
     return True
 
 def validate(raw,pin,kind,now):
@@ -65,7 +69,7 @@ def validate(raw,pin,kind,now):
             changes={k for k in r if r[k]!=before[k]}
             need(bool(changes) and changes<=RISK_FIELDS and stamp(r["last_reviewed_at"])>=stamp(before["last_reviewed_at"]),"risk scope changed")
             for k in ("source_refs","current_controls_refs"):
-                need(isinstance(r[k],list) and len(r[k])<=128 and all(isinstance(x,str) and x.strip() and len(x)<=4000 for x in r[k])
+                need(isinstance(r[k],list) and len(r[k])<=(24 if k=='source_refs' else 128) and all(isinstance(x,str) and x.strip() and len(x)<=4000 for x in r[k])
                      and set(before[k])<=set(r[k]),"provenance loss")
             for k in RISK_FIELDS-{"source_refs","current_controls_refs","evidence_as_of","last_reviewed_at"}:
                 need(isinstance(r[k],str) and r[k].strip() and len(r[k])<=4000,"risk text")
@@ -108,5 +112,5 @@ def read_local(runtime,authorize,kind):
     result=project(raw,p["source_sha256"],kind,review,runtime.clock().isoformat())
     _,after,review2=runtime.gate(authorize())
     need(pin==after and review==review2 and read_snapshot(runtime.source)==raw
-         and backup_bytes(runtime,kind)==raw and enabled(),"source or access changed")
+         and backup_bytes(runtime,kind)==raw and enabled(runtime.root),"source or access changed")
     return result
