@@ -31,6 +31,7 @@ class Ticket:
     expires_at:str
     def __post_init__(self):
         need(self.register in ("decision","risk"),"register outside scope")
+        need(self.record_id in (("DEC-004","DEC-005") if self.register=="decision" else ("RSK-002",)),"record outside scope")
         need(all(hex64(x) for x in (self.previous_ticket,self.predecessor,self.successor)) and self.predecessor!=self.successor,"invalid digest")
         need(isinstance(self.contract,str) and re.fullmatch(r"[a-f0-9]{40}",self.contract),"invalid contract")
         need(type(self.sequence) is int and 1<=self.sequence<=1000,"sequence bound")

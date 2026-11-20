@@ -26,10 +26,12 @@ def ticket_for(trust,head,old,new,rid):
 class Authority:
     """Test seam only. No local on-disk head is trusted for this model."""
     def __init__(self,old):self.value=(0,"0"*64,digest(old));self.live=True;self.interrupt=False
-    def check_live(self,trust,t,now):need(self.live,"revoked")
+    def check_live(self,trust,t,sig,now):need(self.live,"revoked")
     def head(self,register):return self.value
-    def compare_and_set(self,register,old,new,trust,t,sig):
-        trust.verify(t,sig,NOW);self.check_live(trust,t,NOW)
+    def read_head(self,register):return self.head(register)
+    def reserve(self,trust,t,sig,now):self.check_live(trust,t,sig,now)
+    def compare_and_set(self,register,old,new,trust,t,sig,now):
+        trust.verify(t,sig,NOW);self.check_live(trust,t,sig,NOW)
         need(self.value==old,"head conflict");self.value=new
         if self.interrupt:raise OSError("synthetic interruption after head commit")
 def atomic(p,b):

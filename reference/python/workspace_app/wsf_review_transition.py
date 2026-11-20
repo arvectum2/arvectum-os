@@ -48,7 +48,7 @@ def transition(ticket,signature,*,trust,authority,io,company,verify_historical_a
     """Forward only. Head commits last. A resumed exact ticket may finish cleanup."""
     def gate():
         now=clock();trust.verify(ticket,signature,now)
-        authority.check_live(trust,ticket,now)
+        authority.check_live(trust,ticket,signature,now)
         return now
     old_head=(ticket.sequence-1,ticket.previous_ticket,ticket.predecessor)
     new_head=(ticket.sequence,ticket.id(),ticket.successor)
@@ -67,14 +67,16 @@ def transition(ticket,signature,*,trust,authority,io,company,verify_historical_a
         n=phase();saved=io.journal()
         if saved is None:
             if n==4:return "already-completed"
-            need(n==0,"partial state without journal");io.begin(journal)
+            need(n==0,"partial state without journal")
         else:need(saved==journal,"different transaction journal")
+        authority.reserve(trust,ticket,signature,clock())
+        if saved is None:io.begin(journal)
         for i in range(n,4):
             gate();io.check_write();need(io.journal()==journal and phase()==i,"transaction drift")
             if i==0:io.append_source(new,ticket.predecessor)
             elif i==1:io.append_backup(new,ticket.predecessor)
             elif i==2:io.archive_ticket(ticket,signature)
-            else:authority.compare_and_set(trust.register,old_head,new_head,trust,ticket,signature)
+            else:authority.compare_and_set(trust.register,old_head,new_head,trust,ticket,signature,clock())
             need(phase()==i+1,"write verification")
         gate();io.check_write();need(phase()==4 and io.journal()==journal,"final verification")
         io.finish();return "completed"
@@ -82,14 +84,14 @@ def transition(ticket,signature,*,trust,authority,io,company,verify_historical_a
 def admitted_bytes(*,trust,authority,io,clock):
     """Verify independently anchored head and source/backup; no stale fallback."""
     need(io.journal() is None,"unfinished transition")
-    head=authority.head(trust.register)
+    head=authority.read_head(trust.register)
     need(head[0]>0,"no successor admitted")
     t,sig=io.read_ticket(head[1])
-    trust.verify(t,sig,clock());authority.check_live(trust,t,clock())
+    trust.verify(t,sig,clock());authority.check_live(trust,t,sig,clock())
     need(head==(t.sequence,t.id(),t.successor),"head binding")
     raw=io.read_source();backup=io.read_backup()
     need(raw==backup and digest(raw)==t.successor,"snapshot pair mismatch")
-    trust.bind(t,clock());authority.check_live(trust,t,clock())
-    need(authority.head(trust.register)==head and io.journal() is None
+    trust.bind(t,clock());authority.check_live(trust,t,sig,clock())
+    need(authority.read_head(trust.register)==head and io.journal() is None
          and io.read_source()==raw and io.read_backup()==raw,"read changed")
     return raw
