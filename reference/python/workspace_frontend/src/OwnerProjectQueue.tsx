@@ -28,27 +28,55 @@ export function parseOwnerQueue(v:unknown):OwnerQueue{
  if(v.counts.projects!==labels.size||v.counts.actions!==keys.size||queues.some(q=>v.counts && record(v.counts)&&record(v.counts.queues)&&v.counts.queues[q]!==counts[q])||[...labels].some(p=>!itemProjects.has(p)))throw Error("counts");
  return v as unknown as OwnerQueue;
 }
+// Exact translations of known source stages; original wording is preserved in evidence.
+const stageRu:Record<string,string>={
+ "Reliability first, multi-user acceptance separately":"Надёжность доставки; многопользовательская приёмка отдельно",
+ "LAB-02 blocked":"LAB-02 — заблокировано",
+ "Офлайн-репетиция CMS PASS reported; cloud gates open":"Офлайн-репетиция CMS пройдена по отчёту; облачные проверки открыты",
+ "AS-043 first next action at pinned main":"AS-043 — следующее действие по зафиксированной версии",
+ "Workspace First; AC-505 external wait":"Рабочее пространство — приоритет; AC-505 ожидает внешнего результата",
+ "WSF-02–05 recovery and evidence":"WSF-02–05 — восстановление и подтверждения",
+ "AW-020-C2 internal preparation; C1 historical pointer":"AW-020-C2 — внутренняя подготовка; C1 — предыдущий этап",
+ "Waiting-for-client-data, lane 4/7 reported":"Ожидание данных заказчика; этап 4 из 7 по отчёту",
+ "Technical hardening complete reported; lost client, reassessment":"Техническая доработка завершена по отчёту; потеря клиента, переоценка",
+ "Contained reference, no new roadmap":"Сохранение наработок; новой дорожной карты нет",
+ "KEEP_IN_PLACE":"Архив: сохранить без возобновления",
+ "DP-INT-002 open":"DP-INT-002 — открыто",
+ "AC-01 partial; EG-004b2 open; PUBLIC NO-GO":"AC-01 — частично; EG-004b2 — открыт; публичный запуск запрещён",
+ "Four released apps reported; physical QA, analytics and localization open":"По отчёту выпущено четыре приложения; физические проверки, аналитика и локализация открыты",
+ "S0 baseline; distinct from local customer pilot":"S0 — исходная гипотеза; отдельно от клиентского пилота",
+ "BR-05 in progress v0.38":"BR-05 — в работе, версия 0.38",
+ "Static QA accepted; actual SEO and deployment separate":"Статические проверки пройдены; SEO и развёртывание — отдельно",
+ "Physical and tool acceptance open":"Физическая приёмка и проверка инструментов открыты",
+};
 export function OwnerProjectQueue({data,state}:{data:OwnerQueue|null;state:string}){
- const {text}=useWorkspaceLanguage(),[filter,setFilter]=useState<Queue|"all">("all"),[project,setProject]=useState("");
+ const {text,language}=useWorkspaceLanguage();
+ const [filter,setFilter]=useState<Queue|"all">("all"),[project,setProject]=useState(""),[expanded,setExpanded]=useState(false);
  const names:Record<Queue,string>={prepare_within_existing_envelope:text("Подготовка","Preparation"),read_only_reconciliation:text("Сверка","Reconciliation"),blocked:text("Блокеры","Blocked"),watch:text("Ожидание","Waiting"),hold:text("Отложено","On hold")};
- return <section className="exec-panel"><header><h2>{text("Проекты и следующие действия","Projects and next steps")}</h2></header>
+ const matches=data?.projects.filter(p=>(!project||p.label===project)&&data.items.some(i=>i.project===p.label&&(filter==="all"||i.queue===filter)))??[];
+ const shown=expanded||project?matches:matches.slice(0,6);
+ const visibleActions=matches.reduce((n,p)=>n+(data?.items.filter(i=>i.project===p.label&&(filter==="all"||i.queue===filter)).length??0),0);
+ const stage=(v:string)=>language==="ru"?(stageRu[v]??v):v;
+ return <section className="exec-panel owner-queue" id="exec-projects"><header><h2>{text("Проекты и следующие действия","Projects and next steps")}</h2>{data&&<span className="oq-date">{text("Снимок от","Snapshot dated")} {data.as_of}</span>}</header>
  {!data?<p role="status">{state==="unchecked"?text("Обновите сводку для чтения проектной очереди.","Read summary to check the project queue."):text("Проектная очередь не допущена или недоступна. Состояние неизвестно.","Project queue is not admitted or unavailable. Status unknown.")}</p>:<>
- <p className="exec-muted">{text("Снимок на","Snapshot dated")} {data.as_of} · {text("Частичное покрытие. Не реальное время, не поручения владельцу и не разрешение на исполнение.","Partial coverage. Not live status, Owner assignments or execution permission.")}</p>
- <div className="exec-facts"><span>{text("Проектные контуры","Project contours")}<strong>{data.counts.projects}</strong></span><span>{text("Следующие действия","Next-action references")}<strong>{data.counts.actions}</strong></span><span>{text("Требуют подготовки и сверки","Preparation and review")}<strong>{data.counts.queues.prepare_within_existing_envelope+data.counts.queues.read_only_reconciliation}</strong></span></div>
- <h3>{text("Ближайшие контрольные точки снимка","Snapshot control points")}</h3>
- {data.sections[0].entries.map((e,i)=><article className="project-state-message" key={i}><strong>{e.title}</strong><p>{e.next}</p><small>{e.qualification}</small></article>)}
- {data.sections[2].entries.map((e,i)=><details className="exec-row" key={i}><summary>{e.title}<span className="exec-next-point">{e.next}</span></summary><p>{e.qualification}</p></details>)}
- <p>{text("В этом снимке не установлено готовых к принятию решений. Действующий реестр решений проверяется отдельно.","No decision-ready items established in this snapshot. Live decision register is checked separately.")}</p>
- <div className="hub-filters" role="group" aria-label={text("Фильтр очереди","Queue filter")}><button aria-pressed={filter==="all"} onClick={()=>setFilter("all")}>{text("Все","All")} · {data.counts.actions}</button>{queues.map(q=><button key={q} aria-pressed={filter===q} onClick={()=>setFilter(q)}>{names[q]} · {data.counts.queues[q]}</button>)}</div>
- <label>{text("Контур проекта","Project contour")} <select value={project} onChange={e=>setProject(e.target.value)}><option value="">{text("Все проекты","All projects")}</option>{data.projects.map(p=><option key={p.label}>{p.label}</option>)}</select></label>
- {data.projects.filter(p=>!project||p.label===project).map(p=>{
+ <p className="exec-muted">{text("Частичное покрытие. Снимок не отражает состояние в реальном времени и не разрешает исполнение.","Partial coverage. Snapshot is not live status or permission to execute.")}</p>
+ <div className="oq-summary"><div><strong>{data.counts.projects}</strong><span>{text("проектных контуров","project contours")}</span></div><div><strong>{data.counts.actions}</strong><span>{text("следующее действие","next-action references")}</span></div><div><strong>{data.counts.queues.prepare_within_existing_envelope+data.counts.queues.read_only_reconciliation}</strong><span>{text("подготовка и сверка","preparation and review")}</span></div></div>
+ <details className="oq-control"><summary>{text("Ближайшие контрольные точки снимка","Snapshot control points")}</summary>
+ {[...data.sections[0].entries,...data.sections[2].entries].map((e,i)=><article key={i}><strong>{e.title}</strong><p>{e.next}</p><details><summary>{text("Основание","Basis")}</summary><p>{e.qualification}</p></details></article>)}
+ <p className="exec-muted">{text("В снимке не установлено готовых к принятию решений. Действующий реестр проверяется отдельно.","No decision-ready items established in this snapshot. Live register checked separately.")}</p></details>
+ <div className="oq-toolbar"><div className="oq-filters" role="group" aria-label={text("Фильтр очереди","Queue filter")}><button aria-pressed={filter==="all"} onClick={()=>{setFilter("all");setExpanded(false)}}>{text("Все","All")} · {data.counts.actions}</button>{queues.map(k=><button key={k} aria-pressed={filter===k} onClick={()=>{setFilter(k);setExpanded(false)}}>{names[k]} · {data.counts.queues[k]}</button>)}</div>
+ <label className="oq-select">{text("Проект","Project")} <select value={project} onChange={e=>{setProject(e.target.value);setExpanded(false)}}><option value="">{text("Все проекты","All projects")}</option>{data.projects.map(p=><option key={p.label}>{p.label}</option>)}</select></label></div>
+ <p className="oq-result" role="status">{text("Показано проектов","Projects shown")}: {shown.length} {text("из","of")} {matches.length} · {text("Действий по фильтру","Matching action references")}: {visibleActions}</p>
+ {matches.length===0&&<p>{text("По выбранным условиям действий нет в этом снимке.","No matching actions in this snapshot.")}</p>}
+ <div className="oq-list">{shown.map(p=>{
  const all=data.items.filter(i=>i.project===p.label),items=all.filter(i=>filter==="all"||i.queue===filter);
- if(!items.length)return null;
- return <details className="exec-row" key={p.label} open={project===p.label||undefined}><summary><span><strong>{p.label}</strong><small>{p.stage}</small><span className="exec-next-point">{items[0].action}</span></span><span>{items.length}/{all.length}</span></summary>
- {items.map(i=><article key={i.ref}><p><strong>{i.ref} · {names[i.queue]}</strong></p><p>{i.action}</p><details><summary>{text("Условия и источники","Conditions and references")}</summary><p>{i.trigger}</p><p>{i.source_as_of}</p>{i.unknowns.map((u,n)=><p key={n}>{u}</p>)}<p>{i.related_control_refs.join(" · ")}</p></details></article>)}
- {p.subviews.length>0&&<details><summary>{text("Дорожные карты приложений","Application roadmaps")} · {p.subviews.length}</summary>{p.subviews.map((s,i)=><p key={i}>{s.label} · {s.state} — {s.next}</p>)}</details>}
- </details>;})}
- <details><summary>{text("Основание снимка","Snapshot provenance")}</summary><p><code>{data.source_commit}</code></p><p><code>{data.source_blob}</code></p></details>
+ return <details className="oq-project" key={p.label} open={project===p.label||undefined}><summary><div className="oq-project-copy"><strong>{p.label}</strong><span className="oq-stage">{stage(p.stage)}</span><span className="oq-next"><b>{text("Первое действие в выборке: ","First matching action: ")}</b>{items[0].action}</span></div><span className="oq-count">{text("Действия","Actions")}: {items.length} {text("из","of")} {all.length}</span></summary>
+ <div className="oq-details">{items.map(i=><article className="oq-action" key={i.ref}><h3>{names[i.queue]}</h3><p>{i.action}</p><details><summary>{text("Условия и источники","Conditions and references")}</summary><p>{i.ref}</p><p>{i.trigger}</p><p>{i.source_as_of}</p>{i.unknowns.map((u,n)=><p key={n}>{u}</p>)}<p>{i.related_control_refs.join(" · ")}</p></details></article>)}
+ {p.subviews.length>0&&<details className="oq-evidence"><summary>{text("Дорожные карты приложений","Application roadmaps")} · {p.subviews.length}</summary>{p.subviews.map((s,i)=><p key={i}>{s.label} · {s.state} — {s.next}</p>)}</details>}
+ <details className="oq-evidence"><summary>{text("Исходный статус проекта","Original project status")}</summary><p>{p.stage}</p><p>{p.source_as_of}</p></details></div>
+ </details>;})}</div>
+ {!project&&matches.length>6&&<button className="oq-more" onClick={()=>setExpanded(x=>!x)}>{expanded?text("Свернуть список","Collapse list"):text("Показать все проекты по фильтру","Show all matching projects")+" · "+matches.length}</button>}
+ <details className="oq-evidence"><summary>{text("Основание снимка","Snapshot provenance")}</summary><p><code>{data.source_commit}</code></p><p><code>{data.source_blob}</code></p></details>
  </>}
  </section>;
 }

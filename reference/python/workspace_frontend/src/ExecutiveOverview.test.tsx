@@ -209,11 +209,48 @@ it("reconciles admitted risk links and separates historical acts from Owner acti
 
 it("shows the separately admitted dated project queue and clears it if source denied",async()=>{
  const a=setup();click();await screen.findAllByText("Synthetic held next action");
- expect(screen.getByText(/Снимок на 2026-11-20/)).toBeTruthy();
+ expect(screen.getAllByText(/Снимок от 2026-11-20/).length).toBeGreaterThan(0);
  fireEvent.click(screen.getByRole("button",{name:"Подготовка · 0"}));
  expect(screen.queryByText("Synthetic held next action")).toBeNull();
  fireEvent.click(screen.getByRole("button",{name:"Отложено · 1"}));
  expect(screen.getAllByText("Synthetic held next action").length).toBeGreaterThan(0);
  a.fail("company-owner-project-queue",403);click();await screen.findByRole("alert");
  expect(screen.queryByText("Synthetic held next action")).toBeNull();
+});
+
+it("places source-honest key signals above project detail and distinguishes unknown cash",async()=>{
+ setup();click();await screen.findByRole("navigation",{name:"Главные показатели"});
+ const panel=screen.getByRole("navigation",{name:"Главные показатели"});
+ expect(panel.textContent).toContain("Доступные деньги");
+ expect(panel.textContent).toContain("Не установлено");
+ expect(panel.textContent).toContain("1 / 1");
+ const obligations=document.getElementById("exec-obligations")!;
+ const queue=document.getElementById("exec-projects")!;
+ expect(Boolean(obligations.compareDocumentPosition(queue)&Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+ const finance=document.getElementById("exec-finance")!;
+ expect(Boolean(finance.compareDocumentPosition(queue)&Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+});
+it("does not invent zero totals when source unavailable",async()=>{
+ const a=setup();a.fail("company-owner-project-queue",503);click();await screen.findByText("Пересмотр пилота");
+ expect(screen.getByRole("link",{name:/Проекты и действия/}).textContent).toContain("Не установлено");
+});
+it("keeps every project accessible when list is compact",async()=>{
+ const q=fixture["company-owner-project-queue"];
+ const projects=Array.from({length:8},(_,i)=>({...q.projects[0],label:"Project "+i}));
+ const items=projects.map((p,i)=>({...q.items[0],project:p.label,ref:"REF-"+i,action:"Action "+i}));
+ const snapshot={...q,projects,items,counts:{...q.counts,projects:8,actions:8,queues:{...q.counts.queues,hold:8}}};
+ vi.stubGlobal("fetch",vi.fn(async(input:RequestInfo|URL)=>{
+ const k=String(input).replace("/api/app/v1/","");
+ return new Response(JSON.stringify(k==="company-owner-project-queue"?snapshot:fixture[k as keyof typeof fixture]),{status:200});
+ }));
+ render(<LanguageProvider initialLanguage="ru"><ExecutiveOverview csrfToken="fixture"/></LanguageProvider>);
+ click();await screen.findByText("Показать все проекты по фильтру · 8");
+ expect(document.querySelectorAll(".oq-project")).toHaveLength(6);
+ fireEvent.click(screen.getByText("Показать все проекты по фильтру · 8"));
+ expect(document.querySelectorAll(".oq-project")).toHaveLength(8);
+ fireEvent.change(screen.getByRole("combobox",{name:"Проект"}),{target:{value:"Project 7"}});
+ expect(document.querySelectorAll(".oq-project")).toHaveLength(1);
+ expect(document.querySelector(".oq-project[open]")?.textContent).toContain("REF-7");
+ fireEvent.click(screen.getByRole("button",{name:"Подготовка · 0"}));
+ expect(screen.getByText(/По выбранным условиям действий нет/)).toBeTruthy();
 });

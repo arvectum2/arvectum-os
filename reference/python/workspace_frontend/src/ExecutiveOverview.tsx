@@ -66,6 +66,11 @@ export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;
  // A successful read is not a business status, and a missing source is not a zero.
  const readResults=mode==="finance"?[sources.finance]:mode==="work"?[sources.work,sources.decisions,sources.tasks]:Object.values(sources);
  const readyCount=readResults.filter(r=>r.state==="ready").length;
+ const projects=value(sources.ownerQueue);
+ const unknown=text("Не установлено","Unknown");
+ const criticalCount=work?.obligation_signals.length;
+ const readyDecisions=decisions?0:null; // admitted decision parser requires decision_ready=false
+ const headline=(v:number|null|undefined)=>v==null?unknown:String(v);
  const dueStatus=(x:ControlRow)=>{
   if(x.due_or_trigger.kind!=="exact"||!x.due_or_trigger.value||!checked)return null;
   const timestamp=Date.parse(x.due_or_trigger.value);
@@ -85,7 +90,7 @@ export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;
  const unscheduled=crm?.items.filter(x=>x.status==="unscheduled").length;
  const overdue=crm?.items.filter(x=>x.status==="past_due").length;
  const nextPoint=(x:ControlRow)=><span className="exec-next-point"><b>{text("Следующий контроль: ","Next check: ")}</b>{x.next_control_point}</span>;
- const financePanel=<section className="exec-panel"><header><h2>{mode==="finance"?text("Финансовый снимок","Financial snapshot"):text("Финансы","Finances")}</h2>{mode!=="finance"&&<a href="/finance">{text("Подробнее","Details")}</a>}</header>
+ const financePanel=<section className="exec-panel" id="exec-finance"><header><h2>{mode==="finance"?text("Финансовый снимок","Financial snapshot"):text("Финансы","Finances")}</h2>{mode!=="finance"&&<a href="/finance">{text("Подробнее","Details")}</a>}</header>
  <p className="exec-muted">{text("Банк и бухгалтерия не подключены","Bank and accounting not connected")}</p>
  {finance?<><div className="exec-money">{money(finance.conditional_inflow.contract_price_rub)}</div><p>{text("Цена контракта · поступление условное","Contract price · conditional inflow")}</p><div className="exec-facts"><span>{text("Остаток","Cash balance")}<strong>—</strong></span><span>{text("Платежи","Payments")}<strong>—</strong></span><span>{text("Прибыль","Profit")}<strong>—</strong></span></div>
  <details><summary>{text("Условия и ограничения","Terms and limitations")}</summary><p>{finance.conditional_inflow.timing_condition}</p><p>{text("Фактические поступления и дебиторская задолженность не подтверждены.","Actual receipts and receivables not confirmed.")}</p><p>{text("11 финансовых показателей не установлены.","11 financial facts unknown.")}</p><p>{finance.next_control_point}</p><p>{fmt(finance.report_as_of)}</p><details><summary>{text("Источники","Sources")}</summary>{[...finance.conditional_inflow.source_refs,...finance.unknowns].map((s,i)=><p key={i}>{s}</p>)}</details></details>
@@ -101,14 +106,20 @@ export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;
  <header className="exec-head"><div><h1>{mode==="finance"?text("Финансы","Finances"):mode==="work"?text("Работа","Work"):text("Обзор компании","Company overview")}</h1><p>{checked?text("Запрос выполнен ","Requested ")+fmt(checked.toISOString()):text("Сведения из разрешённых источников по запросу.","Admitted sources on request.")}</p></div><button className="exec-primary" disabled={busy||!csrfToken} onClick={()=>void refresh()}>{busy?text("Проверяем…","Checking…"):text("Обновить сводку","Read summary")}</button></header>
  {checked&&<p className="exec-muted exec-read-coverage" role="status">{text("Прочитаны источники: ","Sources read: ")}{readyCount}/{readResults.length}. {text("Это состояние запроса, не полнота реестров компании.","Request status, not completeness of company registers.")}</p>}
  {denied&&<p className="exec-warning" role="alert">{text("Доступ не подтверждён. Сведения скрыты; повторите проверку.","Access not confirmed. Details hidden; try again.")}</p>}
+ {mode==="overview"&&<nav className="exec-overview-grid" aria-label={text("Главные показатели","Key control signals")}>
+ <a className="exec-overview-tile" href="#exec-obligations"><span>{text("Обязательства","Commitments")}</span><strong>{headline(criticalCount)}</strong><small>{text("Под контролем · не подтверждённое исполнение","Monitored · completion unconfirmed")}</small></a>
+ <a className="exec-overview-tile" href="#exec-decisions"><span>{text("Решения собственника","Owner decisions")}</span><strong>{headline(readyDecisions)}</strong><small>{decisions?text("Готовых в допущенном реестре; готовятся: ","Ready in admitted register; preparing: ")+pending.length:text("Реестр не прочитан","Register not read")}</small></a>
+ <a className="exec-overview-tile" href="#exec-risks"><span>{text("Риски","Risks")}</span><strong>{headline(risks?.length)}</strong><small>{text("В допущенном реестре · актуальность требует сверки","Admitted register · current applicability unverified")}</small></a>
+ <a className="exec-overview-tile" href="#exec-finance"><span>{text("Доступные деньги","Available cash")}</span><strong className="exec-unknown">{unknown}</strong><small>{finance?text("Цена контракта не равна остатку","Contract price is not cash"):text("Финансовый источник не прочитан","Financial source not read")}</small></a>
+ <a className="exec-overview-tile" href="#exec-projects"><span>{text("Проекты и действия","Projects and actions")}</span><strong>{projects?projects.counts.projects+" / "+projects.counts.actions:unknown}</strong><small>{projects?text("Снимок от ","Snapshot dated ")+projects.as_of:text("Источник не прочитан","Source not read")}</small></a>
+ </nav>}
  {mode!=="finance"&&<>
  <div className="exec-warning" role="status">{text("Покрытие частичное: отсутствие записей не означает отсутствие работ, рисков или обязательств компании.","Partial coverage: missing records do not mean there is no work, risk or obligation.")}</div>
- <section className="exec-panel"><header><h2>{text("Обязательства под контролем","Commitments to monitor")}</h2><a href="/control-details">{text("Реестры","Registers")}</a></header>
+ <section id="exec-obligations" className="exec-panel"><header><h2>{text("Обязательства под контролем","Commitments to monitor")}</h2><a href="/control-details">{text("Реестры","Registers")}</a></header>
  {work&&<p className="exec-muted">{text("Контроль исполнения. Ответственная Position указана в основаниях; это не список личных поручений собственнику.","Execution monitoring. Accountable Position is in evidence; these are not personal Owner assignments.")}</p>}
  {work?work.obligation_signals.map(x=><details className="exec-row" key={x.id}><summary><span><strong>{x.title}</strong><small>{text("Приоритетный контроль · исполнение не подтверждено","Priority monitoring · completion unconfirmed")}</small><small>{text("Срок / условие: ","Due / condition: ")}{due(x)}</small><small>{text("Ответственная Position: ","Accountable Position: ")}{x.accountable_position}</small>{nextPoint(x)}{mode==="overview"&&relatedRisks(x.id)?.length?<small>{text("Связанные риски: ","Linked risks: ")}{relatedRisks(x.id)?.map(r=>r.id).join(", ")}</small>:null}</span><span className="exec-priority">{text("Высший приоритет","Top priority")}</span></summary><details><summary>{text("Основания","Evidence")}</summary><p>{x.id} · {x.accountable_position} · {fmt(x.evidence_as_of)}</p>{x.source_refs.map((s,i)=><p key={i}>{s}</p>)}</details></details>):<p>{status(sources.work)}</p>}
  </section>
- {mode==="overview"&&<OwnerProjectQueue data={value(sources.ownerQueue)} state={sources.ownerQueue.state}/>}
- <div className="exec-columns"><section className="exec-panel"><header><h2>{text("Решения и следующие шаги","Decisions and next steps")}</h2><a href="/control-details">{text("Реестр решений","Decision register")}</a></header>
+ <div className="exec-columns"><section id="exec-decisions" className="exec-panel"><header><h2>{text("Решения и следующие шаги","Decisions and next steps")}</h2><a href="/control-details">{text("Реестр решений","Decision register")}</a></header>
  {work&&<p className="exec-muted">{text("Работа собственника по допущенному реестру, не новые поручения.","Owner work from admitted register, not new assignments.")}</p>}
  {work?work.owner_action.map(controlRow):<p>{status(sources.work)}</p>}
  {historical&&<p className="exec-muted">{text("Исторические решения и согласования в допущенном реестре: ","Historical decisions and approvals in admitted register: ")}{historical.length}. {text("Не новое разрешение; применимость не подтверждена.","Not new authorization; applicability unconfirmed.")}</p>}
@@ -118,7 +129,7 @@ export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;
  <div className="exec-operational"><h3>{text("Операционные задачи","Operational tasks")}</h3><p className="exec-muted">{text("Отдельная очередь исполнения, не реестр решений собственника.","Separate execution queue, not the Owner decision register.")}</p>
  {queue?<><p className="exec-muted">{text("Операционная очередь: ","Operational queue: ")}{queue.health.state==="fresh"?activeTasks.length:text("требуется проверка","needs review")}</p>{queue.health.state==="fresh"&&(mode==="work"?activeTasks:activeTasks.slice(0,3)).map(x=><p key={x.id}><a href={x.open_href}>{x.title}</a></p>)}</>:<p className="exec-muted">{text("Операционная очередь: ","Operational queue: ")}{status(sources.tasks)}</p>}
  <a href="/my-work">{text("Открыть операционные задачи","Open operational tasks")}</a></div>
- </section>{mode==="overview"&&<section className="exec-panel"><header><h2>{text("Риски","Risks")}</h2><a href="/control-details">{text("Реестр","Register")}</a></header>
+ </section>{mode==="overview"&&<section id="exec-risks" className="exec-panel"><header><h2>{text("Риски","Risks")}</h2><a href="/control-details">{text("Реестр","Register")}</a></header>
  {risks?[...risks].sort((a,b)=>a.priority.localeCompare(b.priority)).map(r=><details className="exec-row" key={r.id}><summary><span><strong>{r.title}</strong><small>{r.id} · {r.position}</small><small>{text("Снижение риска · принятие не подтверждено","Risk reduction · acceptance not established")}</small><span className="exec-risk-next">{text("Следующая проверка: ","Next review: ")}{r.next_control_point}</span></span><span className="exec-priority">{r.priority==="P0"?text("Высший","Top"):text("Высокий","High")}</span></summary><p>{r.risk_statement}</p><p>{r.residual_exposure}</p><p>{r.next_control_point}</p><details><summary>{text("Основания","Evidence")}</summary><p>{r.control_evidence}</p><p>{r.review_trigger}</p>{r.source_refs.map((s,i)=><p key={i}>{s}</p>)}<p>{text("Связанные работы и обязательства","Linked work and obligations")}</p>
  {r.linked_work.map(id=><p key={id}>{id} · {admittedControls.get(id)?.title??text("Связанная запись не допущена или недоступна","Linked record not admitted or unavailable")}</p>)}
  <p className="exec-muted">{text("Связь не подтверждает выполнение работы или закрытие риска.","A link does not establish completion or risk closure.")}</p></details></details>):<p>{status(sources.risks)}</p>}
@@ -159,6 +170,7 @@ export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;
  <p>{text("Полномочия до: ","Authority expires: ")}{inbox.collector.expires_at?fmt(inbox.collector.expires_at):"—"}</p></details>}
  <a href="/projects">{text("Портфель проектов","Project portfolio")}</a>
  </section>}</div>}
+ {mode==="overview"&&<OwnerProjectQueue data={projects} state={sources.ownerQueue.state}/>}
  {mode==="finance"&&finance&&<FinanceStructure finance={finance}/>}
  {mode==="overview"&&<OperatingCadence/>}
  {mode==="overview"&&<section className="exec-panel"><header><h2>{text("Доказательства работы системы","Reference-implementation evidence")}</h2></header>
