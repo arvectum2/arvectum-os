@@ -407,5 +407,77 @@
       "heartbeat_age_seconds": 1
     },
     "items": []
+  },
+  "company-owner-project-queue": {
+    "schema": "arvectum.workspace.owner-project-queue/1",
+    "derived": true,
+    "canonical_authority": false,
+    "organizational_authority_provided": false,
+    "execution_authorized": false,
+    "coverage": "partial",
+    "source_state": "dated_candidate_snapshot",
+    "as_of": "2026-11-20",
+    "source_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "source_blob": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "projects": [
+      {
+        "label": "Synthetic project",
+        "stage": "Fixture stage",
+        "source_as_of": "2026-11-20",
+        "subviews": []
+      }
+    ],
+    "items": [
+      {
+        "project": "Synthetic project",
+        "ref": "FIXTURE-1",
+        "queue": "hold",
+        "action": "Synthetic held next action",
+        "source_as_of": "2026-11-20",
+        "trigger": "fixture trigger",
+        "unknowns": [
+          "actual result"
+        ],
+        "related_control_refs": []
+      }
+    ],
+    "sections": [
+      {
+        "key": "protect_now",
+        "entries": []
+      },
+      {
+        "key": "owner_action_required",
+        "entries": []
+      },
+      {
+        "key": "delegated_work",
+        "entries": []
+      },
+      {
+        "key": "cash_commitments",
+        "entries": []
+      },
+      {
+        "key": "portfolio_review_triggers",
+        "entries": []
+      },
+      {
+        "key": "reference_implementation_evidence",
+        "entries": []
+      }
+    ],
+    "counts": {
+      "projects": 1,
+      "actions": 1,
+      "queues": {
+        "prepare_within_existing_envelope": 0,
+        "read_only_reconciliation": 0,
+        "blocked": 0,
+        "watch": 0,
+        "hold": 1
+      },
+      "decision_ready_owner_items": 0
+    }
   }
 }

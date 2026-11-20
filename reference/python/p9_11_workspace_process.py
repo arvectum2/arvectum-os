@@ -25,6 +25,11 @@ from urllib.request import urlopen
 
 import p7_06_governed_deploy as p706
 
+# Public publication pin, not a policy digest or credential. The operator must
+# independently provision the exact release-bound private launch record.
+OWNER_QUEUE_CONTRACT = "0af2c545f0e68c4f0b8d684a11e3d9051a6d30a5"
+OWNER_QUEUE_SUFFIX = re.compile(r" --owner-queue-policy-sha256 ([0-9a-f]{64}) --owner-queue-contract-blob ([0-9a-f]{40})$")
+
 PORT = 8769
 HOST = "127.0.0.1"
 PROCESS_SCHEMA = "arvectum.p9_11.workspace-process/2"
@@ -139,9 +144,46 @@ def _process_start_identity(pid: int) -> str | None:
     return value or None
 
 
+def _owner_queue_launch_args(root: Path, release: str) -> list[str]:
+    """Read an independently provisioned launch pin, never derive it from policy."""
+    path = root / "config/owner-project-queue-launch.json"
+    if not path.exists() and not path.is_symlink():
+        return []
+    if path.resolve() != path:
+        raise WorkspaceProcessError("owner queue launch record unsafe")
+    with os.fdopen(os.open(path, os.O_RDONLY | os.O_NOFOLLOW), "rb") as handle:
+        info = os.fstat(handle.fileno())
+        if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077 or info.st_nlink != 1:
+            raise WorkspaceProcessError("owner queue launch record unsafe")
+        raw = handle.read(4097)
+    if len(raw) > 4096:
+        raise WorkspaceProcessError("owner queue launch record too large")
+    record = json.loads(raw)
+    if not isinstance(record, dict) or set(record) != {"schema", "release_commit", "contract_blob", "policy_sha256"}:
+        raise WorkspaceProcessError("owner queue launch record invalid")
+    pin = record["policy_sha256"]
+    if (record["schema"] != "arvectum.workspace.owner-project-queue-launch/1"
+            or record["contract_blob"] != OWNER_QUEUE_CONTRACT
+            or not isinstance(pin, str) or not re.fullmatch("[0-9a-f]{64}", pin)
+            or not isinstance(record["release_commit"], str)
+            or not re.fullmatch("[0-9a-f]{40}", record["release_commit"])):
+        raise WorkspaceProcessError("owner queue launch record invalid")
+    # An older or later release must not inherit this activation automatically.
+    if record["release_commit"] != release:
+        return []
+    return ["--owner-queue-policy-sha256", pin, "--owner-queue-contract-blob", OWNER_QUEUE_CONTRACT]
+
+
 def _process_identity(command: str, cwd: Path | None, python: Path, entrypoint: Path) -> tuple[bool, str | None]:
     if cwd is None:
         return False, "wrong cwd"
+    # Only the exact ordered two-pin suffix is recognised; arbitrary flags
+    # remain forbidden. This proves process identity, not permission to read.
+    suffix = OWNER_QUEUE_SUFFIX.search(command)
+    if suffix:
+        if suffix.group(2) != OWNER_QUEUE_CONTRACT:
+            return False, "wrong owner queue contract"
+        command = command[:suffix.start()]
     if not command.endswith(" serve"):
         return False, "not Workspace command"
     absolute_suffix = f" {entrypoint} serve"
@@ -355,6 +397,7 @@ def start(root: Path) -> dict[str, Any]:
     checked = subprocess.run([str(python), str(entrypoint), "check"], cwd=source, check=False, capture_output=True, text=True, timeout=30)
     if checked.returncode != 0:
         raise WorkspaceProcessError("current exact Workspace check failed")
+    launch_args = _owner_queue_launch_args(root, release)
     logs = root / "logs"
     logs.mkdir(parents=True, exist_ok=True)
     os.chmod(logs, 0o700)
@@ -362,7 +405,7 @@ def start(root: Path) -> dict[str, Any]:
     stderr = (logs / "workspace.stderr.log").open("w", encoding="utf-8")
     os.chmod(stdout.name, 0o600)
     os.chmod(stderr.name, 0o600)
-    process = subprocess.Popen([str(python), str(entrypoint), "serve"], cwd=source, stdin=subprocess.DEVNULL, stdout=stdout, stderr=stderr, start_new_session=True)
+    process = subprocess.Popen([str(python), str(entrypoint), "serve", *launch_args], cwd=source, stdin=subprocess.DEVNULL, stdout=stdout, stderr=stderr, start_new_session=True)
     stdout.close()
     stderr.close()
     start_identity = _process_start_identity(process.pid)

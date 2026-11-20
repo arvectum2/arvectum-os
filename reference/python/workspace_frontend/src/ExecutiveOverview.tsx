@@ -6,13 +6,14 @@ import {parseRisk} from "./RiskReference";
 import {parseFinance} from "./FinanceReference";
 import {FinanceStructure} from "./FinanceStructure";
 import {OperatingCadence} from "./OperatingCadence";
+import {OwnerProjectQueue,parseOwnerQueue} from "./OwnerProjectQueue";
 import {parseCRM,parseInbox} from "./ControlReferenceSummary";
 import type {MyWorkProjection} from "./types";
 import "./Executive.css";
 
 type Result<T>={state:"unchecked"|"unavailable"|"denied"}|{state:"ready";value:T};
-type Sources={work:Result<ReturnType<typeof parseControl>>;decisions:Result<ReturnType<typeof parseDecision>>;risks:Result<ReturnType<typeof parseRisk>>;finance:Result<ReturnType<typeof parseFinance>>;crm:Result<ReturnType<typeof parseCRM>>;inbox:Result<ReturnType<typeof parseInbox>>;tasks:Result<MyWorkProjection>};
-const empty=():Sources=>({work:{state:"unchecked"},decisions:{state:"unchecked"},risks:{state:"unchecked"},finance:{state:"unchecked"},crm:{state:"unchecked"},inbox:{state:"unchecked"},tasks:{state:"unchecked"}});
+type Sources={work:Result<ReturnType<typeof parseControl>>;decisions:Result<ReturnType<typeof parseDecision>>;risks:Result<ReturnType<typeof parseRisk>>;finance:Result<ReturnType<typeof parseFinance>>;crm:Result<ReturnType<typeof parseCRM>>;inbox:Result<ReturnType<typeof parseInbox>>;tasks:Result<MyWorkProjection>;ownerQueue:Result<ReturnType<typeof parseOwnerQueue>>};
+const empty=():Sources=>({work:{state:"unchecked"},decisions:{state:"unchecked"},risks:{state:"unchecked"},finance:{state:"unchecked"},crm:{state:"unchecked"},inbox:{state:"unchecked"},tasks:{state:"unchecked"},ownerQueue:{state:"unchecked"}});
 async function read<T>(path:string,parse:(raw:unknown)=>T,csrf?:string):Promise<Result<T>>{
  try{
   const r=await fetch("/api/app/v1/"+path,{method:csrf?"POST":"GET",credentials:"same-origin",cache:"no-store",headers:{"X-Arvectum-Workspace-Release":__ARVECTUM_WORKSPACE_RELEASE__,...(csrf?{"X-Arvectum-CSRF":csrf}:{})}});
@@ -39,12 +40,12 @@ export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;
   let next=empty();
   if(mode==="finance")next.finance=await read("company-finance-reference",parseFinance,csrfToken);
   else{
-   const [work,decisions,risks,finance,crm,inbox,taskView]=await Promise.all([
+   const [work,decisions,risks,finance,crm,inbox,taskView,ownerQueue]=await Promise.all([
     read("company-control-reference",parseControl,csrfToken),read("company-decision-reference",parseDecision,csrfToken),mode==="overview"?read("company-risk-reference",parseRisk,csrfToken):Promise.resolve(empty().risks),
     mode==="overview"?read("company-finance-reference",parseFinance,csrfToken):Promise.resolve(empty().finance),
-    mode==="overview"?read("crm/followups",parseCRM):Promise.resolve(empty().crm),mode==="overview"?read("roadmap-inbox",parseInbox):Promise.resolve(empty().inbox),read("my-work",parseTasks),
+    mode==="overview"?read("crm/followups",parseCRM):Promise.resolve(empty().crm),mode==="overview"?read("roadmap-inbox",parseInbox):Promise.resolve(empty().inbox),read("my-work",parseTasks),mode==="overview"?read("company-owner-project-queue",parseOwnerQueue,csrfToken):Promise.resolve(empty().ownerQueue),
    ]);
-   next={work,decisions,risks,finance,crm,inbox,tasks:taskView};
+   next={work,decisions,risks,finance,crm,inbox,tasks:taskView,ownerQueue};
   }
   if(n!==gen.current)return;
   setBusy(false);
@@ -106,6 +107,7 @@ export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;
  {work&&<p className="exec-muted">{text("Контроль исполнения. Ответственная Position указана в основаниях; это не список личных поручений собственнику.","Execution monitoring. Accountable Position is in evidence; these are not personal Owner assignments.")}</p>}
  {work?work.obligation_signals.map(x=><details className="exec-row" key={x.id}><summary><span><strong>{x.title}</strong><small>{text("Приоритетный контроль · исполнение не подтверждено","Priority monitoring · completion unconfirmed")}</small><small>{text("Срок / условие: ","Due / condition: ")}{due(x)}</small><small>{text("Ответственная Position: ","Accountable Position: ")}{x.accountable_position}</small>{nextPoint(x)}{mode==="overview"&&relatedRisks(x.id)?.length?<small>{text("Связанные риски: ","Linked risks: ")}{relatedRisks(x.id)?.map(r=>r.id).join(", ")}</small>:null}</span><span className="exec-priority">{text("Высший приоритет","Top priority")}</span></summary><details><summary>{text("Основания","Evidence")}</summary><p>{x.id} · {x.accountable_position} · {fmt(x.evidence_as_of)}</p>{x.source_refs.map((s,i)=><p key={i}>{s}</p>)}</details></details>):<p>{status(sources.work)}</p>}
  </section>
+ {mode==="overview"&&<OwnerProjectQueue data={value(sources.ownerQueue)} state={sources.ownerQueue.state}/>}
  <div className="exec-columns"><section className="exec-panel"><header><h2>{text("Решения и следующие шаги","Decisions and next steps")}</h2><a href="/control-details">{text("Реестр решений","Decision register")}</a></header>
  {work&&<p className="exec-muted">{text("Работа собственника по допущенному реестру, не новые поручения.","Owner work from admitted register, not new assignments.")}</p>}
  {work?work.owner_action.map(controlRow):<p>{status(sources.work)}</p>}

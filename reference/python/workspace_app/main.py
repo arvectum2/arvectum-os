@@ -39,6 +39,8 @@ from .wsf_risk_reference import RiskReference
 from .wsf_risk_reference_routes import install_risk_reference_routes
 from .wsf_finance_reference import FinanceReference
 from .wsf_finance_reference_routes import install_finance_reference_routes
+from .wsf_owner_queue import OwnerQueueReference
+from .wsf_owner_queue_routes import install_owner_queue_routes
 
 logger = logging.getLogger("arvectum.workspace.security")
 SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
@@ -143,6 +145,7 @@ def create_app(
     decision_reference: DecisionReference | None = None,
     risk_reference: RiskReference | None = None,
     finance_reference: FinanceReference | None = None,
+    owner_queue_reference: OwnerQueueReference | None = None,
 ) -> FastAPI:
     settings = settings or WorkspaceSettings.from_env()
     release = load_release()
@@ -511,6 +514,7 @@ def create_app(
     install_decision_reference_routes(app, _authorize_current, _csrf_protected, decision_reference)
     install_risk_reference_routes(app, _authorize_current, _csrf_protected, risk_reference)
     install_finance_reference_routes(app, _authorize_current, _csrf_protected, finance_reference)
+    install_owner_queue_routes(app, _authorize_current, _csrf_protected, owner_queue_reference)
 
     if static_root.is_dir():
         assets = static_root / "assets"
