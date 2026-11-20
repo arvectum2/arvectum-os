@@ -42,6 +42,36 @@ def compatible(paths):
     return all(p in allowed or p.startswith(("docs/","reference/python/workspace_frontend/src/",
                 "reference/python/workspace_frontend/dist/","reference/python/workspace_tests/","reference/python/tests/")) for p in paths)
 
+# Exact, Owner-approved queue successor. Do not broaden the generic allowlist.
+QUEUE_SOURCE = "83c0458fa108dd512ee0dbcd976238a3595a8f07"
+QUEUE_ANCHOR = "58fad791a53769f8d87a7c2d60333388fbc8ff91"
+QUEUE_DECISION = "OWNER-2026-11-20-WSF05-OWNER-PROJECT-QUEUE"
+QUEUE_CONTRACT = "docs/contracts/WSF-05-OWNER-PROJECT-QUEUE-v0.5.8.md"
+QUEUE_CONTRACT_BLOB = "0af2c545f0e68c4f0b8d684a11e3d9051a6d30a5"
+QUEUE_SUCCESSOR_FILES = {
+    "reference/python/wsf_collector_repin_operator.py",
+    "reference/python/workspace_tests/test_wsf_owner_queue_collector_compatibility.py",
+}
+
+def exact_queue_successor(source, target, decision, *, git=None):
+    if source != QUEUE_SOURCE or decision != QUEUE_DECISION:
+        return False
+    if not re.fullmatch("[0-9a-f]{40}", target):
+        return False
+    if git is None:
+        def git(*args):
+            return subprocess.check_output(["git", "-C", str(REPO), *args], timeout=10)
+    try:
+        git("merge-base", "--is-ancestor", QUEUE_ANCHOR, target)
+        if git("rev-parse", target + ":" + QUEUE_CONTRACT).decode().strip() != QUEUE_CONTRACT_BLOB:
+            return False
+        paths = set(git("diff", "--name-only", "--no-renames", "-z", QUEUE_ANCHOR, target).decode().split("\0")) - {""}
+        # A release containing this compatibility verification may differ
+        # from the exact reviewed queue anchor only by this operator and its test.
+        return paths == QUEUE_SUCCESSOR_FILES
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return False
+
 def verify(root,source,target,decision):
     if platform.system()!="Darwin" or not root.is_absolute() or root.resolve()!=root:
         raise ManualContextError("selected Mac required")
@@ -56,7 +86,8 @@ def verify(root,source,target,decision):
         if subprocess.check_output(["git","-C",str(REPO),"rev-parse",sha+":"+CONTRACT],text=True,timeout=5).strip()!=PUBLICATION_PIN:
             raise ManualContextError("contract changed")
     paths=subprocess.check_output(["git","-C",str(REPO),"diff","--name-only","--no-renames","-z",source,target],timeout=10).decode().split("\0")
-    if not compatible([p for p in paths if p]):raise ManualContextError("not a compatible bounded successor")
+    if not compatible([p for p in paths if p]) and not exact_queue_successor(source,target,decision):
+        raise ManualContextError("not a compatible bounded successor")
     pointer=json.loads(_private_file(root/"run"/"p7-06-last-success.json"))
     txid=pointer["transaction_id"];pid=pointer["plan_id"]
     if not all(re.fullmatch("[0-9a-f]{64}",v) for v in (txid,pid)):raise ManualContextError("invalid deployment evidence")
