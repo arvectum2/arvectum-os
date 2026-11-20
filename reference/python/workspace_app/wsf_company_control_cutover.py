@@ -48,12 +48,14 @@ class Plan:
 
 def advance(plan,io):
     """Resume exact approved transaction. Never roll back Company history."""
+    steps=getattr(plan,"steps",STEPS)
+    count=len(steps)
     with io.exclusive():
         io.preflight(plan)
         saved=io.read_journal()
         phase=plan.phase(io.observe())
         if saved is None:
-            if phase==4:
+            if phase==count:
                 io.verify_final(plan)
                 return "already-completed"
             if phase!=0:
@@ -61,16 +63,16 @@ def advance(plan,io):
             io.create_journal(plan.journal())
         elif saved!=plan.journal():
             raise ManualContextError("different reviewed transaction")
-        for n in range(phase,4):
+        for n in range(phase,count):
             io.preflight(plan)
             if io.read_journal()!=plan.journal() or plan.phase(io.observe())!=n:
                 raise ManualContextError("transaction changed")
-            io.write(STEPS[n],plan)
+            io.write(steps[n],plan)
             if plan.phase(io.observe())!=n+1:
                 raise ManualContextError("write verification failed")
         io.preflight(plan)
         io.verify_final(plan)
-        if io.read_journal()!=plan.journal() or plan.phase(io.observe())!=4:
+        if io.read_journal()!=plan.journal() or plan.phase(io.observe())!=count:
             raise ManualContextError("final state changed")
         io.remove_journal()
         return "completed"
