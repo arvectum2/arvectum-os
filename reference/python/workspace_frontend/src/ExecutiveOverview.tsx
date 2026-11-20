@@ -66,6 +66,18 @@ export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;
   if(!Number.isFinite(timestamp))return null;
   return timestamp<=checked.getTime()?text("Контрольный срок наступил · состояние исполнения не подтверждено","Review deadline reached · completion unconfirmed"):text("Контрольный срок ещё не наступил","Review deadline not yet reached");
  };
+ const followupStatus=(state:string)=>{
+  switch(state){
+   case "past_due":return text("Срок контакта прошёл","Contact date passed");
+   case "due_now":return text("Контакт сейчас","Contact due now");
+   case "scheduled":return text("Запланирован","Scheduled");
+   case "unscheduled":return text("Дата не задана","Unscheduled");
+   case "paused":return text("На паузе","Paused");
+   default:return text("Не проверено","Not checked");
+  }
+ };
+ const unscheduled=crm?.items.filter(x=>x.status==="unscheduled").length;
+ const overdue=crm?.items.filter(x=>x.status==="past_due").length;
  const nextPoint=(x:ControlRow)=><span className="exec-next-point"><b>{text("Следующий контроль: ","Next check: ")}</b>{x.next_control_point}</span>;
  const financePanel=<section className="exec-panel"><header><h2>{mode==="finance"?text("Финансовый снимок","Financial snapshot"):text("Финансы","Finances")}</h2>{mode!=="finance"&&<a href="/finance">{text("Подробнее","Details")}</a>}</header>
  <p className="exec-muted">{text("Банк и бухгалтерия не подключены","Bank and accounting not connected")}</p>
@@ -87,7 +99,7 @@ export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;
  <div className="exec-warning" role="status">{text("Покрытие частичное: отсутствие записей не означает отсутствие работ, рисков или обязательств компании.","Partial coverage: missing records do not mean there is no work, risk or obligation.")}</div>
  <section className="exec-panel"><header><h2>{text("Обязательства под контролем","Commitments to monitor")}</h2><a href="/control-details">{text("Реестры","Registers")}</a></header>
  {work&&<p className="exec-muted">{text("Контроль исполнения. Ответственная Position указана в основаниях; это не список личных поручений собственнику.","Execution monitoring. Accountable Position is in evidence; these are not personal Owner assignments.")}</p>}
- {work?work.obligation_signals.map(x=><details className="exec-row" key={x.id}><summary><span><strong>{x.title}</strong><small>{text("Приоритетный контроль · исполнение не подтверждено","Priority monitoring · completion unconfirmed")}</small><small>{text("Срок / условие: ","Due / condition: ")}{due(x)}</small>{nextPoint(x)}</span><span className="exec-priority">{text("Высший приоритет","Top priority")}</span></summary><details><summary>{text("Основания","Evidence")}</summary><p>{x.id} · {x.accountable_position} · {fmt(x.evidence_as_of)}</p>{x.source_refs.map((s,i)=><p key={i}>{s}</p>)}</details></details>):<p>{status(sources.work)}</p>}
+ {work?work.obligation_signals.map(x=><details className="exec-row" key={x.id}><summary><span><strong>{x.title}</strong><small>{text("Приоритетный контроль · исполнение не подтверждено","Priority monitoring · completion unconfirmed")}</small><small>{text("Срок / условие: ","Due / condition: ")}{due(x)}</small><small>{text("Ответственная Position: ","Accountable Position: ")}{x.accountable_position}</small>{nextPoint(x)}</span><span className="exec-priority">{text("Высший приоритет","Top priority")}</span></summary><details><summary>{text("Основания","Evidence")}</summary><p>{x.id} · {x.accountable_position} · {fmt(x.evidence_as_of)}</p>{x.source_refs.map((s,i)=><p key={i}>{s}</p>)}</details></details>):<p>{status(sources.work)}</p>}
  </section>
  <div className="exec-columns"><section className="exec-panel"><header><h2>{text("Решения и следующие шаги","Decisions and next steps")}</h2><a href="/control-details">{text("Реестр решений","Decision register")}</a></header>
  {work&&<p className="exec-muted">{text("Работа собственника по допущенному реестру, не новые поручения.","Owner work from admitted register, not new assignments.")}</p>}
@@ -102,9 +114,18 @@ export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;
  {risks&&<p className="exec-muted">{text("Открытые риски, не приняты. Актуальность требует проверки.","Open risks, not accepted. Current applicability unverified.")}</p>}
  </section>}</div>
  </>}
- {mode!=="work"&&<div className="exec-columns">{financePanel}{mode==="overview"&&<section className="exec-panel"><header><h2>{text("Изменения и клиенты","Changes and clients")}</h2><a href="/information-hub">{text("Входящие","Inbox")}</a></header>
+ {mode==="overview"&&<section className="exec-panel"><header><h2>{text("Делегированная работа и наблюдение","Delegated work and watch")}</h2><a href="/my-work">{text("Операционные задачи","Operational tasks")}</a></header>
+ <p className="exec-muted">{text("Назначение ответственной должности само по себе не подтверждает делегирование. Реестр действующих назначений и ожиданий внешнего ответа в эту сводку не допущен.","An accountable position alone does not establish delegation. Current assignments and external-wait states are not admitted to this summary.")}</p>
+ <p>{text("Покрытие делегированной работы: не установлено.","Delegated-work coverage: unknown.")}</p>
+ </section>}
+ {mode!=="work"&&<div className="exec-columns">{financePanel}{mode==="overview"&&<section className="exec-panel"><header><h2>{text("Портфель, возможности и изменения","Portfolio, opportunities and changes")}</h2><a href="/information-hub">{text("Входящие","Inbox")}</a></header>
  <div className="exec-signal"><a href="/crm">{text("Следующие контакты","Follow-ups")}</a><strong>{crm?crm.items.length:status(sources.crm)}</strong></div>
- {crm?.items.slice(0,3).map(x=><p key={x.opportunity_id}>{x.party_name} · {x.next_action}</p>)}
+ {crm&&<><p className="exec-muted">{text("Дата не задана: ","Unscheduled: ")}{unscheduled} · {text("Срок контакта прошёл: ","Contact date passed: ")}{overdue}</p>
+ {crm.items.length===0&&<p>{text("В допущенной очереди нет следующих контактов.","No follow-ups in the admitted queue.")}</p>}
+ {crm.items.slice(0,3).map(x=><article className="exec-followup" key={x.opportunity_id}><strong>{x.party_name}</strong><p>{x.title}</p><p>{x.next_action}</p><small>{followupStatus(x.status)}{x.next_contact_at?" · "+fmt(x.next_contact_at):""}</small></article>)}
+ {crm.items.length>3&&<p><a href="/crm">{text("Открыть все контакты: ","Open all follow-ups: ")}{crm.items.length}</a></p>}
+ <p className="exec-muted">{text("Состояние очереди на ","Queue as of ")}{fmt(crm.as_of)}. {text("Не новые обязательства или решения собственника.","Not new commitments or Owner decisions.")}</p></>}
+ <p className="exec-muted">{text("Решения AC-405 о приоритетах и инвестициях не допущены в эту сводку; изменения дорожной карты не означают пересмотр портфеля.","AC-405 priority and investment decisions are not admitted here; roadmap changes do not imply portfolio re-ranking.")}</p>
  <div className="exec-signal"><a href="/information-hub?view=changes">{text("Изменения ожидают просмотра","Changes pending review")}</a><strong>{inbox?inbox.pending_count:status(sources.inbox)}</strong></div>
  {inbox&&<p className="exec-muted">{text("Актуальные сохранённые наблюдения: ","Current saved observations: ")}{inbox.sources.filter(s=>s.state==="current-source-backed"&&s.freshness==="current-observation").length}/{inbox.sources.length}. {text("Не новый сбор.","Not a new collection.")}</p>}
  {inbox&&inbox.backup_status!=="verified"&&<p className="exec-warning" role="status">{text("Резервная копия очереди требует проверки.","Inbox backup needs review.")}</p>}
@@ -121,6 +142,11 @@ export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;
  <p>{text("Полномочия до: ","Authority expires: ")}{inbox.collector.expires_at?fmt(inbox.collector.expires_at):"—"}</p></details>}
  <a href="/projects">{text("Портфель проектов","Project portfolio")}</a>
  </section>}</div>}
+ {mode==="overview"&&<section className="exec-panel"><header><h2>{text("Доказательства работы системы","Reference-implementation evidence")}</h2></header>
+ <p className="exec-muted">{text("Только подтверждённые технические наблюдения в этой сводке. Не оценка зрелости, автономности или экономии времени.","Only verified technical observations in this summary. Not a maturity, autonomy or time-saving score.")}</p>
+ {inbox?.collector?<><p>{text("Последний подтверждённый сбор: ","Last verified collection: ")}{inbox.collector.last_verified_at?fmt(inbox.collector.last_verified_at):text("Не установлен","Unknown")}</p><p>{text("Состояние сборщика: ","Collector state: ")}{inbox.collector.run_state} · {text("Резервная копия: ","Backup: ")}{inbox.backup_status}</p></>:<p>{text("Сведения о сервисном сборе: ","Service collection evidence: ")}{inbox?text("Не установлено","Unknown"):status(sources.inbox)}</p>}
+ <p>{text("Фактическое использование собственником, экономия времени и результативность AI не измеряются этим экраном.","Actual Owner use, time savings and AI effectiveness are not measured by this screen.")}</p>
+ </section>}
  {mode==="work"&&<div className="exec-panel"><a href="/operations">{text("Операционные очереди и продукты","Operational queues and products")}</a> · <a href="/information-hub">{text("Входящие и закупки","Inbox and procurement")}</a></div>}
  </section>;
 }

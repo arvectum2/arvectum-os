@@ -111,3 +111,43 @@ it("distinguishes exact review deadline from conditional obligations without inf
   expect(screen.getByText("Решение готовится · не готово к утверждению")).toBeTruthy();
  }finally{vi.useRealTimers();}
 });
+
+it("shows dated and unscheduled follow-ups without silently hiding the remaining queue",async()=>{
+ const old=fixture["crm/followups"];
+ const crm={...old,items:[
+ {opportunity_id:"opp-a",title:"Тестовое обсуждение",party_name:"Компания А",next_action:"Уточнить потребность",next_contact_at:null,status:"unscheduled",authority_provided:false},
+ {opportunity_id:"opp-b",title:"Тестовое предложение",party_name:"Компания Б",next_action:"Сверить ответ",next_contact_at:"2026-11-18T06:00:00Z",status:"past_due",authority_provided:false},
+ {opportunity_id:"opp-c",title:"Тестовая встреча",party_name:"Компания В",next_action:"Подготовить материалы",next_contact_at:"2026-11-25T06:00:00Z",status:"scheduled",authority_provided:false},
+ {opportunity_id:"opp-d",title:"Тестовая пауза",party_name:"Компания Г",next_action:"Проверить условие",next_contact_at:null,status:"paused",authority_provided:false}
+ ]};
+ const f=vi.fn(async(input:RequestInfo|URL)=>{
+  const k=String(input).replace("/api/app/v1/","");
+  return new Response(JSON.stringify(k==="crm/followups"?crm:fixture[k as keyof typeof fixture]),{status:200});
+ });
+ vi.stubGlobal("fetch",f);
+ render(<LanguageProvider initialLanguage="ru"><ExecutiveOverview csrfToken="fixture"/></LanguageProvider>);
+ click();
+ expect(await screen.findByText("Компания А")).toBeTruthy();
+ expect(screen.getByText("Дата не задана: 1 · Срок контакта прошёл: 1")).toBeTruthy();
+ expect(screen.getByText("Дата не задана")).toBeTruthy();
+ expect(screen.getByText(/Срок контакта прошёл ·/)).toBeTruthy();
+ expect(screen.getByText(/Запланирован ·/)).toBeTruthy();
+ expect(screen.getByRole("link",{name:"Открыть все контакты: 4"}).getAttribute("href")).toBe("/crm");
+ expect(screen.queryByText("Компания Г")).toBeNull();
+ expect(f).toHaveBeenCalledTimes(7);
+});
+it("distinguishes uncovered delegation and portfolio control from real technical evidence",async()=>{
+ setup();click();await screen.findByText("Пересмотр пилота");
+ expect(screen.getByText("Покрытие делегированной работы: не установлено.")).toBeTruthy();
+ expect(screen.getByText(/Решения AC-405 о приоритетах и инвестициях не допущены/)).toBeTruthy();
+ expect(screen.getAllByText("Ответственная Position: POS-002")).toHaveLength(2);
+ expect(screen.getByText("В допущенной очереди нет следующих контактов.")).toBeTruthy();
+ expect(screen.getByText("Сведения о сервисном сборе: Не установлено")).toBeTruthy();
+ expect(screen.getByText(/Фактическое использование собственником, экономия времени и результативность AI не измеряются/)).toBeTruthy();
+});
+it("never treats a failed CRM read as an empty or zero follow-up queue",async()=>{
+ const a=setup();a.fail("crm/followups",503);click();await screen.findByText("Пересмотр пилота");
+ expect(screen.queryByText(/Дата не задана: 0/)).toBeNull();
+ expect(screen.queryByText("В допущенной очереди нет следующих контактов.")).toBeNull();
+ expect(screen.getByText(/Прочитаны источники: 6\/7/)).toBeTruthy();
+});
