@@ -9,8 +9,8 @@ from .wsf_company_control_reference import sha,read_snapshot,BINDINGS
 from .wsf_manual_context import ManualContextError,_json
 from .wsf_manual_policy import _private_file
 
-PUBLICATION=None
-APPROVED_PLAN_SHA=None
+PUBLICATION='c95048e0ba0d797214c64d28ebfea5db43d100f7'
+APPROVED_PLAN_SHA='163f49d3b0eadbff70296ede8a5c851746f4ea7300c6d3f68b2c66e8c650bdb7'
 PUBLICATION_PATH="ac401-material-approved-publication.md"
 PREFIX="company-control-material"
 JOURNAL=PREFIX+"-cutover.json"
@@ -21,7 +21,8 @@ def load_material_plan(root):
     raw=(Path(__file__).resolve().parent/PUBLICATION_PATH).read_bytes()
     if sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()!=PUBLICATION:
         raise ManualContextError("material publication mismatch")
-    raw=_private_file(root/"config"/(PREFIX+"-approved.json"))
+    try:raw=_private_file(root/"config"/(PREFIX+"-approved.json"))
+    except FileNotFoundError:raise ManualContextError("material approval not staged") from None
     if sha(raw)!=APPROVED_PLAN_SHA:raise ManualContextError("material approval mismatch")
     p=MaterialPlan(**json.loads(raw))
     if p.contract!=PUBLICATION:raise ManualContextError("material contract mismatch")

@@ -11,7 +11,7 @@ from wsf_collector_operator import maintenance
 import p7_06_governed_deploy as p706
 
 DECISION_PATH="docs/governance/decisions/DECISION-2026-11-20-AC401-MATERIAL-WORK-002-003.md"
-DECISION_BLOB=None
+DECISION_BLOB="554e77a891dc0bd4f1ed6d6ba9d36b7da0b726a0"
 CONTRACT_PATH="docs/contracts/WSF-05-COMPANY-CONTROL-MATERIAL-PROVISIONAL-v0.5.6.md"
 
 def main():

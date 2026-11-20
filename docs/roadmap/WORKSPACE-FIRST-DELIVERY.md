@@ -141,3 +141,7 @@ Protected browser verification 7/7 overview HTTP 200 (0.99 s), 3/3 Work HTTP 200
 ### AC-401 material work expansion candidate
 
 Two real material work concerns reviewed against AC-401, approved Positions and existing evidence: WORK-002/POS-002 commercial discovery disposition; WORK-003/POS-005 financial evidence completeness. P1, open, no deadline, new obligation, financial fact or Assignment claim. Exact private candidate extends four to six events and three to five records, prior records preserved. Bounded second admission and separate Position-work UI: 42/42 server, 15/15 UI, actual Company writer temporary recovery and build PASS. See [draft 0.5.6](../contracts/WSF-05-COMPANY-CONTROL-MATERIAL-DRAFT-v0.5.6.md) and [review](../reviews/WSF-05-AC401-MATERIAL-WORK-REVIEW-2026-11-20.md). Pending exact approval and activation gates. Live 0.5.5 unchanged; next collect business evidence without duplicating routine CRM tasks.
+
+### P10.09.23 approved material work candidate
+
+Owner explicitly approved exact draft 0.5.6, two proposed work records and conditional activation. Company #24 merged da51e6a1bb44bce282270ea0d88c72e3c07d1d6b; decision OWNER-2026-11-20-AC401-MATERIAL-WORK-002-003. Bound canonical provisional publication and private approved plan; packaged copy verified. Existing 0.5.5 remains live until exact CI, compatible P7.06/Collector update and verified two-append activation. No new authority, financial data or assignments. P10.09.23 candidate build/assets and changed admission tests PASS.
