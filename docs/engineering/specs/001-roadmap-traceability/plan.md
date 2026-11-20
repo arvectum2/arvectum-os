@@ -1,0 +1,3 @@
+# Plan — non-normative engineering linkage
+
+Preserve the exact pinned roadmap and source anchors, including tables and unmarked actions. Map existing milestone IDs to their normative documents, implementation/test evidence and approvals. Validate compatibility with Constitution, Accepted RFCs, product contracts and AES-001 before any proposed formal admission. Keep existing roadmap and genuine runtime acceptance gates unchanged. No platform runtime, schemas, Company projection, integrations or auto-execution are changed. A change requiring OS approval remains open until it is actually approved.

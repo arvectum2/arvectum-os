@@ -322,3 +322,8 @@ M10 still requires all applicable evidence, including:
 ## 15. 2026-11-17 — Workspace First / actual owner-use lane
 
 Previous roadmap blob `8272f8df79a5106f3687d0ce37eb2af4ad659910` (3.03.2). Company Owner chose first-party CRM Lite inside existing Productive Workspace and explicitly requested Workspace First. Owner reports no successful convenient use yet; prior technical evidence remains intact. See [Workspace First delivery plan](WORKSPACE-FIRST-DELIVERY.md) for WSF-01–09, boundaries and acceptance. First action: read-only recovery inventory; later deployment and new reliance require applicable gates. P10.07, P10.10, R35, M10 and INT-B7 remain unchanged. Product Contract 0.3.0 remains effective; no automatic authority, capability promotion, release or architecture amendment. The existing Company asset/search/Copilot and UI are the baseline, not replacement targets. Do not invent adoption evidence or new execution authority.
+
+
+## Engineering linkage candidate (2026-11-20; not admitted)
+
+[Specification](../engineering/specs/001-roadmap-traceability/spec.md) · [Plan](../engineering/specs/001-roadmap-traceability/plan.md) · [Review tasks](../engineering/specs/001-roadmap-traceability/tasks.md). Proposed optional engineering-documentation adapter to existing AES-001. No change to roadmap version/status, canonical sequence, contracts, acceptance gates or authority; no new work admission.
