@@ -276,7 +276,7 @@ it("opens with actionable company information, technical registers concealed",as
  fireEvent.click(screen.getByRole("button",{name:"Обновить сводку"}));
  await screen.findByRole("region",{name:"Состояние бизнеса"});
  expect(screen.getByText("Что происходит с компанией")).toBeTruthy();
- expect(screen.getByText("Музей Хлеба: сдать результат")).toBeTruthy();
+ expect(screen.getByText("Клиентский проект: сдать результат")).toBeTruthy();
  expect(screen.getByText("Продажи: следующий контакт")).toBeTruthy();
  expect(screen.getByText("Деньги: чего не хватает для решения")).toBeTruthy();
  const technical=document.querySelector(".owner-evidence-hidden");
@@ -299,7 +299,7 @@ it("preserves all 22 project contours and 51 references behind a readable front 
  expect(document.querySelectorAll(".owner-business-project")).toHaveLength(6);
  fireEvent.click(screen.getByRole("button",{name:"Показать остальные направления (16)"}));
  expect(document.querySelectorAll(".owner-business-project")).toHaveLength(22);
- expect(document.querySelector(".owner-business-project summary")?.textContent).toContain("Сверить актуальную цель");
+ expect(document.querySelector(".owner-business-project summary")?.textContent).toContain("Результат не указан в управленческой сводке");
  fireEvent.click(screen.getByRole("button",{name:"Проверочные данные и источники (для аудита)"}));
  expect(document.querySelector(".owner-evidence-hidden")).toBeNull();
  expect(screen.getByText("Все · 51")).toBeTruthy();
