@@ -212,7 +212,7 @@ it("shows the separately admitted dated project queue and clears it if source de
  const a=setup();click();await screen.findAllByText("Synthetic held next action");
  expect(screen.getByText(/Снимок от 2026-11-20/)).toBeTruthy();
  fireEvent.click(screen.getByRole("button",{name:"Подготовка · 0"}));
- expect(screen.queryByText("Synthetic held next action")).toBeNull();
+ expect(document.querySelector(".owner-queue")?.textContent).not.toContain("Synthetic held next action");
  fireEvent.click(screen.getByRole("button",{name:"Отложено · 1"}));
  expect(screen.getAllByText("Synthetic held next action").length).toBeGreaterThan(0);
  a.fail("company-owner-project-queue",403);click();await screen.findByRole("alert");
