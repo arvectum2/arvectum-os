@@ -8,6 +8,7 @@ import {FinanceStructure} from "./FinanceStructure";
 import {OperatingCadence} from "./OperatingCadence";
 import {OwnerProjectQueue,parseOwnerQueue} from "./OwnerProjectQueue";
 import {OwnerBusinessBrief} from "./OwnerBusinessBrief";
+import {OwnerPortfolioTrafficLight} from "./OwnerPortfolioTrafficLight";
 import {parseCRM,parseInbox} from "./ControlReferenceSummary";
 import type {MyWorkProjection} from "./types";
 import "./Executive.css";
@@ -105,7 +106,8 @@ export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;
  }
  return <section className="executive">
  <header className="exec-head"><div><h1>{mode==="finance"?text("Финансы","Finances"):mode==="work"?text("Работа","Work"):text("Обзор компании","Company overview")}</h1><p>{checked?text("Запрос выполнен ","Requested ")+fmt(checked.toISOString()):text("Сведения из разрешённых источников по запросу.","Admitted sources on request.")}</p></div><button className="exec-primary" disabled={busy||!csrfToken} onClick={()=>void refresh()}>{busy?text("Проверяем…","Checking…"):text("Обновить сводку","Read summary")}</button></header>
- {mode==="overview"&&<OwnerBusinessBrief work={work} decisions={decisions} risks={risks} finance={finance} crm={crm} projects={projects} checked={checked}/>}
+ {mode==="overview"&&<OwnerPortfolioTrafficLight data={projects} state={sources.ownerQueue.state} checked={checked}/>}
+ {mode==="overview"&&<details className="traffic-context"><summary>{text("Договоры, клиенты, деньги и контрольные сроки","Contracts, sales, cash and checkpoints")}</summary><OwnerBusinessBrief work={work} decisions={decisions} risks={risks} finance={finance} crm={crm} projects={projects} checked={checked}/></details>}
  {mode==="overview"&&<button className="owner-evidence-toggle" aria-expanded={showEvidence} onClick={()=>setShowEvidence(x=>!x)}>{showEvidence?text("Скрыть технические реестры","Hide technical registers"):text("Проверочные данные и источники (для аудита)","Technical records and evidence (audit)")}</button>}
  <div className={mode==="overview"&&!showEvidence?"owner-evidence-hidden":undefined} aria-hidden={mode==="overview"&&!showEvidence?true:undefined}>
  {checked&&<p className="exec-muted exec-read-coverage" role="status">{text("Прочитаны источники: ","Sources read: ")}{readyCount}/{readResults.length}. {text("Это состояние запроса, не полнота реестров компании.","Request status, not completeness of company registers.")}</p>}
