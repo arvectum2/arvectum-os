@@ -4,7 +4,7 @@ import {LanguageProvider} from "./i18n";
 import {ExecutiveOverview} from "./ExecutiveOverview";
 import fixture from "./__fixtures__/executive-preview.json";
 afterEach(()=>{cleanup();vi.unstubAllGlobals();});
-const click=()=>fireEvent.click(screen.getByRole("button",{name:"Обновить сводку"}));
+const click=()=>{fireEvent.click(screen.getByRole("button",{name:"Обновить сводку"}));const toggle=screen.queryByRole("button",{name:"Проверочные данные и источники (для аудита)"});if(toggle)fireEvent.click(toggle);};
 function setup(mode:"overview"|"work"|"finance"="overview"){
  let bad="",code=503;
  const f=vi.fn(async(input:RequestInfo|URL,init?:RequestInit)=>{
@@ -209,11 +209,89 @@ it("reconciles admitted risk links and separates historical acts from Owner acti
 
 it("shows the separately admitted dated project queue and clears it if source denied",async()=>{
  const a=setup();click();await screen.findAllByText("Synthetic held next action");
- expect(screen.getByText(/Снимок на 2026-11-20/)).toBeTruthy();
+ expect(screen.getByText(/Снимок от 2026-11-20/)).toBeTruthy();
  fireEvent.click(screen.getByRole("button",{name:"Подготовка · 0"}));
  expect(screen.queryByText("Synthetic held next action")).toBeNull();
  fireEvent.click(screen.getByRole("button",{name:"Отложено · 1"}));
  expect(screen.getAllByText("Synthetic held next action").length).toBeGreaterThan(0);
  a.fail("company-owner-project-queue",403);click();await screen.findByRole("alert");
  expect(screen.queryByText("Synthetic held next action")).toBeNull();
+});
+
+it("places source-honest key signals above project detail and distinguishes unknown cash",async()=>{
+ setup();click();await screen.findByRole("navigation",{name:"Главные показатели"});
+ const panel=screen.getByRole("navigation",{name:"Главные показатели"});
+ expect(panel.textContent).toContain("Доступные деньги");
+ expect(panel.textContent).toContain("Не установлено");
+ expect(panel.textContent).toContain("1 / 1");
+ const obligations=document.getElementById("exec-obligations")!;
+ const queue=document.getElementById("exec-projects")!;
+ expect(Boolean(obligations.compareDocumentPosition(queue)&Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+ const finance=document.getElementById("exec-finance")!;
+ expect(Boolean(finance.compareDocumentPosition(queue)&Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+});
+it("does not invent zero totals when source unavailable",async()=>{
+ const a=setup();a.fail("company-owner-project-queue",503);click();await screen.findByText("Пересмотр пилота");
+ expect(screen.getByRole("link",{name:/Проекты и действия/}).textContent).toContain("Не установлено");
+});
+it("keeps every project accessible when list is compact",async()=>{
+ const q=fixture["company-owner-project-queue"];
+ const projects=Array.from({length:8},(_,i)=>({...q.projects[0],label:"Project "+i}));
+ const items=projects.map((p,i)=>({...q.items[0],project:p.label,ref:"REF-"+i,action:"Action "+i}));
+ const snapshot={...q,projects,items,counts:{...q.counts,projects:8,actions:8,queues:{...q.counts.queues,hold:8}}};
+ vi.stubGlobal("fetch",vi.fn(async(input:RequestInfo|URL)=>{
+ const k=String(input).replace("/api/app/v1/","");
+ return new Response(JSON.stringify(k==="company-owner-project-queue"?snapshot:fixture[k as keyof typeof fixture]),{status:200});
+ }));
+ render(<LanguageProvider initialLanguage="ru"><ExecutiveOverview csrfToken="fixture"/></LanguageProvider>);
+ click();await screen.findByText("Показать все проекты по фильтру · 8");
+ expect(document.querySelectorAll(".oq-project")).toHaveLength(6);
+ fireEvent.click(screen.getByText("Показать все проекты по фильтру · 8"));
+ expect(document.querySelectorAll(".oq-project")).toHaveLength(8);
+ fireEvent.change(screen.getByRole("combobox",{name:"Проект"}),{target:{value:"Project 7"}});
+ expect(document.querySelectorAll(".oq-project")).toHaveLength(1);
+ expect(document.querySelector(".oq-project[open]")?.textContent).toContain("REF-7");
+ fireEvent.click(screen.getByRole("button",{name:"Подготовка · 0"}));
+ expect(screen.getByText(/По выбранным условиям действий нет/)).toBeTruthy();
+});
+
+it("keeps technical original wording in disclosure while localizing visible action",async()=>{
+ const q=fixture["company-owner-project-queue"];
+ const snapshot={...q,items:[{...q.items[0],action:"Read-only сверка фактических receipts"}]};
+ vi.stubGlobal("fetch",vi.fn(async(input:RequestInfo|URL)=>{
+  const k=String(input).replace("/api/app/v1/","");
+  return new Response(JSON.stringify(k==="company-owner-project-queue"?snapshot:fixture[k as keyof typeof fixture]),{status:200});
+ }));
+ render(<LanguageProvider initialLanguage="ru"><ExecutiveOverview csrfToken="fixture"/></LanguageProvider>);
+ click();await screen.findByText(/Следующее по списку/);
+ expect(document.querySelector(".oq-project>summary")?.textContent).toContain("Сверка без изменения данных фактических подтверждений");
+ expect(document.querySelector(".oq-project>summary")?.textContent).not.toContain("receipts");
+ fireEvent.click(document.querySelector(".oq-project>summary")!);
+ expect(screen.getByText("Read-only сверка фактических receipts").closest("details")?.open).toBe(false);
+});
+
+it("opens with actionable company information, technical registers concealed",async()=>{
+ const a=setup();
+ fireEvent.click(screen.getByRole("button",{name:"Обновить сводку"}));
+ await screen.findByRole("region",{name:"Состояние бизнеса"});
+ expect(screen.getByText("Что происходит с компанией")).toBeTruthy();
+ expect(screen.getByText("Музей Хлеба: сдать результат")).toBeTruthy();
+ expect(screen.getByText("Продажи: следующий контакт")).toBeTruthy();
+ expect(screen.getByText("Деньги: чего не хватает для решения")).toBeTruthy();
+ const technical=document.querySelector(".owner-evidence-hidden");
+ expect(technical?.getAttribute("aria-hidden")).toBe("true");
+ expect(screen.getByRole("button",{name:"Проверочные данные и источники (для аудита)"}).getAttribute("aria-expanded")).toBe("false");
+ expect(a.f).toHaveBeenCalledTimes(8);
+});
+it("keeps 22 source projects and 51 tasks without making them the first screen",async()=>{
+ setup();fireEvent.click(screen.getByRole("button",{name:"Обновить сводку"}));
+ await screen.findByText("Показать остальные направления (16)");
+ expect(document.querySelectorAll(".owner-business-project")).toHaveLength(6);
+ fireEvent.click(screen.getByRole("button",{name:"Показать остальные направления (16)"}));
+ expect(document.querySelectorAll(".owner-business-project")).toHaveLength(22);
+ const museum=Array.from(document.querySelectorAll(".owner-business-project")).find(x=>x.querySelector("summary strong")?.textContent==="Музей Хлеба");
+ expect(museum?.querySelector("summary")?.textContent).toContain("Сдать работы заказчику");
+ fireEvent.click(screen.getByRole("button",{name:"Проверочные данные и источники (для аудита)"}));
+ expect(document.querySelector(".owner-evidence-hidden")).toBeNull();
+ expect(screen.getByText("Все · 51")).toBeTruthy();
 });
