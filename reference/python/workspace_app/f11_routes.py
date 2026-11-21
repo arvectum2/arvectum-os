@@ -81,7 +81,12 @@ def install_f11_routes(
     settings = app.state.settings
     store = app.state.session_store
     resolver = app.state.access_resolver
-    portfolio = portfolio_provider or VerifiedRuntimeCompanyPortfolioProvider(cache_root=Path(settings.runtime_root))
+    # Ordinary Mission Control reads also avoid the shared anonymous GitHub API budget.
+    from .wsf_collector_git_source import GitPrimaryFixedSourceReader
+    portfolio = portfolio_provider or VerifiedRuntimeCompanyPortfolioProvider(
+        cache_root=Path(settings.runtime_root),
+        reader=GitPrimaryFixedSourceReader(Path(settings.runtime_root)/"portfolio-git-cache"),
+    )
     materials = materials_store or CompanyMaterialsStore(Path(settings.runtime_root))
     library = asset_library or CompanyAssetLibrary(materials, asset_admission)
     retrieval = CompanyAssetRetrieval(library, materials)

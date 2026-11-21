@@ -68,4 +68,5 @@ def provider_for(root,p):
         raise ManualContextError("collector source assurance unavailable")
     if p["source_mode"]!="anonymous-public":
         raise ManualContextError("only anonymous public source access admitted")
-    return VerifiedRuntimeCompanyPortfolioProvider(REGISTRY,reader=FixedSourceReader())
+    from .wsf_collector_git_source import GitPrimaryFixedSourceReader
+    return VerifiedRuntimeCompanyPortfolioProvider(REGISTRY,reader=GitPrimaryFixedSourceReader(root/"source-git-cache"))
