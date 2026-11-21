@@ -19,6 +19,7 @@ LOCK_DIR="$RUNTIME_ROOT/run/p7-06-deploy.lock"
 R22_SHA="950a5a8e0258dd555db4a97e5622d64951bcf6fe"
 P705_LEGACY_PROVEN_SHA="cf60e52c93bf0ef4158cf2c3e26792850a126c70"
 CANONICAL_REPOSITORY="arvectum2/arvectum-os"
+PINNED_PYTHON_314="/opt/homebrew/opt/python@3.14/libexec/bin/python3"
 QUIESCE_WAIT_ATTEMPTS=${ARVECTUM_P7_06_QUIESCE_WAIT_ATTEMPTS:-30}
 QUIESCE_WAIT_INTERVAL=${ARVECTUM_P7_06_QUIESCE_WAIT_INTERVAL:-0.5}
 
@@ -102,7 +103,12 @@ EOF
     mv "$tmp" "$release"
   fi
   venv="$RUNTIME_ROOT/venvs/$target"
-  if [ ! -x "$venv/bin/python" ]; then python3 -m venv "$venv"; fi
+  if [ ! -x "$venv/bin/python" ]; then
+    [ -x "$PINNED_PYTHON_314" ] || fail "pinned Python 3.14 interpreter unavailable"
+    "$PINNED_PYTHON_314" -m venv "$venv" || fail "cannot create pinned Python 3.14 release environment"
+  fi
+  "$venv/bin/python" -c 'import sys; sys.exit(0 if sys.version_info[:2] == (3,14) else 1)' \
+    || fail "target release Python must be exactly 3.14"
   ensure_workspace_runtime_dependencies "$release" "$venv"
 }
 
