@@ -104,6 +104,50 @@ def exact_git_first_successor(source, target, decision, *, git=None):
     except (OSError,ValueError,subprocess.SubprocessError):
         return False
 
+# Bounded combined successor: source-watch read UI and Python 3.14/F11 repair only.
+# The source is the exact Git-first release. Never accepts an arbitrary Workspace update.
+SOURCE_SYNC_ANCHOR = "963ae125921cab23ebca5f826724395452126af4"
+SOURCE_SYNC_DECISION = "OWNER-2026-11-21-MC-SOURCE-SYNC-REPIN"
+SOURCE_SYNC_FILES = frozenset({
+    "docs/engineering/WSF-07A-GIT-FIRST-LIVE-FOLLOWUP-2026-11-21.md",
+    "docs/engineering/F11-COMPANY-SOURCE-WATCH-READ-ONLY-OWNER-VIEW-2026-11-21.md",
+    "docs/governance/decisions/DECISION-2026-11-21-MC-SOURCE-SYNC-REPIN.md",
+    "reference/python/p7_06_macos_deploy.sh",
+    "reference/python/tests/test_p7_06_macos_deploy.py",
+    "reference/python/workspace_app/f11_routes.py",
+    "reference/python/workspace_app/company_source_watch_evidence.py",
+    "reference/python/workspace_frontend/dist/.vite/manifest.json",
+    "reference/python/workspace_frontend/dist/assets/index-CMmcmoc_.js",
+    "reference/python/workspace_frontend/dist/assets/index-k_S1EF-z.js",
+    "reference/python/workspace_frontend/dist/index.html",
+    "reference/python/workspace_frontend/src/CompanySourceWatch.test.tsx",
+    "reference/python/workspace_frontend/src/CompanySourceWatch.tsx",
+    "reference/python/workspace_frontend/src/MissionControl.tsx",
+    "reference/python/workspace_frontend/src/f11Api.ts",
+    "reference/python/workspace_frontend/src/f11Types.ts",
+    "reference/python/workspace_tests/test_company_source_watch_evidence.py",
+    "reference/python/workspace_tests/test_wsf07a_f11_python_pin.py",
+    "reference/python/workspace_tests/test_wsf_collector_source_sync_repin.py",
+    "reference/python/wsf_collector_repin_operator.py",
+})
+
+def exact_source_sync_successor(source,target,decision,*,git=None):
+    if source!=SOURCE_SYNC_ANCHOR or decision!=SOURCE_SYNC_DECISION or not re.fullmatch("[0-9a-f]{40}",target):
+        return False
+    if git is None:
+        def git(*args):
+            return subprocess.check_output(["git","-C",str(REPO),*args],timeout=10)
+    try:
+        git("merge-base","--is-ancestor",SOURCE_SYNC_ANCHOR,target)
+        old_blob=git("rev-parse",SOURCE_SYNC_ANCHOR+":"+CONTRACT).decode().strip()
+        new_blob=git("rev-parse",target+":"+CONTRACT).decode().strip()
+        if old_blob!=new_blob or not re.fullmatch("[a-f0-9]{40}",new_blob):
+            return False
+        changed=set(git("diff","--name-only","--no-renames","-z",SOURCE_SYNC_ANCHOR,target).decode().split("\0"))-{""}
+        return changed==SOURCE_SYNC_FILES
+    except (OSError,ValueError,subprocess.SubprocessError):
+        return False
+
 def verify(root,source,target,decision):
     if platform.system()!="Darwin" or not root.is_absolute() or root.resolve()!=root:
         raise ManualContextError("selected Mac required")
@@ -118,7 +162,7 @@ def verify(root,source,target,decision):
         if subprocess.check_output(["git","-C",str(REPO),"rev-parse",sha+":"+CONTRACT],text=True,timeout=5).strip()!=PUBLICATION_PIN:
             raise ManualContextError("contract changed")
     paths=subprocess.check_output(["git","-C",str(REPO),"diff","--name-only","--no-renames","-z",source,target],timeout=10).decode().split("\0")
-    if not compatible([p for p in paths if p]) and not exact_queue_successor(source,target,decision) and not exact_git_first_successor(source,target,decision):
+    if not compatible([p for p in paths if p]) and not exact_queue_successor(source,target,decision) and not exact_git_first_successor(source,target,decision) and not exact_source_sync_successor(source,target,decision):
         raise ManualContextError("not a compatible bounded successor")
     pointer=json.loads(_private_file(root/"run"/"p7-06-last-success.json"))
     txid=pointer["transaction_id"];pid=pointer["plan_id"]
