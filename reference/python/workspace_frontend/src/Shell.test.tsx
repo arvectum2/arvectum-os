@@ -76,6 +76,7 @@ describe("P9.04 shell", () => {
     expect(screen.getByRole("link", { name: "Work" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Company overview" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button",{name:"Read summary"}));
+    fireEvent.click(screen.getByRole("button",{name:"Technical records and evidence (audit)"}));
     expect(await screen.findByRole("link",{name:"Governed preflight is waiting"})).toBeTruthy();
     expect(screen.getByText(/Partial coverage: missing records/)).toBeTruthy();
   });

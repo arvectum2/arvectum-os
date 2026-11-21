@@ -203,3 +203,9 @@
 .owner-business-project summary:focus-visible,.owner-evidence-toggle:focus-visible,.owner-business-expand:focus-visible{outline:2px solid #147b72;outline-offset:3px}
 @media(max-width:1200px){.owner-business-top{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:750px){.owner-business-heading{flex-direction:column}.owner-business-stories,.owner-project-business-list{grid-template-columns:minmax(0,1fr)}.owner-business-top{gap:7px}.owner-business-top article{padding:10px}.owner-business-project summary{flex-wrap:wrap}.owner-business-project summary em{text-align:left;max-width:none}}
+
+.sidebar-footnote details{margin-top:5px;font-size:.72rem}
+.sidebar-footnote summary{cursor:pointer}
+.sidebar-footnote code{display:block;overflow-wrap:anywhere;white-space:normal;padding-top:5px}
+
+.owner-delivery-check{border:1px solid #e6d6ad;background:#fffaf0;border-radius:9px;padding:12px 16px;color:#523c20}.owner-delivery-check strong{font-size:.96rem}.owner-delivery-check p{font-size:.86rem;margin:5px 0 0;line-height:1.45}
