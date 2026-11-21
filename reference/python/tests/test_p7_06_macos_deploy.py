@@ -219,7 +219,9 @@ class WorkspaceDependencyTests(unittest.TestCase):
         prepare_start = text.index("prepare_target()")
         prepare_end = text.index("\ncurrent_release()", prepare_start)
         prepare_body = text[prepare_start:prepare_end]
-        self.assertIn("if [ ! -x \"$venv/bin/python\" ]; then python3 -m venv \"$venv\"; fi", prepare_body)
+        self.assertIn('"$PINNED_PYTHON_314" -m venv "$venv"', prepare_body)
+        self.assertIn('target release Python must be exactly 3.14', prepare_body)
+        self.assertNotIn('python3 -m venv "$venv"', prepare_body)
         self.assertIn('ensure_workspace_runtime_dependencies "$release" "$venv"', prepare_body)
         venv_line = prepare_body.index('if [ ! -x "$venv/bin/python" ]')
         helper_line = prepare_body.index('ensure_workspace_runtime_dependencies "$release" "$venv"')
