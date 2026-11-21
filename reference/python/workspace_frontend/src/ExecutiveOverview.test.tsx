@@ -1,10 +1,11 @@
+import {contractDateFromCondition} from "./OwnerBusinessBrief";
 import {cleanup,fireEvent,render,screen,waitFor} from "@testing-library/react";
 import {afterEach,expect,it,vi} from "vitest";
 import {LanguageProvider} from "./i18n";
 import {ExecutiveOverview} from "./ExecutiveOverview";
 import fixture from "./__fixtures__/executive-preview.json";
 afterEach(()=>{cleanup();vi.unstubAllGlobals();});
-const click=()=>fireEvent.click(screen.getByRole("button",{name:"Обновить сводку"}));
+const click=()=>{fireEvent.click(screen.getByRole("button",{name:"Обновить сводку"}));const toggle=screen.queryByRole("button",{name:"Проверочные данные и источники (для аудита)"});if(toggle)fireEvent.click(toggle);};
 function setup(mode:"overview"|"work"|"finance"="overview"){
  let bad="",code=503;
  const f=vi.fn(async(input:RequestInfo|URL,init?:RequestInit)=>{
@@ -127,7 +128,7 @@ it("shows dated and unscheduled follow-ups without silently hiding the remaining
  vi.stubGlobal("fetch",f);
  render(<LanguageProvider initialLanguage="ru"><ExecutiveOverview csrfToken="fixture"/></LanguageProvider>);
  click();
- expect(await screen.findByText("Компания А")).toBeTruthy();
+ expect((await screen.findAllByText("Компания А")).length).toBe(2);
  expect(screen.getByText("Дата не задана: 1 · Срок контакта прошёл: 1")).toBeTruthy();
  expect(screen.getByText("Дата не задана")).toBeTruthy();
  expect(screen.getByText(/Срок контакта прошёл ·/)).toBeTruthy();
@@ -268,4 +269,44 @@ it("keeps technical original wording in disclosure while localizing visible acti
  expect(document.querySelector(".oq-project>summary")?.textContent).not.toContain("receipts");
  fireEvent.click(document.querySelector(".oq-project>summary")!);
  expect(screen.getByText("Read-only сверка фактических receipts").closest("details")?.open).toBe(false);
+});
+
+it("opens with actionable company information, technical registers concealed",async()=>{
+ const a=setup();
+ fireEvent.click(screen.getByRole("button",{name:"Обновить сводку"}));
+ await screen.findByRole("region",{name:"Состояние бизнеса"});
+ expect(screen.getByText("Что происходит с компанией")).toBeTruthy();
+ expect(screen.getByText("Клиентский проект: сдать результат")).toBeTruthy();
+ expect(screen.getByText("Продажи: следующий контакт")).toBeTruthy();
+ expect(screen.getByText("Деньги: чего не хватает для решения")).toBeTruthy();
+ const technical=document.querySelector(".owner-evidence-hidden");
+ expect(technical?.getAttribute("aria-hidden")).toBe("true");
+ expect(screen.getByRole("button",{name:"Проверочные данные и источники (для аудита)"}).getAttribute("aria-expanded")).toBe("false");
+ expect(a.f).toHaveBeenCalledTimes(8);
+});
+it("preserves all 22 project contours and 51 references behind a readable front page",async()=>{
+ const base=fixture["company-owner-project-queue"];
+ const projects=["Музей Хлеба",...Array.from({length:21},(_,i)=>"Project "+i)].map(label=>({...base.projects[0],label}));
+ const items=Array.from({length:51},(_,i)=>({...base.items[0],project:projects[i%22].label,ref:"SYNTH-"+i,action:"Synthetic action "+i}));
+ const sample={...base,projects,items,counts:{...base.counts,projects:22,actions:51,queues:{...base.counts.queues,hold:51}}};
+ vi.stubGlobal("fetch",vi.fn(async(input:RequestInfo|URL)=>{
+  const k=String(input).replace("/api/app/v1/","");
+  return new Response(JSON.stringify(k==="company-owner-project-queue"?sample:fixture[k as keyof typeof fixture]),{status:200});
+ }));
+ render(<LanguageProvider initialLanguage="ru"><ExecutiveOverview csrfToken="fixture"/></LanguageProvider>);
+ fireEvent.click(screen.getByRole("button",{name:"Обновить сводку"}));
+ await screen.findByRole("button",{name:"Показать остальные направления (16)"});
+ expect(document.querySelectorAll(".owner-business-project")).toHaveLength(6);
+ fireEvent.click(screen.getByRole("button",{name:"Показать остальные направления (16)"}));
+ expect(document.querySelectorAll(".owner-business-project")).toHaveLength(22);
+ expect(document.querySelector(".owner-business-project summary")?.textContent).toContain("Результат не указан в управленческой сводке");
+ fireEvent.click(screen.getByRole("button",{name:"Проверочные данные и источники (для аудита)"}));
+ expect(document.querySelector(".owner-evidence-hidden")).toBeNull();
+ expect(screen.getByText("Все · 51")).toBeTruthy();
+});
+
+it("shows a signed-contract calendar deadline without treating conditional acceptance as a date",()=>{
+ expect(contractDateFromCondition("По 07.12.2026 включительно (договорная календарная дата)","ru-RU")).toContain("7 декабря 2026");
+ expect(contractDateFromCondition("Не более 3 рабочих дней с даты окончания срока услуг","ru-RU")).toBeNull();
+ expect(contractDateFromCondition("По 31.02.2026 включительно","ru-RU")).toBeNull();
 });

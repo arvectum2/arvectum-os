@@ -7,6 +7,7 @@ import {parseFinance} from "./FinanceReference";
 import {FinanceStructure} from "./FinanceStructure";
 import {OperatingCadence} from "./OperatingCadence";
 import {OwnerProjectQueue,parseOwnerQueue} from "./OwnerProjectQueue";
+import {OwnerBusinessBrief} from "./OwnerBusinessBrief";
 import {parseCRM,parseInbox} from "./ControlReferenceSummary";
 import type {MyWorkProjection} from "./types";
 import "./Executive.css";
@@ -31,9 +32,9 @@ function value<T>(r:Result<T>):T|null{return r.state==="ready"?r.value:null;}
 export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;mode?:"overview"|"work"|"finance"}){
  const {language,text}=useWorkspaceLanguage();
  const [sources,setSources]=useState<Sources>(empty);
- const [busy,setBusy]=useState(false),[checked,setChecked]=useState<Date|null>(null),[denied,setDenied]=useState(false);
+ const [busy,setBusy]=useState(false),[checked,setChecked]=useState<Date|null>(null),[denied,setDenied]=useState(false),[showEvidence,setShowEvidence]=useState(false);
  const gen=useRef(0);
- useEffect(()=>{gen.current++;setSources(empty());setChecked(null);setDenied(false);setBusy(false);return()=>{gen.current++;};},[csrfToken,mode]);
+ useEffect(()=>{gen.current++;setSources(empty());setChecked(null);setDenied(false);setBusy(false);setShowEvidence(false);return()=>{gen.current++;};},[csrfToken,mode]);
  async function refresh(){
   if(!csrfToken)return;
   const n=++gen.current;setBusy(true);setSources(empty());setDenied(false);setChecked(null);
@@ -104,6 +105,9 @@ export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;
  }
  return <section className="executive">
  <header className="exec-head"><div><h1>{mode==="finance"?text("Финансы","Finances"):mode==="work"?text("Работа","Work"):text("Обзор компании","Company overview")}</h1><p>{checked?text("Запрос выполнен ","Requested ")+fmt(checked.toISOString()):text("Сведения из разрешённых источников по запросу.","Admitted sources on request.")}</p></div><button className="exec-primary" disabled={busy||!csrfToken} onClick={()=>void refresh()}>{busy?text("Проверяем…","Checking…"):text("Обновить сводку","Read summary")}</button></header>
+ {mode==="overview"&&<OwnerBusinessBrief work={work} decisions={decisions} risks={risks} finance={finance} crm={crm} projects={projects} checked={checked}/>}
+ {mode==="overview"&&<button className="owner-evidence-toggle" aria-expanded={showEvidence} onClick={()=>setShowEvidence(x=>!x)}>{showEvidence?text("Скрыть технические реестры","Hide technical registers"):text("Проверочные данные и источники (для аудита)","Technical records and evidence (audit)")}</button>}
+ <div className={mode==="overview"&&!showEvidence?"owner-evidence-hidden":undefined} aria-hidden={mode==="overview"&&!showEvidence?true:undefined}>
  {checked&&<p className="exec-muted exec-read-coverage" role="status">{text("Прочитаны источники: ","Sources read: ")}{readyCount}/{readResults.length}. {text("Это состояние запроса, не полнота реестров компании.","Request status, not completeness of company registers.")}</p>}
  {denied&&<p className="exec-warning" role="alert">{text("Доступ не подтверждён. Сведения скрыты; повторите проверку.","Access not confirmed. Details hidden; try again.")}</p>}
  {mode==="overview"&&<nav className="exec-overview-grid" aria-label={text("Главные показатели","Key control signals")}>
@@ -178,6 +182,7 @@ export function ExecutiveOverview({csrfToken,mode="overview"}:{csrfToken:string;
  {inbox?.collector?<><p>{text("Последний подтверждённый сбор: ","Last verified collection: ")}{inbox.collector.last_verified_at?fmt(inbox.collector.last_verified_at):text("Не установлен","Unknown")}</p><p>{text("Состояние сборщика: ","Collector state: ")}{inbox.collector.run_state} · {text("Резервная копия: ","Backup: ")}{inbox.backup_status}</p></>:<p>{text("Сведения о сервисном сборе: ","Service collection evidence: ")}{inbox?text("Не установлено","Unknown"):status(sources.inbox)}</p>}
  <p>{text("Фактическое использование собственником, экономия времени и результативность AI не измеряются этим экраном.","Actual Owner use, time savings and AI effectiveness are not measured by this screen.")}</p>
  </section>}
+ </div>
  {mode==="work"&&<div className="exec-panel"><a href="/operations">{text("Операционные очереди и продукты","Operational queues and products")}</a> · <a href="/information-hub">{text("Входящие и закупки","Inbox and procurement")}</a></div>}
  </section>;
 }
