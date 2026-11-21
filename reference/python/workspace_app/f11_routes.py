@@ -83,7 +83,9 @@ def install_f11_routes(
     resolver = app.state.access_resolver
     # Ordinary Mission Control reads also avoid the shared anonymous GitHub API budget.
     from .wsf_collector_git_source import GitPrimaryFixedSourceReader
+    from .wsf_local_roadmap_collector import REGISTRY as ADMITTED_ROADMAP_REGISTRY
     portfolio = portfolio_provider or VerifiedRuntimeCompanyPortfolioProvider(
+        registry_path=ADMITTED_ROADMAP_REGISTRY,
         cache_root=Path(settings.runtime_root),
         reader=GitPrimaryFixedSourceReader(Path(settings.runtime_root)/"portfolio-git-cache"),
     )

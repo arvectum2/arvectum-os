@@ -1,0 +1,11 @@
+# WSF-07A live follow-up: registry continuity and Python 3.14 gate
+
+Status: Draft / isolated follow-up; not deployed or approved as a successor release.
+
+The first Git-first release merged in OS PR #90 and deployed on selected Mac as release `963ae125921cab23ebca5f826724395452126af4`. P7.06 preflight/deployment passed and wrote a verified pre-update backup. Operator re-pin initially refused because P7.06 prepared target's virtual environment using ambient Python 3.15, while the admitted collector operator requires 3.14. A controlled repair retained the old target 3.15 venv and created a new exact 3.14 environment from unchanged requirements.lock; P7.02/P7.05 health and re-pin passed with `ledger_unchanged` and `access_unchanged`.
+
+The first reloaded launchd collector run was reported `blocked` without a detailed reason in retained error logs; no new Inbox event/checkpoint was committed. Independent read-only source check using the target service Principal and approved 0.6.1 registry returned 8/8 current-source-backed with content digests; private source cache and metadata normalization succeeded. External backup matches current Inbox. The existing blocked status must not be reset or reinterpreted as a verified scheduled run; await a genuine next-window cycle and review its evidence before further release re-pin. A race with startup is a hypothesis, not established root cause.
+
+Owner-facing F11 portfolio uses the older default packaged registry rather than the 0.6.1/0.6.2 admitted WSF-07A registry. Actual operator F11 read returned 7/8 current-source-backed with PORT-007 flagged reconciliation-required despite WSF-07A's admitted PORT-007 locator. Align F11 reader to the already admitted fixed registry; no new project, grant, approval or business disposition is created.
+
+Two narrow code changes are proposed: (1) P7.06 macOS release preparation must create and verify Python 3.14 from a pinned path, never ambient `python3`; (2) F11's default server provider must use the same approved exact WSF-07A registry as the service collector. This draft is intentionally not a silent hotfix to an immutable deployed release. Separate compatibility review, explicit owner release approval and a verified healthy collector state are required before another target release change.
