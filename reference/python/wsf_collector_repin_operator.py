@@ -72,6 +72,38 @@ def exact_queue_successor(source, target, decision, *, git=None):
     except (OSError, ValueError, subprocess.SubprocessError):
         return False
 
+# Exact Git-first source change admitted only under the separate Owner decision.
+# This does not broaden the existing compatible UI/operations envelope.
+GIT_FIRST_SOURCE = "824cc89723495ee6bab7c38e7557821f369c934f"
+GIT_FIRST_DECISION = "OWNER-2026-11-21-WSF07A-GIT-FIRST-FAILOVER"
+GIT_FIRST_FILES = {
+    "docs/engineering/WSF-07A-GIT-SOURCE-FAILOVER-PROPOSAL-2026-11-21.md",
+    "docs/governance/decisions/DECISION-2026-11-21-WSF07A-GIT-FIRST-FAILOVER.md",
+    "reference/python/workspace_app/f11_routes.py",
+    "reference/python/workspace_app/wsf_collector_git_source.py",
+    "reference/python/workspace_app/wsf_collector_source.py",
+    "reference/python/workspace_tests/test_wsf_collector_git_source.py",
+    "reference/python/workspace_tests/test_wsf_collector_git_repin.py",
+    "reference/python/wsf_collector_repin_operator.py",
+}
+
+def exact_git_first_successor(source, target, decision, *, git=None):
+    if source != GIT_FIRST_SOURCE or decision != GIT_FIRST_DECISION or not re.fullmatch("[0-9a-f]{40}",target):
+        return False
+    if git is None:
+        def git(*args):
+            return subprocess.check_output(["git", "-C", str(REPO), *args],timeout=10)
+    try:
+        git("merge-base", "--is-ancestor", GIT_FIRST_SOURCE, target)
+        before = git("rev-parse", GIT_FIRST_SOURCE + ":" + CONTRACT).decode().strip()
+        after = git("rev-parse", target + ":" + CONTRACT).decode().strip()
+        if before != after or not re.fullmatch("[0-9a-f]{40}",after):
+            return False
+        actual = set(git("diff","--name-only","--no-renames","-z",GIT_FIRST_SOURCE,target).decode().split("\0"))-{""}
+        return actual == GIT_FIRST_FILES
+    except (OSError,ValueError,subprocess.SubprocessError):
+        return False
+
 def verify(root,source,target,decision):
     if platform.system()!="Darwin" or not root.is_absolute() or root.resolve()!=root:
         raise ManualContextError("selected Mac required")
@@ -86,7 +118,7 @@ def verify(root,source,target,decision):
         if subprocess.check_output(["git","-C",str(REPO),"rev-parse",sha+":"+CONTRACT],text=True,timeout=5).strip()!=PUBLICATION_PIN:
             raise ManualContextError("contract changed")
     paths=subprocess.check_output(["git","-C",str(REPO),"diff","--name-only","--no-renames","-z",source,target],timeout=10).decode().split("\0")
-    if not compatible([p for p in paths if p]) and not exact_queue_successor(source,target,decision):
+    if not compatible([p for p in paths if p]) and not exact_queue_successor(source,target,decision) and not exact_git_first_successor(source,target,decision):
         raise ManualContextError("not a compatible bounded successor")
     pointer=json.loads(_private_file(root/"run"/"p7-06-last-success.json"))
     txid=pointer["transaction_id"];pid=pointer["plan_id"]
