@@ -150,6 +150,23 @@ def install_f11_routes(
         except CompanyPortfolioError:
             raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="COMPANY_PORTFOLIO_UNAVAILABLE") from None
 
+    @app.get("/api/app/v1/company/source-watch")
+    async def company_source_watch(
+        current: tuple[WorkspaceSession, AccessContext] = Depends(authorize_current),
+    ) -> dict[str, Any]:
+        _, access = current
+        if access.principal_kind != "human":
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="SOURCE_WATCH_OWNER_ONLY")
+        from .company_source_watch_evidence import read_company_source_watch, CompanySourceWatchUnavailable
+        # Only the Company-owned, fixed selected-Mac reports; no source fetch or
+        # admission to OS authority. A missing report is visibly unavailable.
+        report_dir = Path.home() / "ArvectumSafe" / "company-source-watch-service" / "reports"
+        try:
+            return read_company_source_watch(report_dir)
+        except CompanySourceWatchUnavailable:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                                detail="COMPANY_SOURCE_WATCH_UNAVAILABLE") from None
+
     @app.get("/api/app/v1/company-materials")
     async def company_materials(
         current: tuple[WorkspaceSession, AccessContext] = Depends(authorize_current),

@@ -5,6 +5,7 @@ import type {
   CompanyAssetSearchProjection,
   CompanyMaterialsProjection,
   CompanyPortfolioProjection,
+  CompanySourceWatchCandidate,
   GeneratedCompanyOutput,
   CompanyGenerationAssetInput,
   StagedMaterialVersion,
@@ -54,6 +55,11 @@ function assetPath(materialId: string, versionId: string, action: string): strin
 
 export function loadCompanyPortfolio(forceRefresh = false): Promise<CompanyPortfolioProjection> {
   return request<CompanyPortfolioProjection>(forceRefresh ? "/api/app/v1/company/portfolio?refresh=true" : "/api/app/v1/company/portfolio");
+}
+
+export function loadCompanySourceWatch(): Promise<CompanySourceWatchCandidate> {
+  // Reads only a previously persisted Company candidate report; no scan/retry.
+  return request<CompanySourceWatchCandidate>("/api/app/v1/company/source-watch");
 }
 
 export function loadCompanyMaterials(): Promise<CompanyMaterialsProjection> {

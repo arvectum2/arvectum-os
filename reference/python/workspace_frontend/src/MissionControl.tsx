@@ -6,6 +6,7 @@ import { RiskReference } from "./RiskReference";
 import { DecisionReference } from "./DecisionReference";
 import { CompanyControlReference } from "./CompanyControlReference";
 import { ControlReferenceSummary } from "./ControlReferenceSummary";
+import { CompanySourceWatch } from "./CompanySourceWatch";
 
 type Project={id:string;label:string;kind:string};
 type Note={id:string;title:string;text:string;project_id:string|null};
@@ -43,6 +44,7 @@ export function MissionControl({csrfToken=""}:{csrfToken?:string}){
  <p>{text("Рабочий контекст и контрольные точки. Неподключённые источники обозначены явно.","Work context and review triggers. Unconnected sources are explicit.")}</p></div>
  <button disabled={busy} onClick={()=>void load()}>{text("Обновить","Refresh")}</button></header>
  {error&&<p role="alert">{text("Управленческие данные недоступны. Это не означает, что нет задач или рисков.","Control data unavailable. This does not mean there are no tasks or risks.")}</p>}
+ <CompanySourceWatch/>
  {data&&<><div className="company-card"><h2>{text("Контрольные точки","Review triggers")}</h2>
  {data.pilot_review?<p>{text("Пересмотр пилота Workspace","Review Workspace pilot")} · {new Date(data.pilot_review.due_at).toLocaleString()} · {text("Решение о продолжении ещё не принято","Continuation not yet decided")}</p>:<p>{text("Нет подтверждённой контрольной точки в этом источнике.","No verified review trigger from this source.")}</p>}
  <p>{data.manual_context.projects.length} {text("проектов","projects")} · {data.manual_context.notes.length} {text("рабочих заметок","working notes")}</p>

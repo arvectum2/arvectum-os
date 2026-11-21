@@ -55,6 +55,26 @@ export type CompanyPortfolioProjection = {
   review_packet?: unknown; // optional separately admitted AC-405 projection
 };
 
+export type CompanySourceWatchCandidate = {
+  schema: "arvectum.company.source-watch-view/1";
+  state: "current-observation" | "stale";
+  derived: true;
+  canonical_authority: false;
+  business_status_updated: false;
+  organizational_authority_provided: false;
+  source_as_of: "2026-11-20";
+  scanned_at: string;
+  report_name: string;
+  coverage: {
+    projects: 22;
+    source_refs: 35;
+    os_exact_paths_delegated: 5;
+    additional_repositories: number;
+    review_signals: Record<string, number>;
+  };
+  projects: { project: string; review_signal: string }[];
+};
+
 export type StagedMaterialVersion = {
   material_id: string;
   version_id: string;
