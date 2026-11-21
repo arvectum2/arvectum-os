@@ -1,5 +1,7 @@
 """Git-first, REST-fallback read-only source for the eight WSF-07A roadmaps."""
 import hashlib
+import fcntl
+from contextlib import contextmanager
 import os
 from pathlib import Path
 import re
@@ -57,7 +59,26 @@ class GitPrimaryFixedSourceReader(FixedSourceReader):
             raise GitTransportUnavailable("Git source fetch unavailable")
         return out.stdout
 
+    @contextmanager
+    def _cache_lock(self, project_id):
+        # Serializes simultaneous F11 reads without mutating operator checkouts.
+        self._private_dir(self.cache_root)
+        path = self.cache_root / (project_id + ".lock")
+        fd = os.open(path, os.O_CREAT | os.O_RDWR | getattr(os, "O_NOFOLLOW", 0), 0o600)
+        try:
+            st = os.fstat(fd)
+            if not stat.S_ISREG(st.st_mode) or st.st_uid != os.getuid() or st.st_mode & 0o077:
+                raise CompanyPortfolioError("unsafe Git cache lock")
+            fcntl.flock(fd, fcntl.LOCK_EX)
+            yield
+        finally:
+            os.close(fd)
+
     def _read_git(self, descriptor):
+        with self._cache_lock(descriptor.project_id):
+            return self._read_git_locked(descriptor)
+
+    def _read_git_locked(self, descriptor):
         # Private bare cache only; never modify the operator's working clones.
         self._private_dir(self.cache_root)
         repo = self.cache_root / (descriptor.project_id + ".git")

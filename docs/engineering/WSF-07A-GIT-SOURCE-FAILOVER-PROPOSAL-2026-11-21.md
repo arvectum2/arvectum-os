@@ -14,3 +14,5 @@ Activation requires isolated tests, exact release review, operational verificati
 On 2026-11-21, all eight allowed roadmap contents were fetched via Git only on Mac mini, with REST deliberately disabled. The existing collector integration suite (17 tests) and collector suite (15 tests) passed using the pinned runtime Python environment. Git-first unit tests also passed. The live pinned release and Inbox ledger have not been changed. The ordinary F11 Company portfolio API now uses a separate Git cache so that ordinary Mission Control refreshes do not spend REST calls in the normal path.
 
 The independent Company source watcher is owned by the Company repository, not the OS collector; its separate candidate and admission gate are in Company Spec 002. The proposed integrated dashboard remains a read-only derived projection, not a new authority for 22 business project statuses.
+
+Concurrent F11 browser refreshes serialize per-source cache access through a private advisory lock; no browser refresh should corrupt a bare Git cache or mutate an operator checkout.
