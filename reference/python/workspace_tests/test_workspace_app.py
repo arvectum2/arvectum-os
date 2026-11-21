@@ -95,7 +95,7 @@ class WorkspaceBffTests(unittest.TestCase):
 
     def test_shell_navigation_is_owner_oriented_and_release_scoped(self) -> None:
         payload = self.bootstrap().json()
-        self.assertEqual(payload["release"]["id"], "p10.09.27-compact-overview-candidate")
+        self.assertEqual(payload["release"]["id"], "p10.09.26-owner-queue-candidate")
         self.assertEqual(payload["release"]["app_api_contract"], "16")
         self.assertEqual(
             [(item["id"], item["href"]) for item in payload["navigation"]],
