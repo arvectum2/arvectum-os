@@ -104,6 +104,33 @@ def exact_git_first_successor(source, target, decision, *, git=None):
     except (OSError,ValueError,subprocess.SubprocessError):
         return False
 
+# Owner-approved one-time Mission Control compatibility; generic envelope unchanged.
+OWNER_VIEW_SOURCE = "963ae125921cab23ebca5f826724395452126af4"
+OWNER_VIEW_ANCHOR = "ab08b32cbb2cffa65f220d0961e1b6583be38a1a"
+OWNER_VIEW_DECISION = "OWNER-2026-11-23-MISSION-CONTROL-COLLECTOR-CONTINUITY"
+OWNER_VIEW_DELTA = {
+    "reference/python/wsf_collector_repin_operator.py",
+    "reference/python/workspace_tests/test_wsf_collector_owner_view_repin.py",
+    "docs/operations/WSF-08-MISSION-CONTROL-COLLECTOR-COMPATIBILITY-2026-11-23.md",
+}
+
+def exact_owner_view_successor(source,target,decision,*,git=None):
+    if source!=OWNER_VIEW_SOURCE or decision!=OWNER_VIEW_DECISION or not re.fullmatch("[0-9a-f]{40}",target):
+        return False
+    if git is None:
+        def git(*args):
+            return subprocess.check_output(["git","-C",str(REPO),*args],timeout=10)
+    try:
+        git("merge-base","--is-ancestor",source,OWNER_VIEW_ANCHOR)
+        git("merge-base","--is-ancestor",OWNER_VIEW_ANCHOR,target)
+        if any(git("rev-parse",ref+":"+CONTRACT).decode().strip()!=PUBLICATION_PIN
+               for ref in (source,OWNER_VIEW_ANCHOR,target)):
+            return False
+        delta=set(git("diff","--name-only","--no-renames","-z",OWNER_VIEW_ANCHOR,target).decode().split("\0"))-{""}
+        return delta==OWNER_VIEW_DELTA
+    except (OSError,ValueError,subprocess.SubprocessError):
+        return False
+
 def verify(root,source,target,decision):
     if platform.system()!="Darwin" or not root.is_absolute() or root.resolve()!=root:
         raise ManualContextError("selected Mac required")
@@ -118,7 +145,7 @@ def verify(root,source,target,decision):
         if subprocess.check_output(["git","-C",str(REPO),"rev-parse",sha+":"+CONTRACT],text=True,timeout=5).strip()!=PUBLICATION_PIN:
             raise ManualContextError("contract changed")
     paths=subprocess.check_output(["git","-C",str(REPO),"diff","--name-only","--no-renames","-z",source,target],timeout=10).decode().split("\0")
-    if not compatible([p for p in paths if p]) and not exact_queue_successor(source,target,decision) and not exact_git_first_successor(source,target,decision):
+    if not compatible([p for p in paths if p]) and not exact_queue_successor(source,target,decision) and not exact_git_first_successor(source,target,decision) and not exact_owner_view_successor(source,target,decision):
         raise ManualContextError("not a compatible bounded successor")
     pointer=json.loads(_private_file(root/"run"/"p7-06-last-success.json"))
     txid=pointer["transaction_id"];pid=pointer["plan_id"]
