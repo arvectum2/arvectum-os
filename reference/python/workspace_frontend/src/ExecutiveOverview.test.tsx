@@ -323,3 +323,13 @@ it("keeps the business briefing visible without expanding the technical evidence
  expect(screen.getByText("Клиентский проект: сдать результат")).toBeTruthy();
  expect(a.f).toHaveBeenCalledTimes(8);
 });
+
+
+it("provides a recovery action after session authorization is lost",async()=>{
+ const a=setup();a.fail("company-owner-project-queue",401);
+ fireEvent.click(screen.getByRole("button",{name:"Обновить сводку"}));
+ const alert=await screen.findByRole("alert");
+ expect(alert.textContent).toContain("Обновите страницу для восстановления сеанса");
+ expect(screen.queryByText("Пересмотр пилота")).toBeNull();
+ expect(document.querySelector(".owner-evidence-hidden")?.getAttribute("aria-hidden")).toBe("true");
+});
