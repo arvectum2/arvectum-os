@@ -1,6 +1,6 @@
 {
   "schema": "arvectum.workspace.application-release/1",
-  "release_id": "p10.09.29-owner-traffic-light-candidate",
+  "release_id": "p10.09.30-owner-mission-control-brief",
   "app_api_contract": "16",
   "classification": "bounded-internal-provisional",
   "public_api": false

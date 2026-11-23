@@ -252,3 +252,8 @@
 .traffic-stat:focus-visible,.traffic-actions button:focus-visible,.traffic-context>summary:focus-visible{outline:2px solid #137b72;outline-offset:2px}
 @media(max-width:1050px){.traffic-head-row,.traffic-data-row{grid-template-columns:minmax(95px,1fr) minmax(130px,1fr) minmax(210px,2fr) minmax(80px,.7fr);gap:8px}}
 @media(max-width:760px){.traffic-header{flex-wrap:wrap}.traffic-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.traffic-stat:last-child{grid-column:1/-1}.traffic-head-row{display:none}.traffic-data-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;padding:12px}.traffic-project{grid-column:1}.traffic-data-row>div:nth-child(2){grid-column:2;grid-row:1}.traffic-next{grid-column:1/-1}.traffic-actions{grid-column:1/-1}.traffic-actions button{min-height:36px}.traffic-status{font-size:.77rem}.traffic-reason{font-size:.73rem}.traffic-header h2{font-size:1.27rem}.traffic-freshness{font-size:.78rem}}
+
+/* Owner briefing remains visible, while deep evidence still requires disclosure. */
+.exec-source-summary{padding:11px 14px;border:1px solid #bedbd3;border-radius:9px;background:#f5fbf9;color:#234b46;font-size:.88rem}
+.exec-source-summary.exec-source-warning{border-color:#e2c79c;background:#fff9ed;color:#765321}
+.traffic-context>.owner-business{margin-top:0}

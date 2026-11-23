@@ -310,3 +310,16 @@ it("shows a signed-contract calendar deadline without treating conditional accep
  expect(contractDateFromCondition("Не более 3 рабочих дней с даты окончания срока услуг","ru-RU")).toBeNull();
  expect(contractDateFromCondition("По 31.02.2026 включительно","ru-RU")).toBeNull();
 });
+
+
+it("keeps the business briefing visible without expanding the technical evidence",async()=>{
+ const a=setup();a.fail("company-owner-project-queue",503);
+ fireEvent.click(screen.getByRole("button",{name:"Обновить сводку"}));
+ await screen.findByText("Что происходит с компанией");
+ expect(screen.getByRole("region",{name:"Состояние бизнеса"}).closest("details")).toBeNull();
+ expect(screen.getByText(/Прочитано источников: 7\/8/)).toBeTruthy();
+ expect(screen.getByText(/Не все источники доступны/)).toBeTruthy();
+ expect(document.querySelector(".owner-evidence-hidden")?.getAttribute("aria-hidden")).toBe("true");
+ expect(screen.getByText("Клиентский проект: сдать результат")).toBeTruthy();
+ expect(a.f).toHaveBeenCalledTimes(8);
+});
